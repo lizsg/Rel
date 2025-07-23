@@ -207,17 +207,9 @@
       background: linear-gradient(135deg, #d6c1b2 0%, #c4a68a 100%);
       position: relative;
       overflow: hidden;
-    }
-
-    .card-image::after {
-      content: '📚';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 48px;
-      opacity: 0.6;
-      filter: grayscale(0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .card-content {
@@ -240,6 +232,43 @@
       font-size: 15px;
       line-height: 1.5;
       opacity: 0.8;
+      margin-bottom: 15px;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .card-button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .view-button {
+      background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
+      color: white;
+    }
+
+    .edit-button {
+      background: linear-gradient(135deg, #6c584c 0%, #5b4a3e 100%);
+      color: white;
+    }
+
+    .delete-button {
+      background: linear-gradient(135deg, #d4a59a 0%, #bc6c25 100%);
+      color: white;
+    }
+
+    .card-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
     .bottombar {
@@ -431,7 +460,7 @@
 </head>
 <body>
 
-<!-- Barra superior -->
+ <!-- Barra superior -->
 <div class="topbar">
   <!-- Botón Chat con ícono de robot  -->
   <div class="topbar-icon" title="Chat">
@@ -488,39 +517,75 @@
   <!-- Galería -->
   <main class="gallery">
     <div class="card">
-      <div class="card-image"></div>
+      <div class="card-image">
+        <svg width="60" height="60" fill="rgba(0,0,0,0.2)" viewBox="0 0 24 24">
+          <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+        </svg>
+      </div>
       <div class="card-content">
-        <div class="card-title">Publicación Reciente</div>
-        <div class="card-description">Última subida de usuario</div>
+        <div class="card-title">Libro sin título</div>
+        <div class="card-description">Autor desconocido</div>
+        <div class="card-actions">
+          <button class="card-button view-button">Ver</button>
+          <button class="card-button edit-button">Editar</button>
+          <button class="card-button delete-button">Eliminar</button>
+        </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-image"></div>
+      <div class="card-image">
+        <svg width="60" height="60" fill="rgba(0,0,0,0.2)" viewBox="0 0 24 24">
+          <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+        </svg>
+      </div>
       <div class="card-content">
-        <div class="card-title">Publicación Reciente</div>
-        <div class="card-description">Última subida de usuario</div>
+        <div class="card-title">Libro sin título</div>
+        <div class="card-description">Autor desconocido</div>
+        <div class="card-actions">
+          <button class="card-button view-button">Ver</button>
+          <button class="card-button edit-button">Editar</button>
+          <button class="card-button delete-button">Eliminar</button>
+        </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-image"></div>
+      <div class="card-image">
+        <svg width="60" height="60" fill="rgba(0,0,0,0.2)" viewBox="0 0 24 24">
+          <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+        </svg>
+      </div>
       <div class="card-content">
-        <div class="card-title">Publicación Reciente</div>
-        <div class="card-description">Última subida de usuario</div>
+        <div class="card-title">Libro sin título</div>
+        <div class="card-description">Autor desconocido</div>
+        <div class="card-actions">
+          <button class="card-button view-button">Ver</button>
+          <button class="card-button edit-button">Editar</button>
+          <button class="card-button delete-button">Eliminar</button>
+        </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-image"></div>
+      <div class="card-image">
+        <svg width="60" height="60" fill="rgba(0,0,0,0.2)" viewBox="0 0 24 24">
+          <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+        </svg>
+      </div>
       <div class="card-content">
-        <div class="card-title">Publicación Reciente</div>
-        <div class="card-description">Última subida de usuario</div>
+        <div class="card-title">Libro sin título</div>
+        <div class="card-description">Autor desconocido</div>
+        <div class="card-actions">
+          <button class="card-button view-button">Ver</button>
+          <button class="card-button edit-button">Editar</button>
+          <button class="card-button delete-button">Eliminar</button>
+        </div>
       </div>
     </div>
   </main>
 
-  <!-- Barra inferior -->
+ <!-- Barra inferior -->
   <div class="bottombar">
     </button>
         <a href="main.php" class="bottom-button" title="Inicio">
