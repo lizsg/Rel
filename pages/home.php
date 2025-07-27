@@ -1,11 +1,10 @@
 <?php
-  /*session_start();
+  session_start();
 
-  if (!isset($_SESSION['usuario'])) {
-    header("Location: auth/login.php");
-    exit();
-  }*/
-
+  if(!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
+      header("Location: auth/login.php");
+      exit(); 
+  }
 ?>
 
 <!DOCTYPE html>

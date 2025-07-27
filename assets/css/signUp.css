@@ -1,0 +1,120 @@
+/* Estilo general del cuerpo */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor principal del formulario */
+.login-container {
+  background-color: #fdf6f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid rgba(163, 177, 138, 0.3);
+  animation: fadeIn 0.7s ease-in-out;
+}
+
+/* Título */
+h2 {
+  text-align: center;
+  color: #6b4226;
+  margin-bottom: 25px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+button {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+/* Efecto al enfocar */
+input:focus {
+  border-color: #6b4226;
+  outline: none;
+  box-shadow: 0 0 5px rgba(107, 66, 38, 0.3);
+}
+
+/* Botón */
+.btn-login {
+  background-color: #6b4226;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-login:hover {
+  background-color: #8b5a3c;
+}
+
+/* Toggle contraseña */
+.toggle-pass {
+  font-size: 0.9rem;
+  color: #8b5a3c;
+  cursor: pointer;
+  text-align: right;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  user-select: none;
+}
+
+.toggle-pass:hover {
+  text-decoration: underline;
+}
+
+/* Mensajes */
+.success, .error {
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.success {
+  background-color: #d8f3dc;
+  color: #2d6a4f;
+  border: 1px solid #95d5b2;
+}
+
+.error {
+  background-color: #ffe5e5;
+  color: #b00020;
+  border: 1px solid #ffb3b3;
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

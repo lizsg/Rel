@@ -1,5 +1,10 @@
 <?php
+  session_start();
 
+  if(!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
+      header("Location: ../auth/login.php");
+      exit(); 
+  }
 ?>
 
 <!DOCTYPE html>
@@ -14,7 +19,6 @@
   <?php include '../../includes/chat-component.php'; ?>
 </head>
 <body>
-
 
   <div class="topbar">
     <div class="topbar-icon" title="Chat">
@@ -57,6 +61,52 @@
     </div>
     <button class="user-button">Búsqueda Avanzada</button>
   </header>
+
+  <div class="new-button-wrapper">
+  <a href="products/agregar-publicacion.php" class="bottom-button agregar-publicacion" title="Agregar Publicación">
+    <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
+      <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+    </svg>
+    <span>Nuevo</span>
+  </a>
+</div>
+<style>
+.new-button-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 25px 40px 0 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.new-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
+  color: white;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(88, 129, 87, 0.3);
+  transition: all 0.3s ease;
+}
+
+.new-button svg {
+  fill: white;
+}
+
+.new-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(58, 90, 64, 0.4);
+  background: linear-gradient(135deg, #3a5a40 0%, #2d4732 100%);
+}
+
+</style>
+
 
   <main class="gallery">
     <div class="card">
@@ -146,7 +196,7 @@
     </button>
   </div>
 
-   <script src="../../assets/js/publicaciones-script.js"></script>
+  <script src="../../assets/js/publicaciones-script.js"></script>
   <script src="../../assets/js/chat-script.js"></script>
 </body>
 </html>

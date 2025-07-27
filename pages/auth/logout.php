@@ -3,7 +3,7 @@
         session_start();
     }
 
-    $_SESSION = array();
+    $_SESSION['usuario'] = "";
 
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
