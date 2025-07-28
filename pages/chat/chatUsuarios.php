@@ -49,8 +49,34 @@
     <div class="logo">RELEE</div>
   </header>
 
-  <main class="chat">
+  <main class="chat-container">
+    <div class="conversation-list">
+      <?php
+      // Obtener conversaciones del usuario actual desde la base de datos
+      $userId = $_SESSION['usuario']['idUsuario'];
+      $conversaciones = obtenerConversaciones($userId); // Función que debes implementar
+      
+      foreach($conversaciones as $conversacion) {
+        $otroUsuario = obtenerUsuario($conversacion['idUsuario1'] == $userId ? $conversacion['idUsuario2'] : $conversacion['idUsuario1']);
+        echo '<div class="conversation-item" data-conversation="'.$conversacion['idConversacion'].'">';
+        echo '<img src="avatar.jpg" alt="'.$otroUsuario['nombre'].'">';
+        echo '<div class="conversation-info">';
+        echo '<h3>'.$otroUsuario['nombre'].'</h3>';
+        echo '<p>'.substr($conversacion['ultimoMensaje'], 0, 20).'...</p>';
+        echo '</div></div>';
+      }
+      ?>
+    </div>
     
+    <div class="chat-area">
+      <div class="messages-container" id="messages-container">
+        <!-- Los mensajes se cargarán aquí via AJAX o WebSocket -->
+      </div>
+      <div class="message-input">
+        <textarea id="message-input" placeholder="Escribe un mensaje..."></textarea>
+        <button id="send-button">Enviar</button>
+      </div>
+    </div>
   </main>
 
   <div class="bottombar">
@@ -70,6 +96,12 @@
       <span>Menú</span>
     </button>
   </div>
+
+  <script>
+    // Pasaamos el ID del usuario desde PHP a JavaScript
+    const currentUserId = <?php echo $_SESSION['usuario']['idUsuario']; ?>;
+    const webSocketUrl = 'ws://<?php echo $_SERVER['HTTP_HOST']; ?>:8080/chat';
+  </script>
 
   <script src="../../assets/js/chatUsuarios-script.js"></script>
   <script src="../../assets/js/chat-script.js"></script>
