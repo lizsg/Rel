@@ -421,3 +421,98 @@ form.logout-form {
 .search-bar button {
   font-family: 'Segoe UI Symbol', sans-serif;
 }
+
+/* Estilos para la lista de usuarios */
+.lista-usuarios {
+  margin: 20px auto;
+  max-width: 600px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  overflow: hidden;
+}
+
+.lista-usuarios h2 {
+  padding: 16px 20px;
+  margin: 0;
+  background: #f8f9fa;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.lista-usuarios ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.usuario-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+
+.usuario-item:hover {
+  background-color: #f8f9fa;
+}
+
+.usuario-item:last-child {
+  border-bottom: none;
+}
+
+.usuario-item span {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.enviar-mensaje {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.enviar-mensaje:hover {
+  background-color: #0069d9;
+  transform: translateY(-1px);
+}
+
+.enviar-mensaje svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.mensaje-error, .mensaje-info {
+  text-align: center;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 600px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mensaje-error {
+  color: #dc3545;
+  border-left: 4px solid #dc3545;
+}
+
+.mensaje-info {
+  color: #6c757d;
+  border-left: 4px solid #6c757d;
+}

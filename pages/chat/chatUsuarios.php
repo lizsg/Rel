@@ -1,12 +1,26 @@
 <?php
-  session_start();
+// Agrega al inicio del archivo
+function obtenerConversaciones($userId) {
+    require_once '../../config/database.php';
+    $db = new Database();
+    $conn = $db->getConnection();
+    
+    $stmt = $conn->prepare("SELECT * FROM Conversaciones 
+                          WHERE idUsuario1 = ? OR idUsuario2 = ?
+                          ORDER BY ultimoMensaje DESC");
+    $stmt->execute([$userId, $userId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
-  if(!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
-      header("Location: ../auth/login.php");
-      exit(); 
-  }
-
-  
+function obtenerUsuario($userId) {
+    require_once '../../config/database.php';
+    $db = new Database();
+    $conn = $db->getConnection();
+    
+    $stmt = $conn->prepare("SELECT idUsuario, nombre, userName FROM Usuarios WHERE idUsuario = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 ?>
 
 <!DOCTYPE html>
