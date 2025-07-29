@@ -15,4 +15,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Alternativa si quieres abrir en una nueva pestaña:
     // window.open(`chat.php?user_id=${userId}`, '_blank');
   }
+  
 });

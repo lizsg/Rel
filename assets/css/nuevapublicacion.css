@@ -1,0 +1,107 @@
+body {
+  margin: 0;
+  background-color: #ffffff;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
+}
+
+.login-container {
+  background-color: #fdf6f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  padding: 40px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid rgba(163, 177, 138, 0.3);
+}
+
+h2 {
+  text-align: center;
+  color: #6b4226;
+  margin-bottom: 25px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0 20px 0;
+  border: 2px solid #a3b18a;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #fffdfc;
+  color: #4e3b2b;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: #588157;
+  box-shadow: 0 0 0 3px rgba(88, 129, 87, 0.1);
+}
+
+.btn-login {
+  width: 100%;
+  background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(88, 129, 87, 0.3);
+}
+
+.btn-login:hover {
+  background: linear-gradient(135deg, #3a5a40 0%, #2d4732 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(88, 129, 87, 0.4);
+}
+
+.toggle-pass {
+  text-align: right;
+  font-size: 14px;
+  margin-top: -15px;
+  margin-bottom: 20px;
+  color: #6b584c;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.toggle-pass:hover {
+  color: #8b5a3c;
+  text-decoration: underline;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #842029;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+  border: 1px solid #f5c2c7;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 30px 20px;
+    margin: 0 15px;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}
