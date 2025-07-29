@@ -1,43 +1,52 @@
 <?php
 session_start();
 
+// Si no se esta logeado manda a inicio de sesión
 if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
+// Usamos un require con los datos para ingresar a la base de datos
 require_once __DIR__ . '/../../config/database.php';
 
+// Obtenemos el id del usuario, en caso de que sea null, mandar a login
 $userId = $_SESSION['user_id'] ?? null;
-
 if (!$userId) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Variables para la búsqueda
+// Declaraamos las variables para la búsqueda de usuarios
 $usuariosEncontrados = [];
 $error = null;
 $searchTerm = '';
 
 try {
+    // Establecemos la conexion a la base de datos
     $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
     
     if ($conn->connect_error) {
         throw new Exception("Conexión fallida: " . $conn->connect_error);
     }
 
-    // Procesar búsqueda de usuarios
+    // Procesamos la búsqueda de usuarios en caso de que se busque
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["buscador"])) {
         $searchTerm = trim($_POST["buscador"]);
         if (!empty($searchTerm)) {
+            //preparamos la busquedo con los % para que no marque error la consulta
             $parametroBusqueda = "%" . $searchTerm . "%";
             
+            // Buscamos id y userName de los usuarios que tengan un user parecido a lo que ingresamos
+            // pero que mo tenga nuestra misma id, para evitar chats a uno mismo y que marque error
             $stmt = $conn->prepare("SELECT idUsuario, userName FROM Usuarios WHERE userName LIKE ? AND idUsuario != ?");
+            
+            // Preparamos la consulta especifcando que vamos a meter un s -> String y un i -> int
             $stmt->bind_param("si", $parametroBusqueda, $userId);
             $stmt->execute();
             $result = $stmt->get_result();
 
+            // Verificamos si hay resultado, en caso de que haya, se despliega una lista
             if ($result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
                     $usuariosEncontrados[] = $row;
@@ -45,14 +54,22 @@ try {
             } else {
                 $error = "No se encontró ningún usuario con ese nombre";
             }
+
+            // cerramos conexión
             $stmt->close();
-        } else {
+        } else { // si no se ha mandado nada
             $error = "Ingresa un nombre para buscar";
         }
-    }
+    } // Fin buscar usuarios
 
-    // Obtener conversaciones existentes
+    // Declaramos la variable para almacenar las conversaciones existentes
     $conversaciones = [];
+
+    //preparamos la sentencia que mas o menos es:
+    /*
+        Seleccionando de nuestra tabla Conversaciones los id, userNames, contenido,
+        ultimo mensaje, fecga de envio hac
+    */
     $stmt = $conn->prepare("
         SELECT c.idConversacion, c.idUsuario1, c.idUsuario2, c.ultimoMensaje,
                u1.userName as userName1, u2.userName as userName2,
@@ -96,7 +113,7 @@ try {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chat | RELEE</title>
     <link rel="stylesheet" href="../../assets/css/chatUsuarios-styles.css">
 </head>

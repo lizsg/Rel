@@ -109,6 +109,24 @@ class ChatApp {
             this.chatSidebar.style.display = 'none';
             this.chatArea.style.display = 'flex';
             this.chatArea.style.height = 'calc(100vh - 70px)';
+            this.activeChat.style.display = 'flex';
+            this.chatPlaceholder.style.display = 'none';
+            
+            // IMPORTANTE: Asegurar que el input esté visible
+            const messageInputContainer = document.querySelector('.message-input-container');
+            if (messageInputContainer) {
+                messageInputContainer.style.display = 'flex';
+                messageInputContainer.style.position = 'relative';
+                messageInputContainer.style.bottom = '0';
+                messageInputContainer.style.width = '100%';
+            }
+            
+            // Hacer scroll al final de los mensajes
+            setTimeout(() => {
+                if (this.messagesContainer) {
+                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }
+            }, 100);
         }
     }
 
@@ -162,9 +180,25 @@ class ChatApp {
         this.chatPlaceholder.style.display = 'none';
         this.activeChat.style.display = 'flex';
         
-        // En móvil, ocultar sidebar cuando se abre chat
+        // En móvil, configurar layout específico
         if (this.isMobile) {
             this.showMobileChat();
+            
+            // Asegurar que el área de mensajes tenga el height correcto
+            setTimeout(() => {
+                const messagesContainer = this.messagesContainer;
+                const chatHeader = document.querySelector('.chat-header');
+                const messageInput = document.querySelector('.message-input-container');
+                
+                if (messagesContainer && chatHeader && messageInput) {
+                    const headerHeight = chatHeader.offsetHeight;
+                    const inputHeight = messageInput.offsetHeight;
+                    const availableHeight = window.innerHeight - 70 - headerHeight - inputHeight; // 70px del bottombar
+                    
+                    messagesContainer.style.height = availableHeight + 'px';
+                    messagesContainer.style.maxHeight = availableHeight + 'px';
+                }
+            }, 50);
         }
         
         // Marcar conversación como activa
@@ -384,6 +418,18 @@ class ChatApp {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    ensureInputVisible() {
+    if (this.isMobile && this.currentConversationId) {
+        const messageInputContainer = document.querySelector('.message-input-container');
+        if (messageInputContainer) {
+            messageInputContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'end' 
+            });
+        }
+    }
+}
 }
 
 // Inicializar la aplicación cuando el DOM esté listo
@@ -394,4 +440,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('currentUserId no está definido');
     }
+
+
 });
