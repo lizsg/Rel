@@ -8,13 +8,8 @@ if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
 
 require_once __DIR__ . '/../../config/database.php';
 
-// Manejar diferentes formatos de sesión de forma más robusta
-$userId = null;
-if (is_array($_SESSION['usuario'])) {
-    $userId = $_SESSION['usuario']['idUsuario'] ?? null;
-} else {
-    $userId = $_SESSION['usuario'];
-}
+// CORRECCIÓN: Usar user_id que es como se guarda en login.php
+$userId = $_SESSION['user_id'] ?? null;
 
 if (!$userId) {
     header("Location: ../auth/login.php");
@@ -39,13 +34,7 @@ try {
         if (!empty($searchTerm)) {
             $parametroBusqueda = "%" . $searchTerm . "%";
             
-            // Obtener el nombre de usuario actual para excluirlo
-            $stmtCurrentUser = $conn->prepare("SELECT userName FROM Usuarios WHERE idUsuario = ?");
-            $stmtCurrentUser->bind_param("i", $userId);
-            $stmtCurrentUser->execute();
-            $currentUserResult = $stmtCurrentUser->get_result();
-            $currentUserName = $currentUserResult->fetch_assoc()['userName'] ?? '';
-            
+            // CORRECCIÓN: Excluir al usuario actual de los resultados
             $stmt = $conn->prepare("SELECT idUsuario, userName FROM Usuarios WHERE userName LIKE ? AND idUsuario != ?");
             $stmt->bind_param("si", $parametroBusqueda, $userId);
             $stmt->execute();
@@ -112,6 +101,122 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chat | RELEE</title>
     <link rel="stylesheet" href="../../assets/css/chatUsuarios-styles.css">
+    <style>
+        /* Estilos adicionales para mejorar el chat */
+        .active-chat {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+        }
+
+        .chat-header {
+            flex-shrink: 0;
+            height: 70px;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            background: white;
+            z-index: 10;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            scroll-behavior: smooth;
+        }
+
+        .message-input-container {
+            flex-shrink: 0;
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            z-index: 10;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-placeholder {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+            animation: messageAppear 0.2s ease-out;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message.sent {
+            margin-left: auto;
+        }
+
+        .message.received {
+            margin-right: auto;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .no-messages {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .active-chat {
+                height: calc(100vh - 80px);
+            }
+            
+            .chat-area {
+                height: calc(100vh - 80px);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="chat-app">
@@ -375,6 +480,12 @@ try {
         }
 
         function startNewConversation(userId, userName) {
+            // CORRECCIÓN: Verificar que no sea el mismo usuario
+            if (userId == currentUserId) {
+                alert('No puedes iniciar una conversación contigo mismo');
+                return;
+            }
+
             // Crear o encontrar conversación
             fetch('../../api/create_conversation.php', {
                 method: 'POST',
@@ -447,16 +558,34 @@ try {
         }
 
         function displayMessages(messages) {
-            messagesContainer.innerHTML = '';
+            // Guardar posición de scroll para evitar parpadeo
+            const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+            
+            // Obtener mensajes existentes para comparar
+            const existingMessages = Array.from(messagesContainer.querySelectorAll('.message')).map(msg => 
+                msg.querySelector('.message-content').textContent.trim()
+            );
             
             if (messages.length === 0) {
-                messagesContainer.innerHTML = '<div class="no-messages">No hay mensajes aún. ¡Envía el primero!</div>';
+                if (messagesContainer.innerHTML.indexOf('no-messages') === -1) {
+                    messagesContainer.innerHTML = '<div class="no-messages">No hay mensajes aún. ¡Envía el primero!</div>';
+                }
                 return;
             }
             
-            messages.forEach(message => {
+            // Solo actualizar si hay cambios
+            const newMessageContents = messages.map(msg => msg.contenido.trim());
+            const hasChanges = JSON.stringify(existingMessages) !== JSON.stringify(newMessageContents);
+            
+            if (!hasChanges) return;
+            
+            // Limpiar solo si hay cambios reales
+            messagesContainer.innerHTML = '';
+            
+            messages.forEach((message, index) => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${message.idRemitente == currentUserId ? 'sent' : 'received'}`;
+                messageDiv.setAttribute('data-message-id', message.idMensaje);
                 
                 messageDiv.innerHTML = `
                     <div class="message-content">
@@ -470,7 +599,12 @@ try {
                 messagesContainer.appendChild(messageDiv);
             });
             
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Solo hacer scroll si estaba al final o es un mensaje nuevo
+            if (wasAtBottom || newMessageContents.length > existingMessages.length) {
+                setTimeout(() => {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 50);
+            }
         }
 
         function sendMessage() {
@@ -479,7 +613,23 @@ try {
             const content = messageText.value.trim();
             if (!content) return;
             
+            // Deshabilitar botón y cambiar texto
             sendButton.disabled = true;
+            const originalSendButton = sendButton.innerHTML;
+            sendButton.innerHTML = '<div style="width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
+            
+            // Agregar mensaje temporalmente para feedback inmediato
+            const tempMessage = document.createElement('div');
+            tempMessage.className = 'message sent';
+            tempMessage.style.opacity = '0.7';
+            tempMessage.innerHTML = `
+                <div class="message-content">
+                    ${escapeHtml(content)}
+                </div>
+                <div class="message-time">Enviando...</div>
+            `;
+            messagesContainer.appendChild(tempMessage);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             fetch('../../api/send_message.php', {
                 method: 'POST',
@@ -490,20 +640,27 @@ try {
             })
             .then(response => response.json())
             .then(data => {
+                // Remover mensaje temporal
+                tempMessage.remove();
+                
                 if (data.success) {
                     messageText.value = '';
                     messageText.style.height = 'auto';
+                    // Cargar mensajes inmediatamente
                     loadMessages();
                 } else {
                     alert('Error al enviar mensaje: ' + data.message);
                 }
             })
             .catch(error => {
+                // Remover mensaje temporal en caso de error
+                tempMessage.remove();
                 console.error('Error:', error);
                 alert('Error de conexión');
             })
             .finally(() => {
                 sendButton.disabled = false;
+                sendButton.innerHTML = originalSendButton;
             });
         }
 

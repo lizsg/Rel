@@ -15,13 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 
 try {
-    // Obtener ID del usuario actual de forma robusta
-    $userId = null;
-    if (is_array($_SESSION['usuario'])) {
-        $userId = $_SESSION['usuario']['idUsuario'] ?? null;
-    } else {
-        $userId = $_SESSION['usuario'];
-    }
+    // CORRECCIÓN: Usar user_id que es como se guarda en login.php
+    $userId = $_SESSION['user_id'] ?? null;
 
     if (!$userId) {
         throw new Exception('Usuario no válido en sesión');
@@ -33,6 +28,7 @@ try {
         throw new Exception('ID de usuario inválido');
     }
 
+    // CORRECCIÓN: Verificar que no sea el mismo usuario
     if ($userId == $otherUserId) {
         throw new Exception('No puedes crear una conversación contigo mismo');
     }

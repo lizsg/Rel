@@ -62,50 +62,116 @@
     <button class="user-button">Búsqueda Avanzada</button>
   </header>
 
-  <div class="new-button-wrapper">
-  <a href="NuevaPublicacion.php" class="bottom-button agregar-publicacion" title="Agregar Publicación">
-    <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
-      <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
-    </svg>
-    <span>Nuevo</span>
-  </a>
-</div>
-<style>
-.new-button-container {
-  display: flex;
-  justify-content: flex-end;
-  padding: 25px 40px 0 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+  <div class="new-button-container">
+        <a href="NuevaPublicacion.php" class="new-button" title="Agregar Publicación">
+            <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+            </svg>
+            <span>Nueva Publicación</span>
+        </a>
+    </div>
 
-.new-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
-  color: white;
-  padding: 12px 18px;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 4px 15px rgba(88, 129, 87, 0.3);
-  transition: all 0.3s ease;
-}
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
+            margin: 0;
+            padding: 40px 0;
+        }
 
-.new-button svg {
-  fill: white;
-}
+        .new-button-container {
+            display: flex;
+            justify-content: center; /* Centrado horizontal */
+            align-items: center;
+            padding: 25px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-.new-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(58, 90, 64, 0.4);
-  background: linear-gradient(135deg, #3a5a40 0%, #2d4732 100%);
-}
+        .new-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* Más espacio entre ícono y texto */
+            background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%); /* Colores café */
+            color: white;
+            padding: 16px 28px; /* Botón más grande */
+            border: none;
+            border-radius: 15px; /* Bordes más redondeados */
+            font-size: 16px; /* Texto más grande */
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(107, 66, 38, 0.3); /* Sombra café */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            min-width: 200px; /* Ancho mínimo para que se vea más grande */
+        }
 
-</style>
+        /* Efecto de brillo */
+        .new-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .new-button svg {
+            fill: white;
+            transition: transform 0.3s ease;
+        }
+
+        .new-button:hover {
+            transform: translateY(-3px); /* Más elevación */
+            box-shadow: 0 12px 35px rgba(107, 66, 38, 0.4); /* Sombra más pronunciada */
+            background: linear-gradient(135deg, #8b5a3c 0%, #6b4226 100%); /* Gradiente invertido */
+        }
+
+        .new-button:hover::before {
+            left: 100%;
+        }
+
+        .new-button:hover svg {
+            transform: rotate(90deg); /* Rotación del ícono + */
+        }
+
+        .new-button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(107, 66, 38, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .new-button-container {
+                padding: 20px;
+            }
+            
+            .new-button {
+                padding: 14px 24px;
+                font-size: 14px;
+                min-width: 180px;
+            }
+            
+            .new-button svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .new-button {
+                padding: 12px 20px;
+                font-size: 13px;
+                min-width: 160px;
+            }
+        }
+    </style>
 
 
   <main class="gallery">
