@@ -15,6 +15,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 
 try {
+    // Obtener ID del usuario actual de forma robusta
+    $userId = null;
+    if (is_array($_SESSION['usuario'])) {
+        $userId = $_SESSION['usuario']['idUsuario'] ?? null;
+    } else {
+        $userId = $_SESSION['usuario'];
+    }
+
+    if (!$userId) {
+        throw new Exception('Usuario no válido en sesión');
+    }
+
     $conversacionId = isset($_POST['conversacion_id']) ? intval($_POST['conversacion_id']) : 0;
     
     if ($conversacionId <= 0) {
@@ -28,7 +40,6 @@ try {
     }
     
     // Verificar que el usuario tiene acceso a esta conversación
-    $userId = $_SESSION['usuario']['idUsuario'];
     $stmt = $conn->prepare("SELECT * FROM Conversaciones 
                            WHERE idConversacion = ? 
                            AND (idUsuario1 = ? OR idUsuario2 = ?)");
@@ -54,7 +65,7 @@ try {
         $messages[] = $row;
     }
     
-    // Marcar mensajes como leídos
+    // Marcar mensajes como leídos (solo los que no son del usuario actual)
     $stmt = $conn->prepare("UPDATE Mensajes 
                            SET leido = 1 
                            WHERE idConversacion = ? 

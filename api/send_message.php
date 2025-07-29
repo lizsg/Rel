@@ -15,10 +15,27 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 
 try {
+    // Obtener ID del usuario actual de forma robusta
+    $userId = null;
+    if (is_array($_SESSION['usuario'])) {
+        $userId = $_SESSION['usuario']['idUsuario'] ?? null;
+    } else {
+        $userId = $_SESSION['usuario'];
+    }
+
+    if (!$userId) {
+        throw new Exception('Usuario no válido en sesión');
+    }
+
     $conversacionId = isset($_POST['conversacion_id']) ? intval($_POST['conversacion_id']) : 0;
+    $contenido = isset($_POST['contenido']) ? trim($_POST['contenido']) : '';
     
     if ($conversacionId <= 0) {
         throw new Exception('ID de conversación inválido');
+    }
+    
+    if (empty($contenido)) {
+        throw new Exception('El mensaje no puede estar vacío');
     }
     
     $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
@@ -28,7 +45,6 @@ try {
     }
     
     // Verificar que el usuario tiene acceso a esta conversación
-    $userId = $_SESSION['usuario']['idUsuario'];
     $stmt = $conn->prepare("SELECT * FROM Conversaciones 
                            WHERE idConversacion = ? 
                            AND (idUsuario1 = ? OR idUsuario2 = ?)");
@@ -40,34 +56,25 @@ try {
         throw new Exception('No tienes acceso a esta conversación');
     }
     
-    // Obtener mensajes
-    $stmt = $conn->prepare("SELECT idMensaje, idRemitente, contenido, fechaEnvio, leido 
-                           FROM Mensajes 
-                           WHERE idConversacion = ? 
-                           ORDER BY fechaEnvio ASC");
-    $stmt->bind_param("i", $conversacionId);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Insertar el mensaje
+    $stmt = $conn->prepare("INSERT INTO Mensajes (idConversacion, idRemitente, contenido, fechaEnvio, leido) 
+                           VALUES (?, ?, ?, NOW(), 0)");
+    $stmt->bind_param("iis", $conversacionId, $userId, $contenido);
     
-    $messages = [];
-    while ($row = $result->fetch_assoc()) {
-        $messages[] = $row;
+    if (!$stmt->execute()) {
+        throw new Exception('Error al enviar mensaje: ' . $stmt->error);
     }
     
-    // Marcar mensajes como leídos
-    $stmt = $conn->prepare("UPDATE Mensajes 
-                           SET leido = 1 
-                           WHERE idConversacion = ? 
-                           AND idRemitente != ? 
-                           AND leido = 0");
-    $stmt->bind_param("ii", $conversacionId, $userId);
+    // Actualizar el último mensaje de la conversación
+    $stmt = $conn->prepare("UPDATE Conversaciones SET ultimoMensaje = NOW() WHERE idConversacion = ?");
+    $stmt->bind_param("i", $conversacionId);
     $stmt->execute();
     
     $conn->close();
     
     echo json_encode([
         'success' => true,
-        'messages' => $messages
+        'message' => 'Mensaje enviado exitosamente'
     ]);
     
 } catch (Exception $e) {
