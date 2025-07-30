@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 
 try {
-    // CORRECCIÓN: Usar user_id que es como se guarda en login.php
     $userId = $_SESSION['user_id'] ?? null;
 
     if (!$userId) {
@@ -28,7 +27,6 @@ try {
         throw new Exception('ID de usuario inválido');
     }
 
-    // CORRECCIÓN: Verificar que no sea el mismo usuario
     if ($userId == $otherUserId) {
         throw new Exception('No puedes crear una conversación contigo mismo');
     }
@@ -39,7 +37,6 @@ try {
         throw new Exception("Conexión fallida: " . $conn->connect_error);
     }
     
-    // Verificar que el otro usuario existe
     $stmt = $conn->prepare("SELECT idUsuario FROM Usuarios WHERE idUsuario = ?");
     $stmt->bind_param("i", $otherUserId);
     $stmt->execute();
@@ -49,7 +46,6 @@ try {
         throw new Exception('El usuario no existe');
     }
     
-    // Verificar si ya existe una conversación entre estos usuarios
     $stmt = $conn->prepare("SELECT idConversacion FROM Conversaciones 
                            WHERE (idUsuario1 = ? AND idUsuario2 = ?) 
                            OR (idUsuario1 = ? AND idUsuario2 = ?)");
@@ -58,7 +54,6 @@ try {
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        // La conversación ya existe
         $conversacion = $result->fetch_assoc();
         echo json_encode([
             'success' => true,
@@ -66,7 +61,6 @@ try {
             'message' => 'Conversación encontrada'
         ]);
     } else {
-        // Crear nueva conversación
         $stmt = $conn->prepare("INSERT INTO Conversaciones (idUsuario1, idUsuario2, fechaCreacion, ultimoMensaje) 
                                VALUES (?, ?, NOW(), NOW())");
         $stmt->bind_param("ii", $userId, $otherUserId);

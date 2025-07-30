@@ -92,10 +92,24 @@ function hideTypingIndicator() {
 function getBotResponse(message) {
   const lowerMessage = message.toLowerCase();
 
-  if (lowerMessage.includes('hola') || lowerMessage.includes('holi') || lowerMessage.includes('buenos') || lowerMessage.includes('saludos')) {
+  if (lowerMessage.includes('hola') || lowerMessage.includes('holi') || lowerMessage.includes('buenos') || lowerMessage.includes('saludos') || lowerMessage.includes('ola')) {
     return '¡Hola! ¿En qué puedo ayudarte con RELEE hoy? Puedo ayudarte a encontrar libros, explicar cómo funciona la plataforma o resolver dudas.';
   }
-  
+
+  if (lowerMessage.includes('editorial')) {
+    return 'Si no sabes cual es la editorial de tu libro 👀🔎✨:' + '\n' +
+    '📚 Revisa la portada o contraportada, suele aparecer el nombre o logo de la editorial.'  + '\n' +
+    '📚 Busca al inicio o al final del libro la página de créditos una frase como "Publicado por [Nombre de la Editorial]"© [Año] [Nombre de la Editorial]"'  + '\n' +
+    '📚 Busca por el codigo de barras en linea';
+  }
+
+  if (lowerMessage.includes('edicion') || lowerMessage.includes('edición')) {
+    return 'Si no sabes cual es la edición del libro 👀🔎✨:' + '\n' +
+    '📚 Revisa en la página de créditos al inicio o al final frases como: "Primera edición", "Segunda edición", "Edición revisada", "Edición especial". También aparece el año de la edición (ej: "© 2020, 2ª edición")'  + '\n' +
+    '📚 Algunos libros incluyen la edición en pequeño (ej: "3rd Edition").'  + '\n' +
+    '📚 Las ediciones distintas tienen ISBN diferentes.';
+  }
+
   if (lowerMessage.includes('subir') || lowerMessage.includes('publicar') || lowerMessage.includes('agregar')) {
     return 'Para subir un libro, ve a "Mis Publicaciones" en la barra inferior y selecciona "Agregar nueva publicación". Asegúrate de tener los derechos necesarios antes de publicar.';
   }

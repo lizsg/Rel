@@ -1,56 +1,64 @@
 <?php
-session_start();
+    session_start();
 
-if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
-    header("Location: ../auth/login.php");
-    exit();
-}
+    if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
+        header("Location: ../auth/login.php");
+        exit();
+    }
+    // Lógica de procesamiento del formulario
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $titulo = $_POST['titulo'] ?? '';
+        $autor = $_POST['autor'] ?? '';
+        $descripcion = $_POST['descripcion'] ?? '';
+        $precio = $_POST['precio'] ?? '';
+        $etiquetas = $_POST['etiquetas'] ?? '';
+        $editorial = $_POST['editorial'] ?? '';
+        $edicion = $_POST['edicion'] ?? '';
+        $categoria = $_POST['categoria'] ?? '';
+        $tipoPublico = $_POST['tipoPublico'] ?? '';
+        $base = $_POST['base'] ?? '';
+        $altura = $_POST['altura'] ?? '';
+        $paginas = $_POST['paginas'] ?? '';
 
-// Lógica de procesamiento del formulario
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $titulo = $_POST['titulo'] ?? '';
-    $autor = $_POST['autor'] ?? '';
-    $descripcion = $_POST['descripcion'] ?? '';
-    $editorial = $_POST['editorial'] ?? '';
-    $edicion = $_POST['edicion'] ?? '';
-    $categoria = $_POST['categoria'] ?? '';
-    $tipoPublico = $_POST['tipoPublico'] ?? '';
-    $base = $_POST['base'] ?? '';
-    $altura = $_POST['altura'] ?? '';
-    $paginas = $_POST['paginas'] ?? '';
-    $fechaPublicacion = $_POST['fechaPublicacion'] ?? '';
-    $linkVideo = $_POST['linkVideo'] ?? '';
-    $linkImagen1 = $_POST['linkImagen1'] ?? '';
-    $linkImagen2 = $_POST['linkImagen2'] ?? '';
-    $linkImagen3 = $_POST['linkImagen3'] ?? '';
+        $linkVideo;
+        $linkImagen1;
+        $linkImagen2;
+        $linkImagen3;
 
-    // Manejo de subida de archivos
-    $uploadedImagePath1 = '';
-    if (isset($_FILES['uploadImagen1']) && $_FILES['uploadImagen1']['error'] == UPLOAD_ERR_OK) {
-        $uploadDir = '../../uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
+        // Manejo de subida de archivos
+        /*uploadedImagePath1 = '';
+        if (isset($_FILES['uploadImagen1']) && $_FILES['uploadImagen1']['error'] == UPLOAD_ERR_OK) {
+            $uploadDir = '../../uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $uploadedFile = $uploadDir . basename($_FILES['uploadImagen1']['name']);
+            if (move_uploaded_file($_FILES['uploadImagen1']['tmp_name'], $uploadedFile)) {
+                $uploadedImagePath1 = $uploadedFile;
+            }
+        }*/
+
+        // Validaciones
+        $errores = [];
+        if (empty($titulo)) {
+            $errores[] = "El título es obligatorio.";
         }
-        $uploadedFile = $uploadDir . basename($_FILES['uploadImagen1']['name']);
-        if (move_uploaded_file($_FILES['uploadImagen1']['tmp_name'], $uploadedFile)) {
-            $uploadedImagePath1 = $uploadedFile;
+        if (empty($autor)) {
+            $errores[] = "El autor es obligatorio.";
+        }
+        if (!empty($precio) && !is_numeric($precio)) {
+            $errores[] = "El precio debe ser un número válido.";
+        }
+        if(!empty($descripcion)){
+            $errores[] = "La descripcion es obligatoria";
+        }
+        
+
+        if (empty($errores)) {
+            // Lógica para guardar en la base de datos
+            // Aquí implementarías la conexión y inserción a BD
         }
     }
-
-    // Validaciones
-    $errores = [];
-    if (empty($titulo)) {
-        $errores[] = "El título es obligatorio.";
-    }
-    if (empty($autor)) {
-        $errores[] = "El autor es obligatorio.";
-    }
-    
-    if (empty($errores)) {
-        // Lógica para guardar en la base de datos
-        // Aquí implementarías la conexión y inserción a BD
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -74,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             min-height: 100vh;
         }
 
-        /* Contenedor principal del formulario */
         .add-publication-container {
             background: rgba(255, 253, 252, 0.9);
             backdrop-filter: blur(20px);
@@ -300,8 +307,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-
-    <!-- Barra superior  -->
     <div class="topbar">
         <div class="topbar-icon" title="Chat">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
@@ -335,7 +340,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php include '../../includes/chat-component.php'; ?>
 
-    <!-- Header original -->
     <header>
         <div class="logo">RELEE</div>
         <div class="search-bar">
@@ -362,6 +366,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
         
+
+        <!-- Formulario -->
         <form action="" method="POST" class="publication-form" enctype="multipart/form-data">
             
             <div class="form-group">
@@ -372,31 +378,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
                 <label for="autor">Autor:</label>
                 <input type="text" id="autor" name="autor" required value="<?php echo htmlspecialchars($_POST['autor'] ?? ''); ?>">
+                <small>Opcional</small>
             </div>
 
             <div class="form-group full-width">
                 <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="4"><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
+                <textarea id="descripcion" name="descripcion" rows="4" required><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
+                <label for="precio">Precio:</label>
+                <input type="number" id="precio" name="precio" step="0.01" min="0" required value="<?php echo htmlspecialchars($_POST['precio'] ?? ''); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="etiquetas">Etiquetas (separadas por comas):</label>
+                <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" required value="<?php echo htmlspecialchars($_POST['etiquetas'] ?? ''); ?>">
+            </div>
+            <div class="form-group">
                 <label for="editorial">Editorial:</label>
                 <input type="text" id="editorial" name="editorial" value="<?php echo htmlspecialchars($_POST['editorial'] ?? ''); ?>">
+                <small>Opcional</small>
             </div>
 
             <div class="form-group">
                 <label for="edicion">Edición:</label>
                 <input type="text" id="edicion" name="edicion" value="<?php echo htmlspecialchars($_POST['edicion'] ?? ''); ?>">
+                <small>Opcional</small>
             </div>
 
             <div class="form-group">
                 <label for="categoria">Categoría:</label>
-                <input type="text" id="categoria" name="categoria" value="<?php echo htmlspecialchars($_POST['categoria'] ?? ''); ?>">
+                <input type="text" id="categoria" name="categoria" required value="<?php echo htmlspecialchars($_POST['categoria'] ?? ''); ?>">
             </div>
 
             <div class="form-group">
                 <label for="tipoPublico">Tipo de Público:</label>
-                <select id="tipoPublico" name="tipoPublico">
+                <select id="tipoPublico" name="tipoPublico" required>
                     <option value="">Seleccione...</option>
                     <option value="General" <?php echo ($_POST['tipoPublico'] ?? '') === 'General' ? 'selected' : ''; ?>>General</option>
                     <option value="Infantil" <?php echo ($_POST['tipoPublico'] ?? '') === 'Infantil' ? 'selected' : ''; ?>>Infantil</option>
@@ -413,6 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="altura">Altura:</label>
                     <input type="number" id="altura" name="altura" step="0.1" min="0" value="<?php echo htmlspecialchars($_POST['altura'] ?? ''); ?>">
                 </div>
+                <small>Opcional</small>
             </div>
 
             <div class="form-group">
@@ -420,33 +439,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="number" id="paginas" name="paginas" min="1" value="<?php echo htmlspecialchars($_POST['paginas'] ?? ''); ?>">
             </div>
 
-            <div class="form-group">
-                <label for="fechaPublicacion">Fecha de Publicación:</label>
-                <input type="date" id="fechaPublicacion" name="fechaPublicacion" value="<?php echo htmlspecialchars($_POST['fechaPublicacion'] ?? ''); ?>">
+            <div class="form-group full-width">
+                <label for="linkVideo">Video del libro (Subir):</label>
+                <input type="file" id="uploadvideo" name="uploadvideo" accept="video/*" value="<?php echo htmlspecialchars($_POST['video'] ?? ''); ?>">
+                <small>Trata de subir un video donde se pueda ver claramente el estado del libro</small>
             </div>
 
             <div class="form-group full-width">
-                <label for="linkVideo">Enlace de Video (URL):</label>
-                <input type="url" id="linkVideo" name="linkVideo" placeholder="https://ejemplo.com/video" value="<?php echo htmlspecialchars($_POST['linkVideo'] ?? ''); ?>">
+                <label for="linkImagen1">Imagen de Portada (Subir):</label>
+                <input type="file" id="uploadImagen1" name="uploadImagen1" accept="image/*" value="<?php echo htmlspecialchars($_POST['imagen1'] ?? ''); ?>">
             </div>
 
             <div class="form-group full-width">
-                <label for="linkImagen1">Imagen de Portada (URL o Subir):</label>
-                <input type="url" id="linkImagen1" name="linkImagen1" placeholder="https://ejemplo.com/imagen.jpg" value="<?php echo htmlspecialchars($_POST['linkImagen1'] ?? ''); ?>">
-                <input type="file" id="uploadImagen1" name="uploadImagen1" accept="image/*">
-                <small>Puedes usar un enlace externo o subir una imagen desde tu dispositivo.</small>
+                <label for="linkImagen2">Imagen Adicional 1 (Subir):</label>
+                <input type="file" id="uploadImagen2" name="uploadImagen2" accept="image/*" value="<?php echo htmlspecialchars($_POST['imagen2'] ?? ''); ?>">
+                <small>Si no sabes que subir aquí, recomendamos una imagen de la contraportada</small>
             </div>
 
             <div class="form-group full-width">
-                <label for="linkImagen2">Imagen Adicional 1 (URL o Subir):</label>
-                <input type="url" id="linkImagen2" name="linkImagen2" placeholder="https://ejemplo.com/imagen2.jpg" value="<?php echo htmlspecialchars($_POST['linkImagen2'] ?? ''); ?>">
-                <input type="file" id="uploadImagen2" name="uploadImagen2" accept="image/*">
-            </div>
-
-            <div class="form-group full-width">
-                <label for="linkImagen3">Imagen Adicional 2 (URL o Subir):</label>
-                <input type="url" id="linkImagen3" name="linkImagen3" placeholder="https://ejemplo.com/imagen3.jpg" value="<?php echo htmlspecialchars($_POST['linkImagen3'] ?? ''); ?>">
-                <input type="file" id="uploadImagen3" name="uploadImagen3" accept="image/*">
+                <label for="linkImagen3">Imagen Adicional 2 (Subir):</label>
+                <input type="file" id="uploadImagen3" name="uploadImagen3" accept="image/*" value="<?php echo htmlspecialchars($_POST['imagen3'] ?? ''); ?>">
+                <small>Si no sabes que subir aquí, recomendamos una foto que muestre el estado del libro</small>
             </div>
 
             <div class="form-actions">
@@ -456,7 +469,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </main>
 
-    <!-- Barra inferior  -->
     <div class="bottombar">
         <a href="../home.php" class="bottom-button" title="Inicio">
             <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
@@ -478,30 +490,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
-        // Funciones para manejar los modales de chat
         function openChatModal() {
             console.log('Abriendo chat principal...');
-            // Aquí puedes implementar la lógica del chat
         }
 
         function openChatModal2() {
             console.log('Abriendo chat secundario...');
-            // Aquí puedes implementar la lógica del chat secundario
         }
 
-        // Validación del formulario en el cliente
         document.querySelector('.publication-form').addEventListener('submit', function(e) {
             const titulo = document.getElementById('titulo').value.trim();
             const autor = document.getElementById('autor').value.trim();
+            const precio = document.getElementById('precio').value.trim();
             
             if (!titulo || !autor) {
                 e.preventDefault();
-                alert('Por favor completa los campos obligatorios: Título y Autor');
+                alert('Por favor completa los campos obligatorios: Título y Autor.');
+                return false;
+            }
+
+            if (precio !== '' && isNaN(precio)) {
+                e.preventDefault();
+                alert('El precio debe ser un número válido.');
                 return false;
             }
         });
 
-        // Efecto visual para los inputs
         document.querySelectorAll('input, select, textarea').forEach(element => {
             element.addEventListener('focus', function() {
                 this.style.transform = 'translateY(-1px)';

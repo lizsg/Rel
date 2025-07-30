@@ -1,4 +1,3 @@
-// chatUsuarios-script.js
 class ChatApp {
     constructor(currentUserId) {
         this.currentUserId = currentUserId;
@@ -15,7 +14,6 @@ class ChatApp {
     }
 
     initializeElements() {
-        // Referencias a elementos DOM
         this.newChatBtn = document.getElementById('newChatBtn');
         this.searchSection = document.getElementById('searchSection');
         this.conversationsList = document.getElementById('conversationsList');
@@ -35,20 +33,17 @@ class ChatApp {
     }
 
     bindEvents() {
-        // Event listeners principales
         this.newChatBtn?.addEventListener('click', () => this.showSearch());
         this.startChatBtn?.addEventListener('click', () => this.showSearch());
         this.cancelSearch?.addEventListener('click', () => this.hideSearch());
         this.backButton?.addEventListener('click', () => this.closeChat());
         this.sendButton?.addEventListener('click', () => this.sendMessage());
 
-        // Auto-resize textarea
         this.messageText?.addEventListener('input', (e) => {
             e.target.style.height = 'auto';
             e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
         });
 
-        // Send message on Enter (not Shift+Enter)
         this.messageText?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -56,9 +51,7 @@ class ChatApp {
             }
         });
 
-        // Event delegation para conversaciones y resultados de búsqueda
         document.addEventListener('click', (e) => {
-            // Click en conversación existente
             if (e.target.closest('.conversation-item')) {
                 const item = e.target.closest('.conversation-item');
                 const conversationId = item.dataset.conversationId;
@@ -67,7 +60,6 @@ class ChatApp {
                 this.openConversation(conversationId, otherUserId, otherUserName);
             }
 
-            // Click en resultado de búsqueda
             if (e.target.closest('.user-result')) {
                 const item = e.target.closest('.user-result');
                 const userId = item.dataset.userid;
@@ -76,10 +68,8 @@ class ChatApp {
             }
         });
 
-        // Resize handler
         window.addEventListener('resize', () => this.handleResize());
         
-        // Cleanup al salir
         window.addEventListener('beforeunload', () => {
             if (this.messageInterval) {
                 clearInterval(this.messageInterval);
@@ -91,13 +81,10 @@ class ChatApp {
         const wasMobile = this.isMobile;
         this.isMobile = window.innerWidth <= 768;
         
-        // Si cambió de desktop a mobile o viceversa
         if (wasMobile !== this.isMobile) {
             if (this.isMobile && this.currentConversationId) {
-                // En móvil, si hay chat activo, ocultar sidebar
                 this.showMobileChat();
             } else if (!this.isMobile) {
-                // En desktop, mostrar ambos
                 this.showDesktopLayout();
             }
         }
@@ -112,7 +99,6 @@ class ChatApp {
             this.activeChat.style.display = 'flex';
             this.chatPlaceholder.style.display = 'none';
             
-            // IMPORTANTE: Asegurar que el input esté visible
             const messageInputContainer = document.querySelector('.message-input-container');
             if (messageInputContainer) {
                 messageInputContainer.style.display = 'flex';
@@ -121,7 +107,6 @@ class ChatApp {
                 messageInputContainer.style.width = '100%';
             }
             
-            // Hacer scroll al final de los mensajes
             setTimeout(() => {
                 if (this.messagesContainer) {
                     this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
@@ -159,9 +144,7 @@ class ChatApp {
     hideSearch() {
         this.searchSection.style.display = 'none';
         this.conversationsList.style.display = 'block';
-        // Limpiar formulario de búsqueda
         document.getElementById('searchForm')?.reset();
-        // Recargar la página para limpiar resultados
         if (window.location.search) {
             window.location.href = window.location.pathname;
         }
@@ -172,19 +155,15 @@ class ChatApp {
         this.currentOtherUserId = otherUserId;
         this.currentOtherUserName = otherUserName;
 
-        // Actualizar UI
         this.chatUserName.textContent = otherUserName;
         this.chatUserAvatar.textContent = otherUserName.charAt(0).toUpperCase();
         
-        // Mostrar chat
         this.chatPlaceholder.style.display = 'none';
         this.activeChat.style.display = 'flex';
         
-        // En móvil, configurar layout específico
         if (this.isMobile) {
             this.showMobileChat();
             
-            // Asegurar que el área de mensajes tenga el height correcto
             setTimeout(() => {
                 const messagesContainer = this.messagesContainer;
                 const chatHeader = document.querySelector('.chat-header');
@@ -201,28 +180,23 @@ class ChatApp {
             }, 50);
         }
         
-        // Marcar conversación como activa
         document.querySelectorAll('.conversation-item').forEach(item => {
             item.classList.remove('active');
         });
         document.querySelector(`[data-conversation-id="${conversationId}"]`)?.classList.add('active');
 
-        // Cargar mensajes
         this.loadMessages();
         
-        // Configurar polling cada 3 segundos
         if (this.messageInterval) clearInterval(this.messageInterval);
         this.messageInterval = setInterval(() => this.loadMessages(), 3000);
     }
 
     startNewConversation(userId, userName) {
-        // Verificar que no sea el mismo usuario
         if (userId == this.currentUserId) {
             alert('No puedes iniciar una conversación contigo mismo');
             return;
         }
 
-        // Crear o encontrar conversación
         fetch('../../api/create_conversation.php', {
             method: 'POST',
             headers: {
@@ -235,7 +209,6 @@ class ChatApp {
             if (data.success) {
                 this.hideSearch();
                 this.openConversation(data.conversationId, userId, userName);
-                // Recargar la página para mostrar la nueva conversación en la lista
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
@@ -299,10 +272,8 @@ class ChatApp {
     }
 
     displayMessages(messages) {
-        // Guardar posición de scroll para evitar parpadeo
         const wasAtBottom = this.messagesContainer.scrollHeight - this.messagesContainer.scrollTop <= this.messagesContainer.clientHeight + 50;
         
-        // Obtener mensajes existentes para comparar
         const existingMessages = Array.from(this.messagesContainer.querySelectorAll('.message')).map(msg => 
             msg.querySelector('.message-content').textContent.trim()
         );
@@ -314,13 +285,11 @@ class ChatApp {
             return;
         }
         
-        // Solo actualizar si hay cambios
         const newMessageContents = messages.map(msg => msg.contenido.trim());
         const hasChanges = JSON.stringify(existingMessages) !== JSON.stringify(newMessageContents);
         
         if (!hasChanges) return;
         
-        // Limpiar solo si hay cambios reales
         this.messagesContainer.innerHTML = '';
         
         messages.forEach((message, index) => {
@@ -340,7 +309,6 @@ class ChatApp {
             this.messagesContainer.appendChild(messageDiv);
         });
         
-        // Solo hacer scroll si estaba al final o es un mensaje nuevo
         if (wasAtBottom || newMessageContents.length > existingMessages.length) {
             setTimeout(() => {
                 this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
@@ -354,12 +322,10 @@ class ChatApp {
         const content = this.messageText.value.trim();
         if (!content) return;
         
-        // Deshabilitar botón y cambiar texto
         this.sendButton.disabled = true;
         const originalSendButton = this.sendButton.innerHTML;
         this.sendButton.innerHTML = '<div style="width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
         
-        // Agregar mensaje temporalmente para feedback inmediato
         const tempMessage = document.createElement('div');
         tempMessage.className = 'message sent';
         tempMessage.style.opacity = '0.7';
@@ -381,20 +347,17 @@ class ChatApp {
         })
         .then(response => response.json())
         .then(data => {
-            // Remover mensaje temporal
             tempMessage.remove();
             
             if (data.success) {
                 this.messageText.value = '';
                 this.messageText.style.height = 'auto';
-                // Cargar mensajes inmediatamente
                 this.loadMessages();
             } else {
                 alert('Error al enviar mensaje: ' + data.message);
             }
         })
         .catch(error => {
-            // Remover mensaje temporal en caso de error
             tempMessage.remove();
             console.error('Error:', error);
             alert('Error de conexión');
@@ -432,9 +395,7 @@ class ChatApp {
 }
 }
 
-// Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    // Obtener el currentUserId desde PHP (debe estar disponible globalmente)
     if (typeof currentUserId !== 'undefined') {
         window.chatApp = new ChatApp(currentUserId);
     } else {

@@ -67,8 +67,24 @@ try {
 
     //preparamos la sentencia que mas o menos es:
     /*
-        Seleccionando de nuestra tabla Conversaciones los id, userNames, contenido,
-        ultimo mensaje, fecga de envio hac
+        Aqui seleccionamos informacion de de la tabla de Conversación con el
+        alias de c y datos relacionados de otras tablas.
+        El left Join con las tablas de usuarios con el alias de u1 se hace para
+        obtner el nombre del primer usuario en la conversación.
+        El otro left Join con alias u2 es para sacar el el segundo nombre del 
+        segundo usuario.
+
+        Y por ultimo el Left Join de mensajes une con la tabla de mensajes con el
+        alias m para obtener la información del ultimo mensaje, con la condición
+        de que el id de la conversacion de parte de mensaje sea el mismo que por
+        parte de las conversaciones, esto asegura que el mensaje si sea de la
+        conersacion, con select max sacamos el mesaje mas reciente y asi se unen
+        todos los mensajes de la conversacion.
+
+        Ahora esto se hara con el filtrado donde el id corresponda al usuario
+        ya sea como el primero o el segundo y finalmeente se ordenan por fecha
+        del ultimo mensqaje, si no hay mensajes por la fecha de cuando se creo la 
+        conversacon y con DESC tenemos los mas recientes primero.
     */
     $stmt = $conn->prepare("
         SELECT c.idConversacion, c.idUsuario1, c.idUsuario2, c.ultimoMensaje,
@@ -86,19 +102,25 @@ try {
         WHERE c.idUsuario1 = ? OR c.idUsuario2 = ?
         ORDER BY COALESCE(m.fechaEnvio, c.fechaCreacion) DESC
     ");
+
+    //Finalmente aqui ponemos los id del usuario, ejecutamos y tenemos resultados
     $stmt->bind_param("ii", $userId, $userId);
     $stmt->execute();
     $result = $stmt->get_result();
     
+    // Ahora, si hay un resultado con fetch_assoc recorremos cada uno de los registros
     while ($row = $result->fetch_assoc()) {
+        // Si el id del usuario es el mismo que el uno, entonces el otro usuario es el dos
         $otherUserName = ($row['idUsuario1'] == $userId) ? $row['userName2'] : $row['userName1'];
+        // Con la misma logica se saca el id del otro usuario
         $otherUserId = ($row['idUsuario1'] == $userId) ? $row['idUsuario2'] : $row['idUsuario1'];
         
+        // Guardamos las conversaciones en esta matriz que guarda todos los datos recabados
         $conversaciones[] = [
             'idConversacion' => $row['idConversacion'],
             'otherUserId' => $otherUserId,
             'otherUserName' => $otherUserName,
-            'ultimoMensaje' => $row['ultimoMensajeTexto'] ?? 'Nueva conversación',
+            'ultimoMensaje' => $row['ultimoMensajeTexto'] ?? 'Nueva conversación', // Si no hay mensaje manda 'nueva conversacion'
             'fechaUltimoMensaje' => $row['fechaUltimoMensaje'] ?? $row['ultimoMensaje']
         ];
     }
@@ -131,7 +153,7 @@ try {
                 </button>
             </div>
 
-            <!-- Buscador (inicialmente oculto) -->
+            <!-- Buscador (inicialmente oculto hasta que se da click) -->
             <div class="search-section" id="searchSection" style="display: none;">
                 <form method="POST" action="" id="searchForm">
                     <div class="search-bar">
@@ -216,7 +238,7 @@ try {
                 </div>
             </div>
 
-            <!-- Chat activo (inicialmente oculto) -->
+            <!-- Chat activo (inicialmente oculto hasta que se da click como el buscador) -->
             <div class="active-chat" id="activeChat" style="display: none;">
                 <div class="chat-header">
                     <button class="back-button" id="backButton">
@@ -251,7 +273,6 @@ try {
         </div>
     </div>
 
-    <!-- Bottom navigation -->
     <div class="bottombar">
         <a href="../home.php" class="bottom-button">
             <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
@@ -270,9 +291,8 @@ try {
         </button>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        // Pasar el userId de PHP a JavaScript
+        // Pasamos el user name al script
         const currentUserId = <?php echo json_encode($userId); ?>;
     </script>
     <script src="../../assets/js/chatUsuarios-script.js"></script>

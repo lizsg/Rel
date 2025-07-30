@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 
 try {
-    // CORRECCIÓN: Usar user_id que es como se guarda en login.php
     $userId = $_SESSION['user_id'] ?? null;
 
     if (!$userId) {
@@ -34,10 +33,8 @@ try {
         throw new Exception("Conexión fallida: " . $conn->connect_error);
     }
     
-    // Verificar que el usuario tiene acceso a esta conversación
-    $stmt = $conn->prepare("SELECT * FROM Conversaciones 
-                           WHERE idConversacion = ? 
-                           AND (idUsuario1 = ? OR idUsuario2 = ?)");
+    $stmt = $conn->prepare("SELECT * FROM Conversaciones WHERE idConversacion = ? 
+        AND (idUsuario1 = ? OR idUsuario2 = ?)");
     $stmt->bind_param("iii", $conversacionId, $userId, $userId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -46,11 +43,8 @@ try {
         throw new Exception('No tienes acceso a esta conversación');
     }
     
-    // Obtener mensajes
     $stmt = $conn->prepare("SELECT idMensaje, idRemitente, contenido, fechaEnvio, leido 
-                           FROM Mensajes 
-                           WHERE idConversacion = ? 
-                           ORDER BY fechaEnvio ASC");
+        FROM Mensajes WHERE idConversacion = ? ORDER BY fechaEnvio ASC");
     $stmt->bind_param("i", $conversacionId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -60,12 +54,7 @@ try {
         $messages[] = $row;
     }
     
-    // Marcar mensajes como leídos (solo los que no son del usuario actual)
-    $stmt = $conn->prepare("UPDATE Mensajes 
-                           SET leido = 1 
-                           WHERE idConversacion = ? 
-                           AND idRemitente != ? 
-                           AND leido = 0");
+    $stmt = $conn->prepare("UPDATE Mensajes SET leido = 1 WHERE idConversacion = ? AND idRemitente != ?  AND leido = 0");
     $stmt->bind_param("ii", $conversacionId, $userId);
     $stmt->execute();
     
