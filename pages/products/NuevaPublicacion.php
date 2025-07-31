@@ -5,59 +5,176 @@
         header("Location: ../auth/login.php");
         exit();
     }
-    // Lógica de procesamiento del formulario
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $titulo = $_POST['titulo'] ?? '';
-        $autor = $_POST['autor'] ?? '';
-        $descripcion = $_POST['descripcion'] ?? '';
-        $precio = $_POST['precio'] ?? '';
-        $etiquetas = $_POST['etiquetas'] ?? '';
-        $editorial = $_POST['editorial'] ?? '';
-        $edicion = $_POST['edicion'] ?? '';
-        $categoria = $_POST['categoria'] ?? '';
-        $tipoPublico = $_POST['tipoPublico'] ?? '';
-        $base = $_POST['base'] ?? '';
-        $altura = $_POST['altura'] ?? '';
-        $paginas = $_POST['paginas'] ?? '';
 
-        $linkVideo;
-        $linkImagen1;
-        $linkImagen2;
-        $linkImagen3;
+    require_once __DIR__ . '/../../config/database.php';
 
-        // Manejo de subida de archivos
-        /*uploadedImagePath1 = '';
-        if (isset($_FILES['uploadImagen1']) && $_FILES['uploadImagen1']['error'] == UPLOAD_ERR_OK) {
-            $uploadDir = '../../uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            $uploadedFile = $uploadDir . basename($_FILES['uploadImagen1']['name']);
-            if (move_uploaded_file($_FILES['uploadImagen1']['tmp_name'], $uploadedFile)) {
-                $uploadedImagePath1 = $uploadedFile;
-            }
-        }*/
+    $userId = $_SESSION['user_id'] ?? null;
 
-        // Validaciones
-        $errores = [];
-        if (empty($titulo)) {
-            $errores[] = "El título es obligatorio.";
-        }
-        if (empty($autor)) {
-            $errores[] = "El autor es obligatorio.";
-        }
-        if (!empty($precio) && !is_numeric($precio)) {
-            $errores[] = "El precio debe ser un número válido.";
-        }
-        if(!empty($descripcion)){
-            $errores[] = "La descripcion es obligatoria";
-        }
+    if (!$userId) {
+        header("Location: ../auth/login.php");
+        exit();
+    }
+
+    $carpetaUploads = __DIR__ . '../../uploads/';
+    $extencionesPermitidasIMG = ['jpg', 'jpeg', 'png'];
+    $extencionesPermitidasVID = ['gif', 'mp4', 'mov'];
+    $maxTamano = 10 * 1024 * 1024;
+
+    $videoSubido = null;
+    $imagen1Subida = null;
+    $imagen2Subida = null;
+    $imagen3Subida = null;
+
+    $errores = [];
+
+    try {
+        // Establecemos la conexion a la base de datos
+        $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
         
-
-        if (empty($errores)) {
-            // Lógica para guardar en la base de datos
-            // Aquí implementarías la conexión y inserción a BD
+        if ($conn->connect_error) {
+            throw new Exception("Conexión fallida: " . $conn->connect_error);
         }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $titulo = $_POST['titulo'] ?? '';
+            $autor = $_POST['autor'] ?? '';
+            $descripcion = $_POST['descripcion'] ?? '';
+            $precio = $_POST['precio'] ?? '';
+            $etiquetas = $_POST['etiquetas'] ?? '';
+            $editorial = $_POST['editorial'] ?? '';
+            $edicion = $_POST['edicion'] ?? '';
+            $categoria = $_POST['categoria'] ?? '';
+            $tipoPublico = $_POST['tipoPublico'] ?? '';
+            $base = $_POST['base'] ?? '';
+            $altura = $_POST['altura'] ?? '';
+            $paginas = $_POST['paginas'] ?? '';
+
+            $errores = [];
+            if (empty($titulo)) {
+                $errores[] = "El título es obligatorio.";
+            }
+            if (empty($autor)) {
+                $errores[] = "El autor es obligatorio.";
+            }
+            if (!empty($precio) && !is_numeric($precio)) {
+                $errores[] = "El precio debe ser un número válido.";
+            }
+            if(!empty($descripcion)){
+                $errores[] = "La descripcion es obligatoria";
+            }
+            if (!empty($_FILES['uploadvideo']['name'])) {
+            $videoSubido = procesarVideo('uploadvideo', $extensionesPermitidasVID, $carpetaUploads, $maxTamano);
+            }
+            if (empty($_FILES['uploadImagen1']['name'])) {
+                $errores[] = "La imagen de portada es obligatoria.";
+            } else {
+                $imagen1Subida = procesarImagen('uploadImagen1', $extensionesPermitidasIMG, $carpetaUploads, $maxTamano);
+            }
+            if (!empty($_FILES['uploadImagen2']['name'])) {
+                $imagen2Subida = procesarImagen('uploadImagen2', $extensionesPermitidasIMG, $carpetaUploads, $maxTamano);
+            }
+            if (!empty($_FILES['uploadImagen3']['name'])) {
+                $imagen3Subida = procesarImagen('uploadImagen3', $extensionesPermitidasIMG, $carpetaUploads, $maxTamano);
+            }
+
+            function procesarVideo($nombreInput, $extensionesPermitidas, $carpetaDestino, $tamanoMaximo) {
+                if (isset($_FILES[$nombreInput]) && $_FILES[$nombreInput]['error'] === UPLOAD_ERR_OK) {
+                    $archivo = $_FILES[$nombreInput];
+                    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+
+                    if (!in_array($extension, $extensionesPermitidas)) {
+                        die("Error: Solo se permiten videos en formato MP4 o MOV.");
+                    }
+
+                    if ($archivo['size'] > $tamanoMaximo) {
+                        die("Error: El video no puede superar los 10MB.");
+                    }
+
+                    $nuevoNombre = sprintf(
+                        '%d_%d_%s.%s',
+                        $userId,
+                        time(),
+                        bin2hex(random_bytes(4)),
+                        $extension
+                    );
+                    $rutaFinal = $carpetaDestino . $nuevoNombre;
+
+                    if (move_uploaded_file($archivo['tmp_name'], $rutaFinal)) {
+                        return $nuevoNombre;
+                    } else {
+                        die("Error al subir el video.");
+                    }
+                }
+                return null;
+            }
+
+            function procesarImagen($nombreInput, $extensionesPermitidas, $carpetaDestino, $tamanoMaximo) {
+                if (isset($_FILES[$nombreInput]) && $_FILES[$nombreInput]['error'] === UPLOAD_ERR_OK) {
+                    $archivo = $_FILES[$nombreInput];
+                    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+
+                    if (!in_array($extension, $extensionesPermitidas)) {
+                        die("Error: Solo se permiten imágenes JPG, JPEG o PNG.");
+                    }
+
+                    if ($archivo['size'] > $tamanoMaximo) {
+                        die("Error: La imagen no puede superar los 10MB.");
+                    }
+
+                    $nuevoNombre = sprintf(
+                        '%d_%d_%s.%s',
+                        $userId,
+                        time(),
+                        bin2hex(random_bytes(4)),
+                        $extension
+                    );
+                    $rutaFinal = $carpetaDestino . $nuevoNombre;
+
+                    if (move_uploaded_file($archivo['tmp_name'], $rutaFinal)) {
+                        return $nuevoNombre;
+                    } else {
+                        die("Error al subir la imagen.");
+                    }
+                }
+                return null;
+            }
+            
+            if (empty($errores)) {
+                $insertPublicaciones = $conn->prepare("INSERT INTO Publicaciones (titulo, 
+                    autor, descripcion, editorial, edicion, categoria, tipoPublico, base,
+                    altura, paginas, linkVideo, linkImagen1, linkImagen2, linlImagen3) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+                // Preparamos la consulta especifcando que vamos a meter un s -> String y un i -> int
+                $insertPublicaciones->bind_param("sssssssffissss", 
+                    $titulo,
+                    $autor,
+                    $descripcion,
+                    $editorial,
+                    $categoria,
+                    $tipoPublico,
+                    $base,
+                    $altura,
+                    $paginas,
+                    $videoSubido,
+                    $imagen1Subida,
+                    $imagen2Subida,
+                    $imagen3Subida
+                );
+
+                $insertPublicaciones->execute();
+                $result = $insertPublicaciones->get_result();
+
+                // Verificamos si hay resultado, en caso de que haya, se despliega una lista
+                if ($result->num_rows > 0) {
+                    
+                } else {
+                    $error = "No se encontró ningún usuario con ese nombre";
+                }
+            }
+        }
+    } catch (Exception $e) {
+        $error = "Error: " . $e->getMessage();
     }
 ?>
 
