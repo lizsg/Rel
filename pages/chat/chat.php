@@ -1,134 +1,134 @@
 <?php
-session_start();
+    session_start();
 
-// Si no se esta logeado manda a inicio de sesión
-if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
-    header("Location: ../auth/login.php");
-    exit();
-}
-
-// Usamos un require con los datos para ingresar a la base de datos
-require_once __DIR__ . '/../../config/database.php';
-
-// Obtenemos el id del usuario, en caso de que sea null, mandar a login
-$userId = $_SESSION['user_id'] ?? null;
-if (!$userId) {
-    header("Location: ../auth/login.php");
-    exit();
-}
-
-// Declaraamos las variables para la búsqueda de usuarios
-$usuariosEncontrados = [];
-$error = null;
-$searchTerm = '';
-
-try {
-    // Establecemos la conexion a la base de datos
-    $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
-    
-    if ($conn->connect_error) {
-        throw new Exception("Conexión fallida: " . $conn->connect_error);
+    // Si no se esta logeado manda a inicio de sesión
+    if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
+        header("Location: ../auth/login.php");
+        exit();
     }
 
-    // Procesamos la búsqueda de usuarios en caso de que se busque
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["buscador"])) {
-        $searchTerm = trim($_POST["buscador"]);
-        if (!empty($searchTerm)) {
-            //preparamos la busquedo con los % para que no marque error la consulta
-            $parametroBusqueda = "%" . $searchTerm . "%";
-            
-            // Buscamos id y userName de los usuarios que tengan un user parecido a lo que ingresamos
-            // pero que mo tenga nuestra misma id, para evitar chats a uno mismo y que marque error
-            $stmt = $conn->prepare("SELECT idUsuario, userName FROM Usuarios WHERE userName LIKE ? AND idUsuario != ?");
-            
-            // Preparamos la consulta especifcando que vamos a meter un s -> String y un i -> int
-            $stmt->bind_param("si", $parametroBusqueda, $userId);
-            $stmt->execute();
-            $result = $stmt->get_result();
+    // Usamos un require con los datos para ingresar a la base de datos
+    require_once __DIR__ . '/../../config/database.php';
 
-            // Verificamos si hay resultado, en caso de que haya, se despliega una lista
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $usuariosEncontrados[] = $row;
-                }
-            } else {
-                $error = "No se encontró ningún usuario con ese nombre";
-            }
+    // Obtenemos el id del usuario, en caso de que sea null, mandar a login
+    $userId = $_SESSION['user_id'] ?? null;
+    if (!$userId) {
+        header("Location: ../auth/login.php");
+        exit();
+    }
 
-            // cerramos conexión
-            $stmt->close();
-        } else { // si no se ha mandado nada
-            $error = "Ingresa un nombre para buscar";
-        }
-    } // Fin buscar usuarios
+    // Declaraamos las variables para la búsqueda de usuarios
+    $usuariosEncontrados = [];
+    $error = null;
+    $searchTerm = '';
 
-    // Declaramos la variable para almacenar las conversaciones existentes
-    $conversaciones = [];
-
-    //preparamos la sentencia que mas o menos es:
-    /*
-        Aqui seleccionamos informacion de de la tabla de Conversación con el
-        alias de c y datos relacionados de otras tablas.
-        El left Join con las tablas de usuarios con el alias de u1 se hace para
-        obtner el nombre del primer usuario en la conversación.
-        El otro left Join con alias u2 es para sacar el el segundo nombre del 
-        segundo usuario.
-
-        Y por ultimo el Left Join de mensajes une con la tabla de mensajes con el
-        alias m para obtener la información del ultimo mensaje, con la condición
-        de que el id de la conversacion de parte de mensaje sea el mismo que por
-        parte de las conversaciones, esto asegura que el mensaje si sea de la
-        conersacion, con select max sacamos el mesaje mas reciente y asi se unen
-        todos los mensajes de la conversacion.
-
-        Ahora esto se hara con el filtrado donde el id corresponda al usuario
-        ya sea como el primero o el segundo y finalmeente se ordenan por fecha
-        del ultimo mensqaje, si no hay mensajes por la fecha de cuando se creo la 
-        conversacon y con DESC tenemos los mas recientes primero.
-    */
-    $stmt = $conn->prepare("
-        SELECT c.idConversacion, c.idUsuario1, c.idUsuario2, c.ultimoMensaje,
-               u1.userName as userName1, u2.userName as userName2,
-               m.contenido as ultimoMensajeTexto, m.fechaEnvio as fechaUltimoMensaje
-        FROM Conversaciones c
-        LEFT JOIN Usuarios u1 ON c.idUsuario1 = u1.idUsuario
-        LEFT JOIN Usuarios u2 ON c.idUsuario2 = u2.idUsuario
-        LEFT JOIN Mensajes m ON m.idConversacion = c.idConversacion 
-            AND m.fechaEnvio = (
-                SELECT MAX(fechaEnvio) 
-                FROM Mensajes 
-                WHERE idConversacion = c.idConversacion
-            )
-        WHERE c.idUsuario1 = ? OR c.idUsuario2 = ?
-        ORDER BY COALESCE(m.fechaEnvio, c.fechaCreacion) DESC
-    ");
-
-    //Finalmente aqui ponemos los id del usuario, ejecutamos y tenemos resultados
-    $stmt->bind_param("ii", $userId, $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    // Ahora, si hay un resultado con fetch_assoc recorremos cada uno de los registros
-    while ($row = $result->fetch_assoc()) {
-        // Si el id del usuario es el mismo que el uno, entonces el otro usuario es el dos
-        $otherUserName = ($row['idUsuario1'] == $userId) ? $row['userName2'] : $row['userName1'];
-        // Con la misma logica se saca el id del otro usuario
-        $otherUserId = ($row['idUsuario1'] == $userId) ? $row['idUsuario2'] : $row['idUsuario1'];
+    try {
+        // Establecemos la conexion a la base de datos
+        $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
         
-        // Guardamos las conversaciones en esta matriz que guarda todos los datos recabados
-        $conversaciones[] = [
-            'idConversacion' => $row['idConversacion'],
-            'otherUserId' => $otherUserId,
-            'otherUserName' => $otherUserName,
-            'ultimoMensaje' => $row['ultimoMensajeTexto'] ?? 'Nueva conversación', // Si no hay mensaje manda 'nueva conversacion'
-            'fechaUltimoMensaje' => $row['fechaUltimoMensaje'] ?? $row['ultimoMensaje']
-        ];
+        if ($conn->connect_error) {
+            throw new Exception("Conexión fallida: " . $conn->connect_error);
+        }
+
+        // Procesamos la búsqueda de usuarios en caso de que se busque
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["buscador"])) {
+            $searchTerm = trim($_POST["buscador"]);
+            if (!empty($searchTerm)) {
+                //preparamos la busquedo con los % para que no marque error la consulta
+                $parametroBusqueda = "%" . $searchTerm . "%";
+                
+                // Buscamos id y userName de los usuarios que tengan un user parecido a lo que ingresamos
+                // pero que mo tenga nuestra misma id, para evitar chats a uno mismo y que marque error
+                $stmt = $conn->prepare("SELECT idUsuario, userName FROM Usuarios WHERE userName LIKE ? AND idUsuario != ?");
+                
+                // Preparamos la consulta especifcando que vamos a meter un s -> String y un i -> int
+                $stmt->bind_param("si", $parametroBusqueda, $userId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                // Verificamos si hay resultado, en caso de que haya, se despliega una lista
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $usuariosEncontrados[] = $row;
+                    }
+                } else {
+                    $error = "No se encontró ningún usuario con ese nombre";
+                }
+
+                // cerramos conexión
+                $stmt->close();
+            } else { // si no se ha mandado nada
+                $error = "Ingresa un nombre para buscar";
+            }
+        } // Fin buscar usuarios
+
+        // Declaramos la variable para almacenar las conversaciones existentes
+        $conversaciones = [];
+
+        //preparamos la sentencia que mas o menos es:
+        /*
+            Aqui seleccionamos informacion de de la tabla de Conversación con el
+            alias de c y datos relacionados de otras tablas.
+            El left Join con las tablas de usuarios con el alias de u1 se hace para
+            obtner el nombre del primer usuario en la conversación.
+            El otro left Join con alias u2 es para sacar el el segundo nombre del 
+            segundo usuario.
+
+            Y por ultimo el Left Join de mensajes une con la tabla de mensajes con el
+            alias m para obtener la información del ultimo mensaje, con la condición
+            de que el id de la conversacion de parte de mensaje sea el mismo que por
+            parte de las conversaciones, esto asegura que el mensaje si sea de la
+            conersacion, con select max sacamos el mesaje mas reciente y asi se unen
+            todos los mensajes de la conversacion.
+
+            Ahora esto se hara con el filtrado donde el id corresponda al usuario
+            ya sea como el primero o el segundo y finalmeente se ordenan por fecha
+            del ultimo mensqaje, si no hay mensajes por la fecha de cuando se creo la 
+            conversacon y con DESC tenemos los mas recientes primero.
+        */
+        $stmt = $conn->prepare("
+            SELECT c.idConversacion, c.idUsuario1, c.idUsuario2, c.ultimoMensaje,
+                u1.userName as userName1, u2.userName as userName2,
+                m.contenido as ultimoMensajeTexto, m.fechaEnvio as fechaUltimoMensaje
+            FROM Conversaciones c
+            LEFT JOIN Usuarios u1 ON c.idUsuario1 = u1.idUsuario
+            LEFT JOIN Usuarios u2 ON c.idUsuario2 = u2.idUsuario
+            LEFT JOIN Mensajes m ON m.idConversacion = c.idConversacion 
+                AND m.fechaEnvio = (
+                    SELECT MAX(fechaEnvio) 
+                    FROM Mensajes 
+                    WHERE idConversacion = c.idConversacion
+                )
+            WHERE c.idUsuario1 = ? OR c.idUsuario2 = ?
+            ORDER BY COALESCE(m.fechaEnvio, c.fechaCreacion) DESC
+        ");
+
+        //Finalmente aqui ponemos los id del usuario, ejecutamos y tenemos resultados
+        $stmt->bind_param("ii", $userId, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        // Ahora, si hay un resultado con fetch_assoc recorremos cada uno de los registros
+        while ($row = $result->fetch_assoc()) {
+            // Si el id del usuario es el mismo que el uno, entonces el otro usuario es el dos
+            $otherUserName = ($row['idUsuario1'] == $userId) ? $row['userName2'] : $row['userName1'];
+            // Con la misma logica se saca el id del otro usuario
+            $otherUserId = ($row['idUsuario1'] == $userId) ? $row['idUsuario2'] : $row['idUsuario1'];
+            
+            // Guardamos las conversaciones en esta matriz que guarda todos los datos recabados
+            $conversaciones[] = [
+                'idConversacion' => $row['idConversacion'],
+                'otherUserId' => $otherUserId,
+                'otherUserName' => $otherUserName,
+                'ultimoMensaje' => $row['ultimoMensajeTexto'] ?? 'Nueva conversación', // Si no hay mensaje manda 'nueva conversacion'
+                'fechaUltimoMensaje' => $row['fechaUltimoMensaje'] ?? $row['ultimoMensaje']
+            ];
+        }
+        
+        $conn->close();
+    } catch (Exception $e) {
+        $error = "Error: " . $e->getMessage();
     }
-    
-    $conn->close();
-} catch (Exception $e) {
-    $error = "Error: " . $e->getMessage();
-}
 ?>
 
 <!DOCTYPE html>

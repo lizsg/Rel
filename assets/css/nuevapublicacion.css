@@ -1,107 +1,162 @@
-body {
-  margin: 0;
-  background-color: #ffffff;
-  font-family: 'Segoe UI', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
+/* Estilos para el contenedor principal del formulario */
+.add-publication-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
 }
 
-.login-container {
-  background-color: #fdf6f0;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  padding: 40px;
-  width: 90%;
-  max-width: 400px;
-  border: 1px solid rgba(163, 177, 138, 0.3);
+.add-publication-container h1 {
+    text-align: center;
+    color: #3a5a40; /* Color de tu marca */
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    font-weight: 700;
 }
 
-h2 {
-  text-align: center;
-  color: #6b4226;
-  margin-bottom: 25px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Estilos para el formulario */
+.publication-form {
+    display: grid;
+    grid-template-columns: 1fr; /* Una columna por defecto */
+    gap: 20px; /* Espacio entre los grupos de formulario */
 }
 
-input[type="text"],
-input[type="password"] {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0 20px 0;
-  border: 2px solid #a3b18a;
-  border-radius: 8px;
-  font-size: 16px;
-  background-color: #fffdfc;
-  color: #4e3b2b;
-  transition: all 0.3s ease;
+/* Para pantallas más grandes, dos columnas */
+@media (min-width: 768px) {
+    .publication-form {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .form-group.full-width { /* Para elementos que necesitan ocupar el ancho completo */
+        grid-column: 1 / -1;
+    }
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus {
-  outline: none;
-  border-color: #588157;
-  box-shadow: 0 0 0 3px rgba(88, 129, 87, 0.1);
+.form-group {
+    margin-bottom: 10px;
 }
 
-.btn-login {
-  width: 100%;
-  background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
-  color: white;
-  border: none;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(88, 129, 87, 0.3);
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #4a4a4a;
+    font-size: 0.95em;
 }
 
-.btn-login:hover {
-  background: linear-gradient(135deg, #3a5a40 0%, #2d4732 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(88, 129, 87, 0.4);
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group input[type="url"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    font-size: 1em;
+    color: #333;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* Asegura que padding y border no aumenten el ancho total */
 }
 
-.toggle-pass {
-  text-align: right;
-  font-size: 14px;
-  margin-top: -15px;
-  margin-bottom: 20px;
-  color: #6b584c;
-  cursor: pointer;
-  transition: color 0.2s;
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus,
+.form-group input[type="url"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #588157; /* Color de tu marca al enfocar */
+    box-shadow: 0 0 0 3px rgba(88, 129, 87, 0.2);
+    outline: none;
+    background-color: #fff;
 }
 
-.toggle-pass:hover {
-  color: #8b5a3c;
-  text-decoration: underline;
+.form-group textarea {
+    resize: vertical; /* Permite redimensionar verticalmente */
+    min-height: 80px;
 }
 
-.error {
-  background-color: #f8d7da;
-  color: #842029;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
-  text-align: center;
-  border: 1px solid #f5c2c7;
+/* Estilos específicos para el grupo de dimensiones */
+.dimensions-group .dimension-inputs {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-  .login-container {
-    padding: 30px 20px;
-    margin: 0 15px;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
+.dimensions-group .dimension-inputs label {
+    margin-bottom: 0;
+    white-space: nowrap; /* Evita que el texto de la etiqueta se rompa */
 }
+
+.dimensions-group .dimension-inputs input {
+    flex-grow: 1; /* Permite que los inputs de base y altura crezcan */
+}
+
+/* Estilos para el input de tipo file */
+.form-group input[type="file"] {
+    border: 1px dashed #cccccc;
+    padding: 10px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    margin-top: 5px; /* Espacio entre URL e input file */
+}
+
+.form-group input[type="file"]:hover {
+    background-color: #e5e5e5;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #6a6a6a;
+    font-size: 0.85em;
+}
+
+/* Acciones del formulario (botones) */
+.form-actions {
+    grid-column: 1 / -1; /* Ocupa todo el ancho en ambas columnas */
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.submit-button, .cancel-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit-button {
+    background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(88, 129, 87, 0.3);
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 90, 64, 0.4);
+    background: linear-gradient(135deg, #3a5a40 0%, #2d4732 100%);
+}
+
+.cancel-button {
+    background-color: #e0e0e0;
+    color: #555;
+}
+
+.cancel-button:hover {
+    background-color: #d0d0d0;
+    transform: translateY(-2px);
+}
+
+/* Asegurar que las rutas de los activos estén correctas en el CSS si usas imágenes de fondo, etc. */
+/* Por ejemplo, si tuvieras una imagen de fondo en el body: */
+/* body { background-image: url('../../assets/img/background.jpg'); } */

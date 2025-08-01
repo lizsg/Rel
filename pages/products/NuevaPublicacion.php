@@ -1,181 +1,343 @@
 <?php
-    session_start();
+session_start();
 
-    if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
-        header("Location: ../auth/login.php");
-        exit();
+// Redireccionar si el usuario no ha iniciado sesión o no tiene un user_id
+if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario']) || !isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php");
+    exit();
+}
+
+require_once __DIR__ . '/../../config/database.php';
+
+$userId = $_SESSION['user_id'];
+
+// Directorio donde se guardarán los archivos subidos
+$carpetaUploads = __DIR__ . '/../../uploads/';
+
+// Crear la carpeta de uploads si no existe con permisos de escritura
+if (!is_dir($carpetaUploads)) {
+    if (!mkdir($carpetaUploads, 0755, true)) {
+        die("Error: No se pudo crear el directorio de subida: " . $carpetaUploads . ". Verifique los permisos.");
     }
+}
 
-    require_once __DIR__ . '/../../config/database.php';
+// Extensiones de archivo permitidas
+$extensionesPermitidasIMG = ['jpg', 'jpeg', 'png', 'gif'];
+$extensionesPermitidasVID = ['mp4', 'mov', 'webm', 'avi'];
+$maxTamanoImagen = 10 * 1024 * 1024; // 10 MB en bytes para imágenes
+$maxTamanoVideo = 500 * 1024 * 1024; // 500 MB en bytes para videos
 
-    $userId = $_SESSION['user_id'] ?? null;
+// Variables para almacenar los nombres de archivo subidos
+$videoSubido = null;
+$imagen1Subida = null;
+$imagen2Subida = null;
+$imagen3Subida = null;
 
-    if (!$userId) {
-        header("Location: ../auth/login.php");
-        exit();
-    }
+$errores = [];
+$mensaje_exito = '';
 
-    $carpetaUploads = __DIR__ . '../../uploads/';
-    $extencionesPermitidasIMG = ['jpg', 'jpeg', 'png'];
-    $extencionesPermitidasVID = ['gif', 'mp4', 'mov'];
-    $maxTamano = 10 * 1024 * 1024;
+// Función para procesar la subida de archivos
+function procesarArchivo($nombreInput, $extensionesPermitidas, $carpetaDestino, $tamanoMaximo, $userId) {
+    if (isset($_FILES[$nombreInput]) && $_FILES[$nombreInput]['error'] === UPLOAD_ERR_OK) {
+        $archivo = $_FILES[$nombreInput];
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
 
-    $videoSubido = null;
-    $imagen1Subida = null;
-    $imagen2Subida = null;
-    $imagen3Subida = null;
-
-    $errores = [];
-
-    try {
-        // Establecemos la conexion a la base de datos
-        $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
-        
-        if ($conn->connect_error) {
-            throw new Exception("Conexión fallida: " . $conn->connect_error);
+        // Validación de extensión
+        if (!in_array($extension, $extensionesPermitidas)) {
+            return ['error' => "Error: La extensión .$extension para $nombreInput no es permitida. Solo se permiten " . implode(', ', $extensionesPermitidas) . "."];
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $titulo = $_POST['titulo'] ?? '';
-            $autor = $_POST['autor'] ?? '';
-            $descripcion = $_POST['descripcion'] ?? '';
-            $precio = $_POST['precio'] ?? '';
-            $etiquetas = $_POST['etiquetas'] ?? '';
-            $editorial = $_POST['editorial'] ?? '';
-            $edicion = $_POST['edicion'] ?? '';
-            $categoria = $_POST['categoria'] ?? '';
-            $tipoPublico = $_POST['tipoPublico'] ?? '';
-            $base = $_POST['base'] ?? '';
-            $altura = $_POST['altura'] ?? '';
-            $paginas = $_POST['paginas'] ?? '';
+        // Validación de tamaño
+        if ($archivo['size'] > $tamanoMaximo) {
+            return ['error' => "Error: El archivo de $nombreInput excede el tamaño máximo permitido de " . ($tamanoMaximo / (1024 * 1024)) . "MB."];
+        }
 
-            $errores = [];
-            if (empty($titulo)) {
-                $errores[] = "El título es obligatorio.";
-            }
-            if (empty($autor)) {
-                $errores[] = "El autor es obligatorio.";
-            }
-            if (!empty($precio) && !is_numeric($precio)) {
-                $errores[] = "El precio debe ser un número válido.";
-            }
-            if(!empty($descripcion)){
-                $errores[] = "La descripcion es obligatoria";
-            }
-            if (!empty($_FILES['uploadvideo']['name'])) {
-            $videoSubido = procesarVideo('uploadvideo', $extensionesPermitidasVID, $carpetaUploads, $maxTamano);
-            }
-            if (empty($_FILES['uploadImagen1']['name'])) {
-                $errores[] = "La imagen de portada es obligatoria.";
-            } else {
-                $imagen1Subida = procesarImagen('uploadImagen1', $extensionesPermitidasIMG, $carpetaUploads, $maxTamano);
-            }
-            if (!empty($_FILES['uploadImagen2']['name'])) {
-                $imagen2Subida = procesarImagen('uploadImagen2', $extensionesPermitidasIMG, $carpetaUploads, $maxTamano);
-            }
-            if (!empty($_FILES['uploadImagen3']['name'])) {
-                $imagen3Subida = procesarImagen('uploadImagen3', $extensionesPermitidasIMG, $carpetaUploads, $maxTamano);
-            }
+        // Generar un nombre único para el archivo
+        $nuevoNombre = sprintf(
+            '%d_%d_%s.%s',
+            $userId,
+            time(),
+            bin2hex(random_bytes(8)),
+            $extension
+        );
+        $rutaFinal = $carpetaDestino . $nuevoNombre;
 
-            function procesarVideo($nombreInput, $extensionesPermitidas, $carpetaDestino, $tamanoMaximo) {
-                if (isset($_FILES[$nombreInput]) && $_FILES[$nombreInput]['error'] === UPLOAD_ERR_OK) {
-                    $archivo = $_FILES[$nombreInput];
-                    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        // Mover el archivo subido del directorio temporal al destino final
+        if (move_uploaded_file($archivo['tmp_name'], $rutaFinal)) {
+            return ['nombre' => $nuevoNombre];
+        } else {
+            return ['error' => "Error al mover el archivo subido para $nombreInput. Verifique los permisos de la carpeta de destino."];
+        }
+    } elseif (isset($_FILES[$nombreInput]) && $_FILES[$nombreInput]['error'] !== UPLOAD_ERR_NO_FILE) {
+        switch ($_FILES[$nombreInput]['error']) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                return ['error' => "Error: El archivo de $nombreInput es demasiado grande (excede límites del servidor/formulario)."];
+            case UPLOAD_ERR_PARTIAL:
+                return ['error' => "Error: El archivo de $nombreInput se subió solo parcialmente."];
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return ['error' => "Error interno: Falta una carpeta temporal en el servidor para $nombreInput."];
+            case UPLOAD_ERR_CANT_WRITE:
+                return ['error' => "Error: Fallo al escribir el archivo de $nombreInput en el disco."];
+            case UPLOAD_ERR_EXTENSION:
+                return ['error' => "Error: Una extensión de PHP detuvo la subida de $nombreInput."];
+            default:
+                return ['error' => "Error desconocido al subir el archivo para $nombreInput. Código: " . $_FILES[$nombreInput]['error']];
+        }
+    }
+    return null;
+}
 
-                    if (!in_array($extension, $extensionesPermitidas)) {
-                        die("Error: Solo se permiten videos en formato MP4 o MOV.");
+// Función para procesar hashtags
+function procesarHashtags($etiquetasTexto, $conn) {
+    $hashtagIds = [];
+    
+    if (!empty(trim($etiquetasTexto))) {
+        $etiquetas = array_map('trim', explode(',', $etiquetasTexto));
+        $etiquetas = array_filter($etiquetas);
+        $etiquetas = array_unique($etiquetas);
+        
+        foreach ($etiquetas as $etiqueta) {
+            if (!empty($etiqueta) && strlen($etiqueta) <= 50) {
+                $etiqueta = htmlspecialchars(trim($etiqueta));
+                
+                $checkHashtag = $conn->prepare("SELECT idHashtag FROM Hashtags WHERE texto = ?");
+                $checkHashtag->bind_param("s", $etiqueta);
+                $checkHashtag->execute();
+                $result = $checkHashtag->get_result();
+                
+                if ($result->num_rows > 0) {
+                    $row = $result->fetch_assoc();
+                    $hashtagIds[] = $row['idHashtag'];
+                } else {
+                    $insertHashtag = $conn->prepare("INSERT INTO Hashtags (texto, fechaCreacion) VALUES (?, NOW())");
+                    $insertHashtag->bind_param("s", $etiqueta);
+                    
+                    if ($insertHashtag->execute()) {
+                        $hashtagIds[] = $conn->insert_id;
                     }
-
-                    if ($archivo['size'] > $tamanoMaximo) {
-                        die("Error: El video no puede superar los 10MB.");
-                    }
-
-                    $nuevoNombre = sprintf(
-                        '%d_%d_%s.%s',
-                        $userId,
-                        time(),
-                        bin2hex(random_bytes(4)),
-                        $extension
-                    );
-                    $rutaFinal = $carpetaDestino . $nuevoNombre;
-
-                    if (move_uploaded_file($archivo['tmp_name'], $rutaFinal)) {
-                        return $nuevoNombre;
-                    } else {
-                        die("Error al subir el video.");
-                    }
+                    $insertHashtag->close();
                 }
-                return null;
+                $checkHashtag->close();
             }
+        }
+    }
+    
+    return $hashtagIds;
+}
 
-            function procesarImagen($nombreInput, $extensionesPermitidas, $carpetaDestino, $tamanoMaximo) {
-                if (isset($_FILES[$nombreInput]) && $_FILES[$nombreInput]['error'] === UPLOAD_ERR_OK) {
-                    $archivo = $_FILES[$nombreInput];
-                    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+// Inicializar variables para mantener los valores en el formulario
+$titulo = htmlspecialchars($_POST['titulo'] ?? '');
+$autor = htmlspecialchars($_POST['autor'] ?? '');
+$descripcion = htmlspecialchars($_POST['descripcion'] ?? '');
+$precio = htmlspecialchars($_POST['precio'] ?? '');
+$etiquetas = htmlspecialchars($_POST['etiquetas'] ?? '');
+$editorial = htmlspecialchars($_POST['editorial'] ?? '');
+$edicion = htmlspecialchars($_POST['edicion'] ?? '');
+$categoria = htmlspecialchars($_POST['categoria'] ?? '');
+$tipoPublico = htmlspecialchars($_POST['tipoPublico'] ?? '');
+$base = htmlspecialchars($_POST['base'] ?? '');
+$altura = htmlspecialchars($_POST['altura'] ?? '');
+$paginas = htmlspecialchars($_POST['paginas'] ?? '');
+$fechaPublicacion = htmlspecialchars($_POST['fechaPublicacion'] ?? '');
 
-                    if (!in_array($extension, $extensionesPermitidas)) {
-                        die("Error: Solo se permiten imágenes JPG, JPEG o PNG.");
-                    }
+try {
+    $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
+    $conn->set_charset("utf8mb4");
+    
+    if ($conn->connect_error) {
+        throw new Exception("Conexión fallida: " . $conn->connect_error);
+    }
 
-                    if ($archivo['size'] > $tamanoMaximo) {
-                        die("Error: La imagen no puede superar los 10MB.");
-                    }
-
-                    $nuevoNombre = sprintf(
-                        '%d_%d_%s.%s',
-                        $userId,
-                        time(),
-                        bin2hex(random_bytes(4)),
-                        $extension
-                    );
-                    $rutaFinal = $carpetaDestino . $nuevoNombre;
-
-                    if (move_uploaded_file($archivo['tmp_name'], $rutaFinal)) {
-                        return $nuevoNombre;
-                    } else {
-                        die("Error al subir la imagen.");
-                    }
-                }
-                return null;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Validaciones básicas
+        if (empty(trim($titulo))) {
+            $errores[] = "El título es obligatorio.";
+        }
+        if (empty(trim($autor))) {
+            $errores[] = "El autor es obligatorio.";
+        }
+        if (empty(trim($descripcion))) {
+            $errores[] = "La descripción es obligatoria.";
+        }
+        
+        // Validación específica para edición (máximo 20 caracteres según tu BD)
+        if (!empty($edicion) && strlen($edicion) > 20) {
+            $errores[] = "La edición no puede exceder los 20 caracteres. Actual: " . strlen($edicion) . " caracteres.";
+        }
+        
+        // Validación específica para editorial (máximo 50 caracteres)
+        if (!empty($editorial) && strlen($editorial) > 50) {
+            $errores[] = "La editorial no puede exceder los 50 caracteres. Actual: " . strlen($editorial) . " caracteres.";
+        }
+        
+        // Validación específica para categoría (máximo 20 caracteres según tu BD)
+        if (!empty($categoria) && strlen($categoria) > 20) {
+            $errores[] = "La categoría no puede exceder los 20 caracteres. Actual: " . strlen($categoria) . " caracteres.";
+        }
+        
+        // Validación específica para tipoPublico (máximo 20 caracteres según tu BD)
+        if (!empty($tipoPublico) && strlen($tipoPublico) > 20) {
+            $errores[] = "El tipo de público no puede exceder los 20 caracteres. Actual: " . strlen($tipoPublico) . " caracteres.";
+        }
+        
+        // Validaciones numéricas
+        if (!empty($precio)) {
+            if (!is_numeric($precio) || (float)$precio < 0) {
+                $errores[] = "El precio debe ser un número válido y no negativo.";
             }
+        }
+        if (!empty($paginas)) {
+            if (!filter_var($paginas, FILTER_VALIDATE_INT, array("options" => array("min_range"=>1)))) {
+                $errores[] = "El número de páginas debe ser un número entero positivo.";
+            }
+        }
+        if (!empty($base)) {
+            if (!is_numeric($base) || (float)$base < 0) {
+                $errores[] = "La base debe ser un número válido y no negativo.";
+            }
+        }
+        if (!empty($altura)) {
+            if (!is_numeric($altura) || (float)$altura < 0) {
+                $errores[] = "La altura debe ser un número válido y no negativo.";
+            }
+        }
+
+        // Procesar subidas de archivos
+        
+        // Procesar video (opcional)
+        $resVideo = procesarArchivo('uploadVideo', $extensionesPermitidasVID, $carpetaUploads, $maxTamanoVideo, $userId);
+        if ($resVideo && isset($resVideo['error'])) {
+            $errores[] = $resVideo['error'];
+        } else if ($resVideo) {
+            $videoSubido = $resVideo['nombre'];
+        }
+
+        $resImagen1 = procesarArchivo('uploadImagen1', $extensionesPermitidasIMG, $carpetaUploads, $maxTamanoImagen, $userId);
+        if ($resImagen1 && isset($resImagen1['error'])) {
+            $errores[] = $resImagen1['error'];
+        } else if ($resImagen1) {
+            $imagen1Subida = $resImagen1['nombre'];
+        } else {
+            $errores[] = "La imagen de portada es obligatoria.";
+        }
+
+        $resImagen2 = procesarArchivo('uploadImagen2', $extensionesPermitidasIMG, $carpetaUploads, $maxTamanoImagen, $userId);
+        if ($resImagen2 && isset($resImagen2['error'])) {
+            $errores[] = $resImagen2['error'];
+        } else if ($resImagen2) {
+            $imagen2Subida = $resImagen2['nombre'];
+        }
+
+        $resImagen3 = procesarArchivo('uploadImagen3', $extensionesPermitidasIMG, $carpetaUploads, $maxTamanoImagen, $userId);
+        if ($resImagen3 && isset($resImagen3['error'])) {
+            $errores[] = $resImagen3['error'];
+        } else if ($resImagen3) {
+            $imagen3Subida = $resImagen3['nombre'];
+        }
+
+        // Si no hay errores de validación, insertar en la base de datos
+        if (empty($errores)) {
+            $conn->begin_transaction();
             
-            if (empty($errores)) {
-                $insertPublicaciones = $conn->prepare("INSERT INTO Publicaciones (titulo, 
-                    autor, descripcion, editorial, edicion, categoria, tipoPublico, base,
-                    altura, paginas, linkVideo, linkImagen1, linkImagen2, linlImagen3) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            try {
+                // Convertir a null los campos vacíos para la DB
+                $precioDB = !empty($precio) ? (float)$precio : null;
+                $baseDB = !empty($base) ? (float)$base : null;
+                $alturaDB = !empty($altura) ? (float)$altura : null;
+                $paginasDB = !empty($paginas) ? (int)$paginas : null;
+                $fechaPublicacionDB = !empty($fechaPublicacion) ? $fechaPublicacion : null;
+                
+                // Truncar campos de texto para que no excedan los límites de la BD
+                $editorialDB = !empty($editorial) ? substr($editorial, 0, 50) : null;
+                $edicionDB = !empty($edicion) ? substr($edicion, 0, 20) : null;
+                $categoriaDB = !empty($categoria) ? substr($categoria, 0, 20) : 'General';
+                $tipoPublicoDB = !empty($tipoPublico) ? substr($tipoPublico, 0, 20) : 'General';
 
-                // Preparamos la consulta especifcando que vamos a meter un s -> String y un i -> int
-                $insertPublicaciones->bind_param("sssssssffissss", 
+                // **1. INSERTAR EN TABLA LIBROS** 
+                $insertLibro = $conn->prepare("INSERT INTO Libros (
+                    titulo, autor, descripcion, editorial, edicion, categoria, tipoPublico, 
+                    base, altura, paginas, fechaPublicacion, linkVideo, linkImagen1, linkImagen2, linkImagen3
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+                $insertLibro->bind_param("sssssssddisssss",
                     $titulo,
                     $autor,
                     $descripcion,
-                    $editorial,
-                    $categoria,
-                    $tipoPublico,
-                    $base,
-                    $altura,
-                    $paginas,
+                    $editorialDB,
+                    $edicionDB,
+                    $categoriaDB,
+                    $tipoPublicoDB,
+                    $baseDB,
+                    $alturaDB,
+                    $paginasDB,
+                    $fechaPublicacionDB,
                     $videoSubido,
                     $imagen1Subida,
                     $imagen2Subida,
                     $imagen3Subida
                 );
 
-                $insertPublicaciones->execute();
-                $result = $insertPublicaciones->get_result();
-
-                // Verificamos si hay resultado, en caso de que haya, se despliega una lista
-                if ($result->num_rows > 0) {
-                    
-                } else {
-                    $error = "No se encontró ningún usuario con ese nombre";
+                if (!$insertLibro->execute()) {
+                    throw new Exception("Error al insertar el libro: " . $insertLibro->error);
                 }
+
+                $libroId = $conn->insert_id;
+                $insertLibro->close();
+
+                // **2. PROCESAR HASHTAGS Y CREAR RELACIONES**
+                $hashtagIds = procesarHashtags($etiquetas, $conn);
+                
+                // **3. INSERTAR EN TABLA LIBRO_HASHTAGS**
+                if (!empty($hashtagIds)) {
+                    $insertRelacion = $conn->prepare("INSERT INTO LibroHashtags (idLibro, idHashtag) VALUES (?, ?)");
+                    
+                    foreach ($hashtagIds as $hashtagId) {
+                        $insertRelacion->bind_param("ii", $libroId, $hashtagId);
+                        if (!$insertRelacion->execute()) {
+                            throw new Exception("Error al insertar relación libro-hashtag: " . $insertRelacion->error);
+                        }
+                    }
+                    $insertRelacion->close();
+                }
+
+                // **4. INSERTAR EN TABLA PUBLICACIONES**
+                $insertPublicacion = $conn->prepare("INSERT INTO Publicaciones (
+                    idUsuario, idLibro, precio, fechaCreacion
+                ) VALUES (?, ?, ?, NOW())");
+
+                $insertPublicacion->bind_param("iid", $userId, $libroId, $precioDB);
+
+                if (!$insertPublicacion->execute()) {
+                    throw new Exception("Error al insertar la publicación: " . $insertPublicacion->error);
+                }
+
+                $publicacionId = $conn->insert_id;
+                $insertPublicacion->close();
+
+                $conn->commit();
+
+                error_log("Publicación creada exitosamente - Libro ID: $libroId, Publicación ID: $publicacionId, Usuario ID: $userId");
+
+                $_SESSION['mensaje_exito'] = "¡Publicación guardada exitosamente! Se crearon " . count($hashtagIds) . " hashtags.";
+                header("Location: publicaciones.php");
+                exit();
+
+            } catch (Exception $e) {
+                $conn->rollback();
+                $errores[] = "Error al guardar la publicación: " . $e->getMessage();
+                error_log("Error en transacción de publicación: " . $e->getMessage());
             }
         }
-    } catch (Exception $e) {
-        $error = "Error: " . $e->getMessage();
     }
+} catch (Exception $e) {
+    $errores[] = "Error en el servidor: " . $e->getMessage();
+    error_log("Error en NuevaPublicacion.php: " . $e->getMessage());
+} finally {
+    if (isset($conn) && $conn instanceof mysqli) {
+        $conn->close();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -189,6 +351,18 @@
     <link rel="stylesheet" href="../../assets/css/chat-styles.css">
     
     <style>
+        :root {
+            --primary-color: #6a994e;
+            --secondary-color: #a7c957;
+            --background-color: #f2e9e4;
+            --form-background: #ffffff;
+            --text-color: #4a4e69;
+            --border-color: #ced4da;
+            --button-bg-color: #d8a47f;
+            --button-text-color: #ffffff;
+            --hover-color: #c98c5a;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
@@ -236,7 +410,6 @@
             letter-spacing: -0.5px;
         }
 
-        /* Formulario en grid */
         .publication-form {
             display: grid;
             grid-template-columns: 1fr;
@@ -299,7 +472,6 @@
             min-height: 100px;
         }
 
-        /* Estilos específicos para el grupo de dimensiones */
         .dimensions-group .dimension-inputs {
             display: flex;
             gap: 15px;
@@ -316,19 +488,47 @@
             flex-grow: 1;
         }
 
-        /* Input file personalizado */
-        .form-group input[type="file"] {
-            border: 2px dashed #a3b18a;
-            padding: 15px;
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: block;
             background: rgba(163, 177, 138, 0.05);
-            cursor: pointer;
+            border: 2px dashed #a3b18a;
             border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
             transition: all 0.3s ease;
+            text-align: center;
         }
 
-        .form-group input[type="file"]:hover {
+        .file-upload-wrapper:hover {
             background: rgba(163, 177, 138, 0.1);
             transform: translateY(-1px);
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-upload-wrapper .file-label {
+            display: block;
+            color: #2c2016;
+            font-weight: 500;
+        }
+
+        .file-upload-wrapper.video-upload {
+            background: rgba(138, 177, 163, 0.05);
+            border-color: #8ab1a3;
+        }
+
+        .file-upload-wrapper.video-upload:hover {
+            background: rgba(138, 177, 163, 0.1);
         }
 
         .form-group small {
@@ -339,7 +539,6 @@
             opacity: 0.8;
         }
 
-        /* Botones del formulario */
         .form-actions {
             grid-column: 1 / -1;
             display: flex;
@@ -358,6 +557,10 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: 0.5px;
             text-transform: uppercase;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .submit-button {
@@ -384,7 +587,45 @@
             box-shadow: 0 10px 30px rgba(108, 88, 76, 0.4);
         }
 
-        /* Responsive */
+        .errores {
+            background-color: #ffebee;
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            grid-column: 1 / -1;
+        }
+        
+        .errores p {
+            margin: 5px 0;
+            font-weight: 500;
+        }
+        
+        .exito {
+            background-color: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .char-counter {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .char-counter.warning {
+            color: #ff9800;
+        }
+
+        .char-counter.error {
+            color: #f44336;
+        }
+
         @media (max-width: 768px) {
             .add-publication-container {
                 padding: 30px 20px;
@@ -406,7 +647,6 @@
             }
         }
 
-        /* Animación de entrada */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -476,112 +716,141 @@
         <?php if (!empty($errores)): ?>
             <div class="errores">
                 <?php foreach ($errores as $error): ?>
-                    <p style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                        <?php echo htmlspecialchars($error); ?>
-                    </p>
+                    <p><?php echo htmlspecialchars($error); ?></p>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
         
-
-        <!-- Formulario -->
+        <?php if (!empty($mensaje_exito)): ?>
+            <div class="exito">
+                <p><?php echo htmlspecialchars($mensaje_exito); ?></p>
+            </div>
+        <?php endif; ?>
+        
         <form action="" method="POST" class="publication-form" enctype="multipart/form-data">
             
-            <div class="form-group">
+            <div class="form-group full-width">
                 <label for="titulo">Título:</label>
-                <input type="text" id="titulo" name="titulo" required value="<?php echo htmlspecialchars($_POST['titulo'] ?? ''); ?>">
+                <input type="text" id="titulo" name="titulo" required value="<?php echo $titulo; ?>" maxlength="70">
+                <small>Máximo 70 caracteres</small>
             </div>
 
             <div class="form-group">
                 <label for="autor">Autor:</label>
-                <input type="text" id="autor" name="autor" required value="<?php echo htmlspecialchars($_POST['autor'] ?? ''); ?>">
-                <small>Opcional</small>
+                <input type="text" id="autor" name="autor" required value="<?php echo $autor; ?>" maxlength="70">
+                <small>Máximo 70 caracteres</small>
+            </div>
+
+            <div class="form-group">
+                <label for="editorial">Editorial:</label>
+                <input type="text" id="editorial" name="editorial" value="<?php echo $editorial; ?>" maxlength="50">
+                <div class="char-counter" id="editorial-counter">0/50 caracteres</div>
             </div>
 
             <div class="form-group full-width">
                 <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="4" required><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="precio">Precio:</label>
-                <input type="number" id="precio" name="precio" step="0.01" min="0" required value="<?php echo htmlspecialchars($_POST['precio'] ?? ''); ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="etiquetas">Etiquetas (separadas por comas):</label>
-                <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" required value="<?php echo htmlspecialchars($_POST['etiquetas'] ?? ''); ?>">
-            </div>
-            <div class="form-group">
-                <label for="editorial">Editorial:</label>
-                <input type="text" id="editorial" name="editorial" value="<?php echo htmlspecialchars($_POST['editorial'] ?? ''); ?>">
-                <small>Opcional</small>
-            </div>
-
-            <div class="form-group">
-                <label for="edicion">Edición:</label>
-                <input type="text" id="edicion" name="edicion" value="<?php echo htmlspecialchars($_POST['edicion'] ?? ''); ?>">
-                <small>Opcional</small>
+                <textarea id="descripcion" name="descripcion" rows="4" required><?php echo $descripcion; ?></textarea>
+                <small>Descripción detallada del libro</small>
             </div>
 
             <div class="form-group">
                 <label for="categoria">Categoría:</label>
-                <input type="text" id="categoria" name="categoria" required value="<?php echo htmlspecialchars($_POST['categoria'] ?? ''); ?>">
+                <input type="text" id="categoria" name="categoria" value="<?php echo $categoria; ?>" maxlength="20" placeholder="ej: Ficción, Romance">
+                <div class="char-counter" id="categoria-counter">0/20 caracteres</div>
             </div>
 
             <div class="form-group">
-                <label for="tipoPublico">Tipo de Público:</label>
-                <select id="tipoPublico" name="tipoPublico" required>
+                <label for="tipoPublico">Público:</label>
+                <select id="tipoPublico" name="tipoPublico">
                     <option value="">Seleccione...</option>
-                    <option value="General" <?php echo ($_POST['tipoPublico'] ?? '') === 'General' ? 'selected' : ''; ?>>General</option>
-                    <option value="Infantil" <?php echo ($_POST['tipoPublico'] ?? '') === 'Infantil' ? 'selected' : ''; ?>>Infantil</option>
-                    <option value="Juvenil" <?php echo ($_POST['tipoPublico'] ?? '') === 'Juvenil' ? 'selected' : ''; ?>>Juvenil</option>
-                    <option value="Adultos" <?php echo ($_POST['tipoPublico'] ?? '') === 'Adultos' ? 'selected' : ''; ?>>Adultos</option>
+                    <option value="General" <?php echo ($tipoPublico === 'General' ? 'selected' : ''); ?>>General</option>
+                    <option value="Infantil" <?php echo ($tipoPublico === 'Infantil' ? 'selected' : ''); ?>>Infantil</option>
+                    <option value="Juvenil" <?php echo ($tipoPublico === 'Juvenil' ? 'selected' : ''); ?>>Juvenil</option>
+                    <option value="Adultos" <?php echo ($tipoPublico === 'Adultos' ? 'selected' : ''); ?>>Adultos</option>
                 </select>
+                <small>Opcional - Por defecto: General</small>
+            </div>
+
+            <div class="form-group">
+                <label for="edicion">Edición:</label>
+                <input type="text" id="edicion" name="edicion" value="<?php echo $edicion; ?>" maxlength="20" placeholder="ej: 1ra, 2da">
+                <div class="char-counter" id="edicion-counter">0/20 caracteres</div>
+            </div>
+
+            <div class="form-group">
+                <label for="paginas">Páginas:</label>
+                <input type="number" id="paginas" name="paginas" min="1" value="<?php echo $paginas; ?>">
+                <small>Opcional</small>
             </div>
 
             <div class="form-group dimensions-group">
                 <label>Dimensiones (cm):</label>
                 <div class="dimension-inputs">
                     <label for="base">Base:</label>
-                    <input type="number" id="base" name="base" step="0.1" min="0" value="<?php echo htmlspecialchars($_POST['base'] ?? ''); ?>">
+                    <input type="number" id="base" name="base" step="0.1" min="0" value="<?php echo $base; ?>">
                     <label for="altura">Altura:</label>
-                    <input type="number" id="altura" name="altura" step="0.1" min="0" value="<?php echo htmlspecialchars($_POST['altura'] ?? ''); ?>">
+                    <input type="number" id="altura" name="altura" step="0.1" min="0" value="<?php echo $altura; ?>">
                 </div>
                 <small>Opcional</small>
             </div>
 
             <div class="form-group">
-                <label for="paginas">Número de Páginas:</label>
-                <input type="number" id="paginas" name="paginas" min="1" value="<?php echo htmlspecialchars($_POST['paginas'] ?? ''); ?>">
+                <label for="fechaPublicacion">Fecha de Publicación:</label>
+                <input type="date" id="fechaPublicacion" name="fechaPublicacion" value="<?php echo $fechaPublicacion; ?>">
+                <small>Opcional - Fecha original de publicación del libro</small>
+            </div>
+
+            <div class="form-group">
+                <label for="precio">Precio:</label>
+                <input type="number" id="precio" name="precio" step="0.01" min="0" value="<?php echo $precio; ?>">
+                <small>Opcional</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="etiquetas">Etiquetas (separadas por comas):</label>
+                <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" value="<?php echo $etiquetas; ?>">
+                <small>Opcional - Máximo 50 caracteres por etiqueta</small>
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="uploadVideo">Video del Libro:</label>
+                <div class="file-upload-wrapper video-upload">
+                    <span class="file-label">Seleccionar video del libro (Max 500MB)</span>
+                    <input type="file" id="uploadVideo" name="uploadVideo" accept="video/mp4,video/mov,video/webm,video/avi">
+                </div>
+                <small>Opcional - Formatos permitidos: MP4, MOV, WEBM, AVI</small>
             </div>
 
             <div class="form-group full-width">
-                <label for="linkVideo">Video del libro (Subir):</label>
-                <input type="file" id="uploadvideo" name="uploadvideo" accept="video/*" value="<?php echo htmlspecialchars($_POST['video'] ?? ''); ?>">
-                <small>Trata de subir un video donde se pueda ver claramente el estado del libro</small>
+                <label for="uploadImagen1">Imagen de Portada (Obligatoria):</label>
+                <div class="file-upload-wrapper">
+                    <span class="file-label">Seleccionar imagen de portada (Max 10MB)</span>
+                    <input type="file" id="uploadImagen1" name="uploadImagen1" accept="image/*" required>
+                </div>
+                <small>Esta imagen es obligatoria</small>
             </div>
 
             <div class="form-group full-width">
-                <label for="linkImagen1">Imagen de Portada (Subir):</label>
-                <input type="file" id="uploadImagen1" name="uploadImagen1" accept="image/*" value="<?php echo htmlspecialchars($_POST['imagen1'] ?? ''); ?>">
+                <label for="uploadImagen2">Imagen Adicional 1:</label>
+                <div class="file-upload-wrapper">
+                    <span class="file-label">Seleccionar imagen adicional (Max 10MB)</span>
+                    <input type="file" id="uploadImagen2" name="uploadImagen2" accept="image/*">
+                </div>
+                <small>Si no sabes qué subir aquí, recomendamos una imagen de la contraportada</small>
             </div>
 
             <div class="form-group full-width">
-                <label for="linkImagen2">Imagen Adicional 1 (Subir):</label>
-                <input type="file" id="uploadImagen2" name="uploadImagen2" accept="image/*" value="<?php echo htmlspecialchars($_POST['imagen2'] ?? ''); ?>">
-                <small>Si no sabes que subir aquí, recomendamos una imagen de la contraportada</small>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="linkImagen3">Imagen Adicional 2 (Subir):</label>
-                <input type="file" id="uploadImagen3" name="uploadImagen3" accept="image/*" value="<?php echo htmlspecialchars($_POST['imagen3'] ?? ''); ?>">
-                <small>Si no sabes que subir aquí, recomendamos una foto que muestre el estado del libro</small>
+                <label for="uploadImagen3">Imagen Adicional 2:</label>
+                <div class="file-upload-wrapper">
+                    <span class="file-label">Seleccionar imagen adicional (Max 10MB)</span>
+                    <input type="file" id="uploadImagen3" name="uploadImagen3" accept="image/*">
+                </div>
+                <small>Si no sabes qué subir aquí, recomendamos una foto que muestre el estado del libro</small>
             </div>
 
             <div class="form-actions">
+                <a href="../home.php" class="cancel-button">Cancelar</a>
                 <button type="submit" class="submit-button">Guardar Publicación</button>
-                <button type="button" class="cancel-button" onclick="window.history.back()">Cancelar</button>
             </div>
         </form>
     </main>
@@ -607,6 +876,63 @@
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
+        // Función para actualizar contadores de caracteres
+        function updateCharCounter(inputId, counterId, maxLength) {
+            const input = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            
+            function updateCounter() {
+                const currentLength = input.value.length;
+                counter.textContent = `${currentLength}/${maxLength} caracteres`;
+                
+                if (currentLength > maxLength * 0.8) {
+                    counter.className = 'char-counter warning';
+                } else if (currentLength >= maxLength) {
+                    counter.className = 'char-counter error';
+                } else {
+                    counter.className = 'char-counter';
+                }
+            }
+            
+            input.addEventListener('input', updateCounter);
+            updateCounter(); // Actualizar al cargar
+        }
+
+        // Inicializar contadores
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCharCounter('editorial', 'editorial-counter', 50);
+            updateCharCounter('edicion', 'edicion-counter', 20);
+            updateCharCounter('categoria', 'categoria-counter', 20);
+        });
+
+        // Actualizar nombres de archivos seleccionados
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const label = this.parentElement.querySelector('.file-label');
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    const fileSize = (this.files[0].size / (1024 * 1024)).toFixed(2);
+                    
+                    if (this.id === 'uploadVideo') {
+                        label.textContent = `Video seleccionado: ${fileName} (${fileSize}MB)`;
+                    } else {
+                        label.textContent = `Imagen seleccionada: ${fileName} (${fileSize}MB)`;
+                    }
+                    label.style.color = '#588157';
+                } else {
+                    // Resetear texto original
+                    if (this.id === 'uploadVideo') {
+                        label.textContent = 'Seleccionar video del libro (Max 500MB)';
+                    } else if (this.id === 'uploadImagen1') {
+                        label.textContent = 'Seleccionar imagen de portada (Max 10MB)';
+                    } else {
+                        label.textContent = 'Seleccionar imagen adicional (Max 10MB)';
+                    }
+                    label.style.color = '';
+                }
+            });
+        });
+
         function openChatModal() {
             console.log('Abriendo chat principal...');
         }
@@ -615,24 +941,102 @@
             console.log('Abriendo chat secundario...');
         }
 
+        // Validación del formulario
         document.querySelector('.publication-form').addEventListener('submit', function(e) {
             const titulo = document.getElementById('titulo').value.trim();
             const autor = document.getElementById('autor').value.trim();
-            const precio = document.getElementById('precio').value.trim();
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const imagen1 = document.getElementById('uploadImagen1');
             
-            if (!titulo || !autor) {
-                e.preventDefault();
-                alert('Por favor completa los campos obligatorios: Título y Autor.');
-                return false;
+            let erroresJS = [];
+
+            if (!titulo) {
+                erroresJS.push('El título es obligatorio.');
+            }
+            if (!autor) {
+                erroresJS.push('El autor es obligatorio.');
+            }
+            if (!descripcion) {
+                erroresJS.push('La descripción es obligatoria.');
+            }
+            if (imagen1.files.length === 0) {
+                erroresJS.push('La imagen de portada es obligatoria.');
             }
 
-            if (precio !== '' && isNaN(precio)) {
+            // Validar longitudes de campos
+            const editorial = document.getElementById('editorial').value;
+            const edicion = document.getElementById('edicion').value;
+            const categoria = document.getElementById('categoria').value;
+
+            if (editorial.length > 50) {
+                erroresJS.push('La editorial no puede exceder los 50 caracteres.');
+            }
+            if (edicion.length > 20) {
+                erroresJS.push('La edición no puede exceder los 20 caracteres.');
+            }
+            if (categoria.length > 20) {
+                erroresJS.push('La categoría no puede exceder los 20 caracteres.');
+            }
+
+            const precio = document.getElementById('precio').value.trim();
+            if (precio !== '' && (isNaN(precio) || parseFloat(precio) < 0)) {
+                erroresJS.push('El precio debe ser un número válido y no negativo.');
+            }
+
+            const paginas = document.getElementById('paginas').value.trim();
+            if (paginas !== '' && (isNaN(paginas) || parseInt(paginas) < 1)) {
+                erroresJS.push('El número de páginas debe ser un número entero positivo.');
+            }
+
+            const base = document.getElementById('base').value.trim();
+            if (base !== '' && (isNaN(base) || parseFloat(base) < 0)) {
+                erroresJS.push('La base debe ser un número válido y no negativo.');
+            }
+
+            const altura = document.getElementById('altura').value.trim();
+            if (altura !== '' && (isNaN(altura) || parseFloat(altura) < 0)) {
+                erroresJS.push('La altura debe ser un número válido y no negativo.');
+            }
+
+            // Validar tamaño de archivos
+            const video = document.getElementById('uploadVideo');
+            if (video.files.length > 0) {
+                const videoSize = video.files[0].size;
+                const maxVideoSize = 500 * 1024 * 1024; // 500MB
+                if (videoSize > maxVideoSize) {
+                    erroresJS.push('El video no puede exceder los 500MB.');
+                }
+                
+                // Validar extensión de video
+                const videoExtension = video.files[0].name.split('.').pop().toLowerCase();
+                const allowedVideoExtensions = ['mp4', 'mov', 'webm', 'avi'];
+                if (!allowedVideoExtensions.includes(videoExtension)) {
+                    erroresJS.push('El formato de video no es válido. Solo se permiten: MP4, MOV, WEBM, AVI.');
+                }
+            }
+
+            // Validar tamaño de imágenes
+            const imagenes = ['uploadImagen1', 'uploadImagen2', 'uploadImagen3'];
+            const maxImageSize = 10 * 1024 * 1024; // 10MB
+            
+            imagenes.forEach(imagenId => {
+                const imagen = document.getElementById(imagenId);
+                if (imagen.files.length > 0) {
+                    const imageSize = imagen.files[0].size;
+                    if (imageSize > maxImageSize) {
+                        erroresJS.push(`La imagen ${imagenId.replace('upload', '').replace('Imagen', ' ')} no puede exceder los 10MB.`);
+                    }
+                }
+            });
+
+            if (erroresJS.length > 0) {
                 e.preventDefault();
-                alert('El precio debe ser un número válido.');
+                alert('Por favor corrige los siguientes errores:\n\n' + erroresJS.join('\n'));
                 return false;
             }
         });
 
+        // Efectos visuales de foco para inputs
         document.querySelectorAll('input, select, textarea').forEach(element => {
             element.addEventListener('focus', function() {
                 this.style.transform = 'translateY(-1px)';
