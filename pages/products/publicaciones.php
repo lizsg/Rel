@@ -1,56 +1,99 @@
 <?php
 session_start();
 
-// Redireccionar si el usuario no ha iniciado sesión o no tiene un user_id
-if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario']) || !isset($_SESSION['user_id'])) {
+if(!isset($_SESSION['usuario']) || empty($_SESSION['usuario']) || !isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-require_once __DIR__ . '/../../config/database.php'; // Asegúrate de que esta ruta sea correcta
+require_once __DIR__ . '/../../config/database.php';
 
-$userId = $_SESSION['user_id']; // Obtener el ID del usuario de la sesión. Ya validamos que existe.
-
-$publicaciones = []; // Array para almacenar las publicaciones
-$errorMessage = ''; // Variable para mensajes de error al usuario
+$publicaciones = [];
+$hashtags = [];
+$errorMessage = '';
 
 try {
-    // Establecer la conexión a la base de datos
     $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
+    $conn->set_charset("utf8mb4");
 
     if ($conn->connect_error) {
-        throw new Exception("Error de conexión a la base de datos: " . $conn->connect_error);
+        throw new Exception("Error de conexión: " . $conn->connect_error);
     }
 
-    // Consulta para obtener las publicaciones del usuario actual
-    // Seleccionamos también el ID de la publicación para los botones de acción
-    $stmt = $conn->prepare("SELECT id, titulo, autor, linkImagen1 FROM Publicaciones WHERE user_id = ? ORDER BY id DESC");
+    $stmt = $conn->prepare("
+        SELECT 
+            p.idPublicacion,
+            p.idLibro,
+            p.precio,
+            p.fechaCreacion,
+            l.titulo,
+            l.autor,
+            l.descripcion,
+            l.editorial,
+            l.edicion,
+            l.categoria,
+            l.tipoPublico,
+            l.base,
+            l.altura,
+            l.paginas,
+            l.linkVideo,
+            l.linkImagen1,
+            l.linkImagen2,
+            l.linkImagen3,
+            l.fechaPublicacion,
+            u.usuario as nombreUsuario
+        FROM Publicaciones p
+        JOIN Libros l ON p.idLibro = l.idLibro
+        JOIN Usuarios u ON p.idUsuario = u.idUsuario
+        WHERE p.idUsuario = ?
+        ORDER BY p.fechaCreacion DESC
+    ");
     
-    if (!$stmt) {
-        throw new Exception("Error al preparar la consulta: " . $conn->error);
-    }
-
-    $stmt->bind_param("i", $userId);
+    $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $publicaciones[] = $row;
+    while ($row = $result->fetch_assoc()) {
+        $publicaciones[] = $row;
+    }
+
+    if (!empty($publicaciones)) {
+        $libroIds = array_column($publicaciones, 'idLibro');
+        $placeholders = implode(',', array_fill(0, count($libroIds), '?'));
+        
+        $hashtagStmt = $conn->prepare("
+            SELECT lh.idLibro, h.texto as hashtag
+            FROM LibroHashtags lh
+            INNER JOIN Hashtags h ON lh.idHashtag = h.idHashtag
+            WHERE lh.idLibro IN ($placeholders)
+        ");
+        
+        $types = str_repeat('i', count($libroIds));
+        $hashtagStmt->bind_param($types, ...$libroIds);
+        $hashtagStmt->execute();
+        $hashtagResult = $hashtagStmt->get_result();
+        
+        while ($hashtagRow = $hashtagResult->fetch_assoc()) {
+            $hashtags[$hashtagRow['idLibro']][] = $hashtagRow['hashtag'];
         }
-    } else {
-        throw new Exception("Error al obtener resultados de la consulta: " . $stmt->error);
+        $hashtagStmt->close();
     }
 
     $stmt->close();
     $conn->close();
 
 } catch (Exception $e) {
-    // Manejo de errores de conexión o consulta
-    error_log("Error al cargar publicaciones en publicaciones.php: " . $e->getMessage());
-    $errorMessage = "No se pudieron cargar tus publicaciones en este momento. Por favor, inténtalo de nuevo más tarde.";
+    $errorMessage = "Error al cargar publicaciones: " . $e->getMessage();
+    error_log($errorMessage);
 }
 
+function formatearPrecio($precio) {
+    return ($precio == 0 || $precio === null) ? 'Gratis' : '$' . number_format($precio, 2);
+}
+
+function formatearFecha($fecha) {
+    return empty($fecha) ? 'No especificada' : date('d/m/Y', strtotime($fecha));
+}
 ?>
 
 <!DOCTYPE html>
@@ -59,23 +102,21 @@ try {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mis Publicaciones | RELEE</title>
-    <link rel="stylesheet" href="../../assets/css/home-styles.css"> <link rel="stylesheet" href="../../assets/css/chat-styles.css">
-    
+    <link rel="stylesheet" href="../../assets/css/home-styles.css">
+    <link rel="stylesheet" href="../../assets/css/chat-styles.css">
     <style>
-        /* CSS adicional o sobrescrito para publicaciones.php */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
             margin: 0;
-            padding-bottom: 65px; /* Espacio para el bottombar */
+            padding-bottom: 65px;
             min-height: 100vh;
             color: #2c2016;
         }
 
         .new-button-container {
             display: flex;
-            justify-content: center; /* Centrado horizontal */
-            align-items: center;
+            justify-content: center;
             padding: 25px 40px;
             max-width: 1400px;
             margin: 0 auto;
@@ -85,87 +126,25 @@ try {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 12px; /* Más espacio entre ícono y texto */
-            background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%); /* Colores café */
+            gap: 12px;
+            background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%);
             color: white;
-            padding: 16px 28px; /* Botón más grande */
+            padding: 16px 28px;
             border: none;
-            border-radius: 15px; /* Bordes más redondeados */
-            font-size: 16px; /* Texto más grande */
+            border-radius: 15px;
+            font-size: 16px;
             font-weight: 700;
             text-decoration: none;
-            box-shadow: 0 6px 20px rgba(107, 66, 38, 0.3); /* Sombra café */
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            position: relative;
-            overflow: hidden;
-            min-width: 200px; /* Ancho mínimo para que se vea más grande */
-        }
-
-        /* Efecto de brillo */
-        .new-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .new-button svg {
-            fill: white;
-            transition: transform 0.3s ease;
+            box-shadow: 0 6px 20px rgba(107, 66, 38, 0.3);
+            transition: all 0.3s;
+            min-width: 200px;
         }
 
         .new-button:hover {
-            transform: translateY(-3px); /* Más elevación */
-            box-shadow: 0 12px 35px rgba(107, 66, 38, 0.4); /* Sombra más pronunciada */
-            background: linear-gradient(135deg, #8b5a3c 0%, #6b4226 100%); /* Gradiente invertido */
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(107, 66, 38, 0.4);
         }
 
-        .new-button:hover::before {
-            left: 100%;
-        }
-
-        .new-button:hover svg {
-            transform: rotate(90deg); /* Rotación del ícono + */
-        }
-
-        .new-button:active {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(107, 66, 38, 0.3);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .new-button-container {
-                padding: 20px;
-            }
-            
-            .new-button {
-                padding: 14px 24px;
-                font-size: 14px;
-                min-width: 180px;
-            }
-            
-            .new-button svg {
-                width: 20px;
-                height: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .new-button {
-                padding: 12px 20px;
-                font-size: 13px;
-                min-width: 160px;
-            }
-        }
-
-        /* Estilos para las tarjetas de publicaciones dinámicas */
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -180,10 +159,7 @@ try {
             border-radius: 15px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative; /* Para el mensaje de éxito */
+            transition: transform 0.3s ease;
         }
 
         .card:hover {
@@ -193,32 +169,22 @@ try {
 
         .card-image {
             width: 100%;
-            height: 200px; /* Altura fija para las imágenes */
+            height: 200px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #f0ede8; /* Fondo para cuando no hay imagen */
+            background-color: #f0ede8;
         }
 
         .card-image img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Asegura que la imagen cubra el espacio */
-            display: block;
-        }
-
-        .card-image svg {
-            width: 80px;
-            height: 80px;
-            fill: rgba(0,0,0,0.1);
+            object-fit: cover;
         }
 
         .card-content {
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
         }
 
         .card-title {
@@ -226,14 +192,18 @@ try {
             font-weight: 700;
             color: #3e2723;
             margin-bottom: 8px;
-            line-height: 1.3;
         }
 
-        .card-author { /* Cambiado de card-description a card-author para mayor claridad */
+        .card-author {
             font-size: 0.95em;
             color: #6d4c41;
             margin-bottom: 15px;
-            flex-grow: 1;
+        }
+
+        .card-price {
+            font-weight: bold;
+            color: #8b5a3c;
+            margin-bottom: 10px;
         }
 
         .card-actions {
@@ -250,9 +220,8 @@ try {
             border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             font-size: 0.9em;
-            text-decoration: none; /* Asegura que los enlaces se vean como botones */
             text-align: center;
         }
 
@@ -285,34 +254,17 @@ try {
             background-color: #c62828;
         }
 
-        @media (max-width: 600px) {
-            .gallery {
-                grid-template-columns: 1fr;
-                padding: 20px;
-            }
-        }
-
-        /* Estilo para el mensaje de éxito */
         .success-message {
-            background-color: #e8f5e9; /* Verde claro */
-            border: 1px solid #a5d6a7; /* Verde más oscuro */
-            color: #2e7d32; /* Verde texto */
+            background-color: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            color: #2e7d32;
             padding: 15px 20px;
             border-radius: 8px;
             margin: 20px auto;
             max-width: 1000px;
             text-align: center;
             font-weight: 600;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            animation: fadeInOut 5s forwards; /* Animación para desaparecer */
-        }
-
-        /* Animación para el mensaje de éxito */
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(-20px); }
-            10% { opacity: 1; transform: translateY(0); }
-            90% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); }
+            animation: fadeInOut 5s forwards;
         }
 
         .error-display {
@@ -324,14 +276,26 @@ try {
             margin: 20px auto;
             max-width: 1000px;
             text-align: center;
-            font-weight: 500;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-
     <div class="topbar">
-        <div class="topbar-icon" title="Chat" onclick="openChatModal()">
+        <div class="topbar-icon" title="Chat">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                 <path d="M12 2c.55 0 1 .45 1 1v1h4a2 2 0 0 1 2 2v2h1a1 1 0 1 1 0 2h-1v6a3 3 0 0 1-3 3h-1v1a1 1 0 1 1-2 0v-1H9v1a1 1 0 1 1-2 0v-1H6a3 3 0 0 1-3-3v-6H2a1 1 0 1 1 0-2h1V6a2 2 0 0 1 2-2h4V3c0-.55.45-1 1-1zm-5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
             </svg>
@@ -377,25 +341,21 @@ try {
     </header>
 
     <div class="new-button-container">
-        <a href="NuevaPublicacion.php" class="new-button" title="Agregar Publicación">
+        <a href="NuevaPublicacion.php" class="new-button">
             <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
             </svg>
             <span>Nueva Publicación</span>
         </a>
     </div>
 
-    <?php 
-    // Mostrar mensaje de éxito si existe en la sesión
-    if (isset($_SESSION['mensaje_exito']) && !empty($_SESSION['mensaje_exito'])) {
-        echo '<div class="success-message">' . htmlspecialchars($_SESSION['mensaje_exito']) . '</div>';
-        unset($_SESSION['mensaje_exito']); // Limpiar el mensaje después de mostrarlo
-    }
-    // Mostrar mensaje de error si existe
-    if (!empty($errorMessage)) {
-        echo '<div class="error-display">' . htmlspecialchars($errorMessage) . '</div>';
-    }
-    ?>
+    <?php if (isset($_SESSION['mensaje_exito'])): ?>
+        <div class="success-message"><?php echo htmlspecialchars($_SESSION['mensaje_exito']); unset($_SESSION['mensaje_exito']); ?></div>
+    <?php endif; ?>
+
+    <?php if (!empty($errorMessage)): ?>
+        <div class="error-display"><?php echo htmlspecialchars($errorMessage); ?></div>
+    <?php endif; ?>
 
     <main class="gallery">
         <?php if (empty($publicaciones)): ?>
@@ -407,7 +367,7 @@ try {
                 <div class="card">
                     <div class="card-image">
                         <?php if (!empty($publicacion['linkImagen1'])): ?>
-                            <img src="../../uploads/<?php echo htmlspecialchars($publicacion['linkImagen1']); ?>" alt="Portada de <?php echo htmlspecialchars($publicacion['titulo'] ?? 'Publicación'); ?>">
+                            <img src="../../uploads/<?php echo htmlspecialchars($publicacion['linkImagen1']); ?>" alt="<?php echo htmlspecialchars($publicacion['titulo']); ?>">
                         <?php else: ?>
                             <svg width="60" height="60" fill="rgba(0,0,0,0.2)" viewBox="0 0 24 24">
                                 <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
@@ -415,13 +375,14 @@ try {
                         <?php endif; ?>
                     </div>
                     <div class="card-content">
-                        <div class="card-title"><?php echo htmlspecialchars($publicacion['titulo'] ?? 'Título Desconocido'); ?></div>
-                        <div class="card-author"><?php echo htmlspecialchars($publicacion['autor'] ?? 'Autor Desconocido'); ?></div>
+                        <div class="card-title"><?php echo htmlspecialchars($publicacion['titulo']); ?></div>
+                        <div class="card-author"><?php echo htmlspecialchars($publicacion['autor']); ?></div>
+                        <div class="card-price"><?php echo formatearPrecio($publicacion['precio']); ?></div>
                         <div class="card-actions">
-                            <a href="ver_publicacion.php?id=<?php echo htmlspecialchars($publicacion['id']); ?>" class="card-button view-button">Ver</a>
-                            <a href="editar_publicacion.php?id=<?php echo htmlspecialchars($publicacion['id']); ?>" class="card-button edit-button">Editar</a>
-                            <form action="eliminar_publicacion.php" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.');" style="display:contents;">
-                                <input type="hidden" name="publicacion_id" value="<?php echo htmlspecialchars($publicacion['id']); ?>">
+                            <a href="ver_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">Ver</a>
+                            <a href="editar_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button edit-button">Editar</a>
+                            <form action="eliminar_publicacion.php" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta publicación?');" style="display:contents;">
+                                <input type="hidden" name="publicacion_id" value="<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>">
                                 <button type="submit" class="card-button delete-button">Eliminar</button>
                             </form>
                         </div>
@@ -449,16 +410,16 @@ try {
         </button>
     </div>
 
-    <script src="../../assets/js/home-script.js"></script> <script src="../../assets/js/chat-script.js"></script>
+    <script src="../../assets/js/home-script.js"></script>
+    <script src="../../assets/js/chat-script.js"></script>
     <script>
-        // Funciones para el chat (asegúrate de que estén definidas en chat-script.js o aquí)
-        function openChatModal() {
-            console.log('Abriendo chat principal...');
-            // Lógica para abrir el modal del chat (si existe)
-        }
-
-        // Si tienes más lógica JS para publicaciones, agrégala aquí o en publicaciones-script.js
-        // Por ejemplo, manejo de clics para los botones de acción si no son enlaces directos.
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('¿Estás seguro de eliminar esta publicación?')) {
+                    e.preventDefault();
+                }
+            });
+        });
     </script>
 </body>
 </html>
