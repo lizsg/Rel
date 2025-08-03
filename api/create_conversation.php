@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 session_start();
 
-if (!isset($_SESSION['usuario']) || empty($_SESSION['usuario'])) {
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit();
 }

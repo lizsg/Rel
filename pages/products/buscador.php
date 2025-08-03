@@ -269,11 +269,14 @@
             letter-spacing: -0.5px;
         }
 
-        /* Formulario en grid */
         .publication-form {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
         }
 
         @media (min-width: 768px) {
@@ -285,8 +288,15 @@
             }
         }
 
-        .form-group {
-            margin-bottom: 10px;
+        .field-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .field-group .form-group {
+            flex: 1;
+            margin-bottom: 0;
         }
 
         .form-group label {
@@ -304,16 +314,15 @@
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px 20px;
+            padding: 12px 15px;
             border: 2px solid transparent;
-            border-radius: 15px;
+            border-radius: 12px;
             font-size: 1em;
             color: #2c2016;
-            background: linear-gradient(white, white) padding-box,
-                                    linear-gradient(135deg, #a3b18a, #588157) border-box;
+            background: white;
+            border: 1px solid #e0e0e0;
             transition: all 0.3s ease;
             box-sizing: border-box;
-            box-shadow: 0 4px 15px rgba(163, 177, 138, 0.1);
         }
 
         .form-group input[type="text"]:focus,
@@ -334,20 +343,22 @@
 
         /* Estilos específicos para el grupo de dimensiones */
         .dimensions-group .dimension-inputs {
-            display: flex;
-            gap: 15px;
-            align-items: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
         }
 
         .dimensions-group .dimension-inputs label {
             margin-bottom: 0;
-            white-space: nowrap;
             font-weight: 500;
+            font-size: 0.9em;
+            color: #5a5a5a;
         }
 
         .dimensions-group .dimension-inputs input {
-            flex-grow: 1;
+            width: 100%;
         }
+
 
         .form-group small {
             display: block;
@@ -355,6 +366,11 @@
             color: #6f5c4d;
             font-size: 0.85em;
             opacity: 0.8;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
         }
 
         /* Botones del formulario */
@@ -650,23 +666,24 @@
         <?php endif; ?>
         
         <form action="" method="POST" class="publication-form">
-            
-            <div class="form-group">
-                <label for="titulo">Título:</label>
-                <input type="text" id="titulo" name="titulo" value="<?php echo $titulo; ?>">
-            </div>
+        <!-- Información básica -->
+        <div class="form-group">
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" name="titulo" value="<?php echo $titulo; ?>">
+        </div>
 
-            <div class="form-group">
-                <label for="autor">Autor:</label>
-                <input type="text" id="autor" name="autor" value="<?php echo $autor; ?>">
-            </div>
+        <div class="form-group">
+            <label for="autor">Autor:</label>
+            <input type="text" id="autor" name="autor" value="<?php echo $autor; ?>">
+        </div>
 
-            <div class="form-group full-width">
-                <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="4"><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
-                <small>Descripción detallada del libro</small>
-            </div>
+        <div class="form-group full-width">
+            <label for="descripcion">Descripción:</label>
+            <textarea id="descripcion" name="descripcion" rows="4"><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
+        </div>
 
+        <!-- Precio y páginas -->
+        <div class="field-group">
             <div class="form-group">
                 <label for="precioMin">Precio Mínimo:</label>
                 <input type="number" id="precioMin" name="precioMin" step="0.01" min="0" value="<?php echo $precioMin; ?>">
@@ -676,67 +693,81 @@
                 <label for="precioMax">Precio Máximo:</label>
                 <input type="number" id="precioMax" name="precioMax" step="0.01" min="0" value="<?php echo $precioMax; ?>">
             </div>
+        </div>
 
+        <div class="field-group">
             <div class="form-group">
-                <label for="etiquetas">Etiquetas (separadas por comas):</label>
-                <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" value="<?php echo $etiquetas; ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="editorial">Editorial:</label>
-                <input type="text" id="editorial" name="editorial" value="<?php echo $editorial; ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="edicion">Edición:</label>
-                <input type="text" id="edicion" name="edicion" value="<?php echo $edicion; ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="categoria">Categoría:</label>
-                <input type="text" id="categoria" name="categoria" value="<?php echo $categoria; ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="tipoPublico">Tipo de Público:</label>
-                <select id="tipoPublico" name="tipoPublico">
-                    <option value="">Seleccione...</option>
-                    <option value="General" <?php echo ($tipoPublico === 'General' ? 'selected' : ''); ?>>General</option>
-                    <option value="Infantil" <?php echo ($tipoPublico === 'Infantil' ? 'selected' : ''); ?>>Infantil</option>
-                    <option value="Juvenil" <?php echo ($tipoPublico === 'Juvenil' ? 'selected' : ''); ?>>Juvenil</option>
-                    <option value="Adultos" <?php echo ($tipoPublico === 'Adultos' ? 'selected' : ''); ?>>Adultos</option>
-                </select>
-            </div>
-
-            <div class="form-group dimensions-group">
-                <label>Dimensiones (cm):</label>
-                <div class="dimension-inputs">
-                    <label for="baseMin">Base Mín:</label>
-                    <input type="number" id="baseMin" name="baseMin" step="0.1" min="0" value="<?php echo $baseMin; ?>">
-                    <label for="baseMax">Base Máx:</label>
-                    <input type="number" id="baseMax" name="baseMax" step="0.1" min="0" value="<?php echo $baseMax; ?>">
-                    <label for="alturaMin">Altura Mín:</label>
-                    <input type="number" id="alturaMin" name="alturaMin" step="0.1" min="0" value="<?php echo $alturaMin; ?>">
-                    <label for="alturaMax">Altura Máx:</label>
-                    <input type="number" id="alturaMax" name="alturaMax" step="0.1" min="0" value="<?php echo $alturaMax; ?>">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="paginasMin">Número de Páginas Mínimo:</label>
+                <label for="paginasMin">Páginas Mín:</label>
                 <input type="number" id="paginasMin" name="paginasMin" min="1" value="<?php echo $paginasMin; ?>">
             </div>
 
             <div class="form-group">
-                <label for="paginasMax">Número de Páginas Máximo:</label>
+                <label for="paginasMax">Páginas Máx:</label>
                 <input type="number" id="paginasMax" name="paginasMax" min="1" value="<?php echo $paginasMax; ?>">
             </div>
+        </div>
 
-            <div class="form-actions">
-                <a href="../home.php" class="cancel-button">Cancelar</a>
-                <button type="submit" class="submit-button">Buscar</button>
+        <!-- Detalles del libro -->
+        <div class="form-group">
+            <label for="editorial">Editorial:</label>
+            <input type="text" id="editorial" name="editorial" value="<?php echo $editorial; ?>">
+        </div>
+
+        <div class="form-group">
+            <label for="edicion">Edición:</label>
+            <input type="text" id="edicion" name="edicion" value="<?php echo $edicion; ?>">
+        </div>
+
+        <div class="form-group">
+            <label for="categoria">Categoría:</label>
+            <input type="text" id="categoria" name="categoria" value="<?php echo $categoria; ?>">
+        </div>
+
+        <div class="form-group">
+            <label for="tipoPublico">Tipo de Público:</label>
+            <select id="tipoPublico" name="tipoPublico">
+                <option value="">Seleccione...</option>
+                <option value="General" <?php echo ($tipoPublico === 'General' ? 'selected' : ''); ?>>General</option>
+                <option value="Infantil" <?php echo ($tipoPublico === 'Infantil' ? 'selected' : ''); ?>>Infantil</option>
+                <option value="Juvenil" <?php echo ($tipoPublico === 'Juvenil' ? 'selected' : ''); ?>>Juvenil</option>
+                <option value="Adultos" <?php echo ($tipoPublico === 'Adultos' ? 'selected' : ''); ?>>Adultos</option>
+            </select>
+        </div>
+
+        <!-- Dimensiones -->
+        <div class="form-group dimensions-group">
+            <label>Dimensiones (cm):</label>
+            <div class="dimension-inputs">
+                <div>
+                    <label for="baseMin">Base Mín:</label>
+                    <input type="number" id="baseMin" name="baseMin" step="0.1" min="0" value="<?php echo $baseMin; ?>">
+                </div>
+                <div>
+                    <label for="baseMax">Base Máx:</label>
+                    <input type="number" id="baseMax" name="baseMax" step="0.1" min="0" value="<?php echo $baseMax; ?>">
+                </div>
+                <br><div>
+                    <label for="alturaMin">Altura Mín:</label>
+                    <input type="number" id="alturaMin" name="alturaMin" step="0.1" min="0" value="<?php echo $alturaMin; ?>">
+                </div>
+                <div>
+                    <label for="alturaMax">Altura Máx:</label>
+                    <input type="number" id="alturaMax" name="alturaMax" step="0.1" min="0" value="<?php echo $alturaMax; ?>">
+                </div>
             </div>
-        </form>
+        </div>
+
+        <!-- Etiquetas -->
+        <div class="form-group full-width">
+            <label for="etiquetas">Etiquetas (separadas por comas):</label>
+            <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" value="<?php echo $etiquetas; ?>">
+        </div>
+
+        <div class="form-actions">
+            <a href="../home.php" class="cancel-button">Cancelar</a>
+            <button type="submit" class="submit-button">Buscar</button>
+        </div>
+    </form>
 
         <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($publicaciones)): ?>
             <div class="results-section">
@@ -758,8 +789,8 @@
                                 <div class="card-author">Por: <?php echo htmlspecialchars($publicacion['autor']); ?></div>
                                 <div class="card-price">$<?php echo number_format($publicacion['precio'], 2); ?></div>
                                 <div class="card-actions">
-                                    <a href="detalle_publicacion.php?id=<?php echo $publicacion['idPublicacion']; ?>" class="btn-details">Ver Detalles</a>
-                                    <button class="btn-contact" onclick="abrirChat(<?php echo $publicacion['idUsuario']; ?>, '<?php echo htmlspecialchars($publicacion['userName']); ?>')">Contactar</button>
+                                    <a href="../products/detalle_publicacion.php?id=<?php echo $publicacion['idPublicacion']; ?>" class="btn-details">Ver Detalles</a>
+                                    <button class="btn-contact" onclick="abrirChat(<?php echo $publicacion['idUsuario']; ?>, '<?php echo htmlspecialchars(addslashes($publicacion['userName'])); ?>')">Contactar</button>
                                 </div>
                             </div>
                         </div>
@@ -790,17 +821,28 @@
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
-        // Efectos visuales de foco para inputs
-        document.querySelectorAll('input, select, textarea').forEach(element => {
-            element.addEventListener('focus', function() {
-                this.style.transform = 'translateY(-1px)';
+        // Función para abrir chat con un usuario específico
+        function abrirChat(userId, userName) {
+            fetch('../../api/create_conversation.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'other_user_id=' + userId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '../chat/chat.php?conversacion=' + data.conversationId;
+                } else {
+                    alert('Error al abrir el chat: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al conectar con el servidor');
             });
-            
-            element.addEventListener('blur', function() {
-                this.style.transform = 'translateY(0)';
-            });
-        });
-
+        }
     </script>
 </body>
 </html>
