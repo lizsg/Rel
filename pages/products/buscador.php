@@ -13,8 +13,7 @@
 
     $errores = [];
     $mensaje_exito = '';
-    $resultados = [];
-    $hashtags = [];
+    $publicaciones = [];
 
     // Obtener valores del formulario
     $titulo = htmlspecialchars($_POST['titulo'] ?? '');
@@ -36,7 +35,6 @@
 
     try {
         $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
-        $conn->set_charset("utf8mb4");
         
         if ($conn->connect_error) {
             throw new Exception("Conexión fallida: " . $conn->connect_error);
@@ -44,15 +42,28 @@
 
         // Procesar el formulario solo si se ha enviado por POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Construir la consulta SQL dinámicamente
-            $sql = "SELECT 
+            // Validar que al menos un campo esté lleno
+            $camposLlenos = !empty(trim($titulo)) || !empty(trim($autor)) || !empty(trim($descripcion)) || 
+                           !empty($precioMin) || !empty($precioMax) || !empty($paginasMin) || !empty($paginasMax) ||
+                           !empty($baseMin) || !empty($baseMax) || !empty($alturaMin) || !empty($alturaMax) || 
+                           !empty(trim($categoria)) || !empty(trim($tipoPublico)) || !empty(trim($editorial)) || 
+                           !empty(trim($edicion)) || !empty(trim($etiquetas));
+
+            if (!$camposLlenos) {
+                $errores[] = "Debe llenar al menos un campo para realizar la búsqueda.";
+            } else {
+                // Construir la consulta dinámicamente
+                $query = "
+                    SELECT 
                         p.idPublicacion,
                         p.idLibro,
+                        p.idUsuario,
                         p.precio,
                         p.fechaCreacion,
                         l.titulo,
                         l.autor,
                         l.descripcion,
+                        l.linkImagen1,
                         l.editorial,
                         l.edicion,
                         l.categoria,
@@ -60,182 +71,135 @@
                         l.base,
                         l.altura,
                         l.paginas,
-                        l.linkVideo,
-                        l.linkImagen1,
-                        l.linkImagen2,
-                        l.linkImagen3,
-                        l.fechaPublicacion,
-                        u.username as nombreUsuario
+                        u.userName as nombreUsuario,
+                        u.nombre
                     FROM Publicaciones p
                     JOIN Libros l ON p.idLibro = l.idLibro
-                    LEFT JOIN Usuarios u ON p.idUsuario = u.idUsuario
-                    WHERE 1=1";
+                    JOIN Usuarios u ON p.idUsuario = u.idUsuario
+                    WHERE p.idUsuario != ?
+                ";
 
-            $params = [];
-            $types = "";
+                $conditions = [];
+                $params = [$userId];
+                $types = "i";
 
-            // Agregar filtros dinámicamente
-            if (!empty(trim($titulo))) {
-                $sql .= " AND l.titulo LIKE ?";
-                $params[] = "%" . trim($titulo) . "%";
-                $types .= "s";
-            }
+                // Agregar condiciones según los campos llenos
+                if (!empty(trim($titulo))) {
+                    $conditions[] = "l.titulo LIKE ?";
+                    $params[] = "%" . $titulo . "%";
+                    $types .= "s";
+                }
 
-            if (!empty(trim($autor))) {
-                $sql .= " AND l.autor LIKE ?";
-                $params[] = "%" . trim($autor) . "%";
-                $types .= "s";
-            }
+                if (!empty(trim($autor))) {
+                    $conditions[] = "l.autor LIKE ?";
+                    $params[] = "%" . $autor . "%";
+                    $types .= "s";
+                }
 
-            if (!empty(trim($descripcion))) {
-                $sql .= " AND l.descripcion LIKE ?";
-                $params[] = "%" . trim($descripcion) . "%";
-                $types .= "s";
-            }
+                if (!empty(trim($descripcion))) {
+                    $conditions[] = "l.descripcion LIKE ?";
+                    $params[] = "%" . $descripcion . "%";
+                    $types .= "s";
+                }
 
-            if (!empty($precioMin)) {
-                $sql .= " AND p.precio >= ?";
-                $params[] = floatval($precioMin);
-                $types .= "d";
-            }
+                if (!empty($precioMin)) {
+                    $conditions[] = "p.precio >= ?";
+                    $params[] = floatval($precioMin);
+                    $types .= "d";
+                }
 
-            if (!empty($precioMax)) {
-                $sql .= " AND p.precio <= ?";
-                $params[] = floatval($precioMax);
-                $types .= "d";
-            }
+                if (!empty($precioMax)) {
+                    $conditions[] = "p.precio <= ?";
+                    $params[] = floatval($precioMax);
+                    $types .= "d";
+                }
 
-            if (!empty(trim($editorial))) {
-                $sql .= " AND l.editorial LIKE ?";
-                $params[] = "%" . trim($editorial) . "%";
-                $types .= "s";
-            }
+                if (!empty(trim($categoria))) {
+                    $conditions[] = "l.categoria LIKE ?";
+                    $params[] = "%" . $categoria . "%";
+                    $types .= "s";
+                }
 
-            if (!empty(trim($edicion))) {
-                $sql .= " AND l.edicion LIKE ?";
-                $params[] = "%" . trim($edicion) . "%";
-                $types .= "s";
-            }
+                if (!empty(trim($tipoPublico))) {
+                    $conditions[] = "l.tipoPublico = ?";
+                    $params[] = $tipoPublico;
+                    $types .= "s";
+                }
 
-            if (!empty(trim($categoria))) {
-                $sql .= " AND l.categoria LIKE ?";
-                $params[] = "%" . trim($categoria) . "%";
-                $types .= "s";
-            }
+                if (!empty(trim($editorial))) {
+                    $conditions[] = "l.editorial LIKE ?";
+                    $params[] = "%" . $editorial . "%";
+                    $types .= "s";
+                }
 
-            if (!empty($tipoPublico)) {
-                $sql .= " AND l.tipoPublico = ?";
-                $params[] = $tipoPublico;
-                $types .= "s";
-            }
+                if (!empty(trim($edicion))) {
+                    $conditions[] = "l.edicion LIKE ?";
+                    $params[] = "%" . $edicion . "%";
+                    $types .= "s";
+                }
 
-            if (!empty($baseMin)) {
-                $sql .= " AND l.base >= ?";
-                $params[] = floatval($baseMin);
-                $types .= "d";
-            }
+                if (!empty($baseMin)) {
+                    $conditions[] = "l.base >= ?";
+                    $params[] = floatval($baseMin);
+                    $types .= "d";
+                }
 
-            if (!empty($baseMax)) {
-                $sql .= " AND l.base <= ?";
-                $params[] = floatval($baseMax);
-                $types .= "d";
-            }
+                if (!empty($baseMax)) {
+                    $conditions[] = "l.base <= ?";
+                    $params[] = floatval($baseMax);
+                    $types .= "d";
+                }
 
-            if (!empty($alturaMin)) {
-                $sql .= " AND l.altura >= ?";
-                $params[] = floatval($alturaMin);
-                $types .= "d";
-            }
+                if (!empty($alturaMin)) {
+                    $conditions[] = "l.altura >= ?";
+                    $params[] = floatval($alturaMin);
+                    $types .= "d";
+                }
 
-            if (!empty($alturaMax)) {
-                $sql .= " AND l.altura <= ?";
-                $params[] = floatval($alturaMax);
-                $types .= "d";
-            }
+                if (!empty($alturaMax)) {
+                    $conditions[] = "l.altura <= ?";
+                    $params[] = floatval($alturaMax);
+                    $types .= "d";
+                }
 
-            if (!empty($paginasMin)) {
-                $sql .= " AND l.paginas >= ?";
-                $params[] = intval($paginasMin);
-                $types .= "i";
-            }
+                if (!empty($paginasMin)) {
+                    $conditions[] = "l.paginas >= ?";
+                    $params[] = intval($paginasMin);
+                    $types .= "i";
+                }
 
-            if (!empty($paginasMax)) {
-                $sql .= " AND l.paginas <= ?";
-                $params[] = intval($paginasMax);
-                $types .= "i";
-            }
+                if (!empty($paginasMax)) {
+                    $conditions[] = "l.paginas <= ?";
+                    $params[] = intval($paginasMax);
+                    $types .= "i";
+                }
 
-            // Búsqueda por hashtags
-            if (!empty(trim($etiquetas))) {
-                $etiquetasArray = array_map('trim', explode(',', $etiquetas));
-                $hashtagConditions = [];
+                // Agregar las condiciones a la consulta
+                if (!empty($conditions)) {
+                    $query .= " AND " . implode(" AND ", $conditions);
+                }
+
+                $query .= " ORDER BY p.fechaCreacion DESC";
+
+                $stmt = $conn->prepare($query);
                 
-                foreach ($etiquetasArray as $etiqueta) {
-                    if (!empty($etiqueta)) {
-                        $hashtagConditions[] = "h.texto LIKE ?";
-                        $params[] = "%" . $etiqueta . "%";
-                        $types .= "s";
-                    }
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
                 }
                 
-                if (!empty($hashtagConditions)) {
-                    $sql .= " AND l.idLibro IN (
-                        SELECT lh.idLibro 
-                        FROM LibroHashtags lh 
-                        JOIN Hashtags h ON lh.idHashtag = h.idHashtag 
-                        WHERE " . implode(' OR ', $hashtagConditions) . "
-                    )";
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                while ($row = $result->fetch_assoc()) {
+                    $publicaciones[] = $row;
+                }
+
+                $stmt->close();
+
+                if (empty($publicaciones)) {
+                    $mensaje_exito = "No se encontraron publicaciones que coincidan con los criterios de búsqueda.";
                 }
             }
-
-            $sql .= " ORDER BY p.fechaCreacion DESC";
-
-            // Ejecutar consulta
-            $stmt = $conn->prepare($sql);
-            
-            if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
-            }
-            
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            while ($row = $result->fetch_assoc()) {
-                $resultados[] = $row;
-            }
-
-            // Obtener hashtags para cada libro encontrado
-            if (!empty($resultados)) {
-                $libroIds = array_column($resultados, 'idLibro');
-                $placeholders = implode(',', array_fill(0, count($libroIds), '?'));
-                
-                $hashtagStmt = $conn->prepare("
-                    SELECT lh.idLibro, h.texto as hashtag
-                    FROM LibroHashtags lh
-                    INNER JOIN Hashtags h ON lh.idHashtag = h.idHashtag
-                    WHERE lh.idLibro IN ($placeholders)
-                ");
-                
-                if ($hashtagStmt) {
-                    $hashtagTypes = str_repeat('i', count($libroIds));
-                    $hashtagStmt->bind_param($hashtagTypes, ...$libroIds);
-                    $hashtagStmt->execute();
-                    $hashtagResult = $hashtagStmt->get_result();
-                    
-                    while ($hashtagRow = $hashtagResult->fetch_assoc()) {
-                        $hashtags[$hashtagRow['idLibro']][] = $hashtagRow['hashtag'];
-                    }
-                    $hashtagStmt->close();
-                }
-            }
-
-            if (empty($resultados)) {
-                $mensaje_exito = "No se encontraron libros que coincidan con los criterios de búsqueda.";
-            } else {
-                $mensaje_exito = "Se encontraron " . count($resultados) . " libro(s) que coinciden con tu búsqueda.";
-            }
-
-            $stmt->close();
         }
     } catch (Exception $e) {
         $errores[] = "Error en el servidor: " . $e->getMessage();
@@ -244,22 +208,6 @@
         if (isset($conn) && $conn instanceof mysqli) {
             $conn->close();
         }
-    }
-
-    // Funciones helper
-    function formatearPrecio($precio) {
-        return ($precio == 0 || $precio === null) ? 'Gratis' : '$' . number_format($precio, 2);
-    }
-
-    function formatearFecha($fecha) {
-        return empty($fecha) ? 'No especificada' : date('d/m/Y', strtotime($fecha));
-    }
-
-    function formatearDimensiones($base, $altura) {
-        if (empty($base) && empty($altura)) return 'No especificadas';
-        if (empty($base)) return "Altura: {$altura} cm";
-        if (empty($altura)) return "Base: {$base} cm";
-        return "{$base} x {$altura} cm";
     }
 ?>
 
@@ -311,7 +259,7 @@
 
         .search-container h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             font-size: 2.2em;
             font-weight: 800;
             background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%);
@@ -321,22 +269,15 @@
             letter-spacing: -0.5px;
         }
 
-        .search-description {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #6f5c4d;
-            font-size: 1.1em;
-            line-height: 1.6;
-        }
-
-        .search-form {
+        /* Formulario en grid */
+        .publication-form {
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
         }
 
         @media (min-width: 768px) {
-            .search-form {
+            .publication-form {
                 grid-template-columns: repeat(2, 1fr);
             }
             .form-group.full-width {
@@ -358,6 +299,8 @@
 
         .form-group input[type="text"],
         .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group input[type="url"],
         .form-group select,
         .form-group textarea {
             width: 100%;
@@ -373,7 +316,10 @@
             box-shadow: 0 4px 15px rgba(163, 177, 138, 0.1);
         }
 
-        .form-group input:focus,
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group input[type="date"]:focus,
+        .form-group input[type="url"]:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
@@ -386,23 +332,21 @@
             min-height: 100px;
         }
 
+        /* Estilos específicos para el grupo de dimensiones */
         .dimensions-group .dimension-inputs {
             display: flex;
             gap: 15px;
             align-items: center;
-            flex-wrap: wrap;
         }
 
         .dimensions-group .dimension-inputs label {
             margin-bottom: 0;
             white-space: nowrap;
             font-weight: 500;
-            min-width: fit-content;
         }
 
         .dimensions-group .dimension-inputs input {
-            flex: 1;
-            min-width: 80px;
+            flex-grow: 1;
         }
 
         .form-group small {
@@ -413,10 +357,11 @@
             opacity: 0.8;
         }
 
+        /* Botones del formulario */
         .form-actions {
             grid-column: 1 / -1;
             display: flex;
-            justify-content: center;
+            justify-content: flex-end;
             gap: 15px;
             margin-top: 30px;
         }
@@ -431,10 +376,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .submit-button {
@@ -466,250 +407,145 @@
             margin-top: 40px;
         }
 
-        .results-header {
+        .results-title {
             text-align: center;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #6b4226;
             margin-bottom: 30px;
         }
 
-        .results-header h2 {
-            font-size: 1.8em;
-            font-weight: 700;
-            color: #2c2016;
-            margin-bottom: 10px;
-        }
-
-        .results-count {
-            background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .results-grid {
+        .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            padding: 0 20px;
-            max-width: 1400px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
         }
 
-        .book-card {
-            background: rgba(255, 253, 252, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
+        .card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-
-        .book-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-        }
-
-        .book-image {
-            position: relative;
-            height: 250px;
-            overflow: hidden;
-            background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
-        }
-
-        .book-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
             transition: transform 0.3s ease;
         }
 
-        .book-card:hover .book-image img {
-            transform: scale(1.05);
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
 
-        .image-placeholder {
+        .card-image {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: #f0ede8;
+        }
+
+        .card-image img {
+            width: 100%;
             height: 100%;
-            color: rgba(44, 32, 22, 0.3);
+            object-fit: cover;
         }
 
-        .video-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .card-content {
+            padding: 20px;
         }
 
-        .price-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: linear-gradient(135deg, #6b4226 0%, #8b5a3c 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-weight: 700;
-            font-size: 0.85em;
-        }
-
-        .price-badge.free {
-            background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
-        }
-
-        .book-content {
-            padding: 25px;
-        }
-
-        .book-title {
+        .card-title {
             font-size: 1.3em;
             font-weight: 700;
-            color: #2c2016;
+            color: #3e2723;
             margin-bottom: 8px;
-            line-height: 1.3;
         }
 
-        .book-author {
-            color: #6f5c4d;
-            font-weight: 600;
-            margin-bottom: 15px;
-            font-size: 1em;
-        }
-
-        .book-description {
-            color: #8a7a6a;
-            line-height: 1.5;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .card-author {
             font-size: 0.95em;
-        }
-
-        .book-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
+            color: #6d4c41;
             margin-bottom: 15px;
         }
 
-        .detail-item {
-            background: rgba(163, 177, 138, 0.1);
-            padding: 8px 12px;
-            border-radius: 10px;
-            border-left: 3px solid #a3b18a;
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: #588157;
-            display: block;
-            margin-bottom: 3px;
-            font-size: 0.75em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .detail-value {
-            color: #2c2016;
-            font-weight: 500;
-            font-size: 0.85em;
-        }
-
-        .book-hashtags {
+        .card-price {
+            font-weight: bold;
+            color: #8b5a3c;
             margin-bottom: 15px;
+            font-size: 1.1em;
         }
 
-        .hashtag {
-            display: inline-block;
-            background: rgba(88, 129, 87, 0.1);
-            color: #3a5a40;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-            margin: 2px 4px 2px 0;
-            border: 1px solid rgba(88, 129, 87, 0.2);
-        }
-
-        .book-footer {
+        .card-actions {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 15px;
-            border-top: 1px solid rgba(163, 177, 138, 0.2);
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .publication-date {
-            color: #8a7a6a;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-
-        .view-button {
-            background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
-            color: white;
-            padding: 8px 16px;
+        .btn-details, .btn-contact {
+            flex: 1;
+            padding: 10px 15px;
             border: none;
-            border-radius: 15px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            font-size: 0.85em;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            text-align: center;
+            font-size: 0.9em;
         }
 
-        .view-button:hover {
+        .btn-details {
+            background: linear-gradient(135deg, #588157 0%, #3a5a40 100%);
+            color: white;
+        }
+
+        .btn-details:hover {
             background: linear-gradient(135deg, #3a5a40 0%, #2d4732 100%);
             transform: translateY(-1px);
         }
 
-        .no-results {
-            text-align: center;
-            padding: 60px 20px;
-            color: #8a7a6a;
+        .btn-contact {
+            background: linear-gradient(135deg, #8b5a3c 0%, #6b4226 100%);
+            color: white;
         }
 
-        .no-results-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .errores, .mensaje-exito {
-            padding: 15px 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            text-align: center;
+        .btn-contact:hover {
+            background: linear-gradient(135deg, #6b4226 0%, #5d3a22 100%);
+            transform: translateY(-1px);
         }
 
         .errores {
-            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            background-color: #ffebee;
             border: 1px solid #ef9a9a;
             color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .errores p {
+            margin: 5px 0;
+            font-weight: 500;
         }
 
         .mensaje-exito {
-            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-            border: 1px solid #81c784;
+            background-color: #e8f5e8;
+            border: 1px solid #4caf50;
             color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6d4c41;
+        }
+
+        .no-results svg {
+            margin-bottom: 20px;
         }
 
         /* Responsive */
@@ -731,25 +567,19 @@
             .submit-button, .cancel-button {
                 width: 100%;
                 padding: 12px 20px;
-                justify-content: center;
             }
 
-            .results-grid {
+            .gallery {
                 grid-template-columns: 1fr;
-                padding: 0 15px;
+                padding: 20px;
             }
 
-            .dimensions-group .dimension-inputs {
+            .card-actions {
                 flex-direction: column;
-                gap: 10px;
-            }
-
-            .dimensions-group .dimension-inputs input {
-                width: 100%;
             }
         }
 
-        /* Animaciones */
+        /* Animación de entrada */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -761,7 +591,7 @@
             }
         }
 
-        .search-container, .book-card {
+        .search-container {
             animation: fadeInUp 0.6s ease forwards;
         }
     </style>
@@ -802,8 +632,8 @@
     <?php include '../../includes/chat-component.php'; ?>
 
     <main class="search-container">
-        <h1>🔍 Buscador Avanzado</h1>
-        <p class="search-description">Encuentra libros usando múltiples criterios. Todos los campos son opcionales, pero más detalles te darán mejores resultados.</p>
+        <h1>Buscador Avanzado</h1>
+        <p>Llene los campos con las características del libro que busque. Todos los campos son opcionales, pero con más datos funcionará mejor el filtro.</p>
         
         <?php if (!empty($errores)): ?>
             <div class="errores">
@@ -813,65 +643,64 @@
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($mensaje_exito) && $_SERVER['REQUEST_METHOD'] === 'POST'): ?>
+        <?php if (!empty($mensaje_exito)): ?>
             <div class="mensaje-exito">
                 <p><?php echo htmlspecialchars($mensaje_exito); ?></p>
             </div>
         <?php endif; ?>
         
-        <form action="" method="POST" class="search-form">
+        <form action="" method="POST" class="publication-form">
             
             <div class="form-group">
                 <label for="titulo">Título:</label>
-                <input type="text" id="titulo" name="titulo" value="<?php echo $titulo; ?>" placeholder="Ej: Cien años de soledad">
+                <input type="text" id="titulo" name="titulo" value="<?php echo $titulo; ?>">
             </div>
 
             <div class="form-group">
                 <label for="autor">Autor:</label>
-                <input type="text" id="autor" name="autor" value="<?php echo $autor; ?>" placeholder="Ej: Gabriel García Márquez">
+                <input type="text" id="autor" name="autor" value="<?php echo $autor; ?>">
             </div>
 
             <div class="form-group full-width">
-                <label for="descripcion">Descripción (palabras clave):</label>
-                <textarea id="descripcion" name="descripcion" rows="3" placeholder="Palabras clave de la descripción del libro"><?php echo $descripcion; ?></textarea>
-                <small>Busca palabras clave en la descripción del libro</small>
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" rows="4"><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
+                <small>Descripción detallada del libro</small>
             </div>
 
             <div class="form-group">
                 <label for="precioMin">Precio Mínimo:</label>
-                <input type="number" id="precioMin" name="precioMin" step="0.01" min="0" value="<?php echo $precioMin; ?>" placeholder="0.00">
+                <input type="number" id="precioMin" name="precioMin" step="0.01" min="0" value="<?php echo $precioMin; ?>">
             </div>
 
             <div class="form-group">
                 <label for="precioMax">Precio Máximo:</label>
-                <input type="number" id="precioMax" name="precioMax" step="0.01" min="0" value="<?php echo $precioMax; ?>" placeholder="100.00">
+                <input type="number" id="precioMax" name="precioMax" step="0.01" min="0" value="<?php echo $precioMax; ?>">
             </div>
 
             <div class="form-group">
                 <label for="etiquetas">Etiquetas (separadas por comas):</label>
-                <input type="text" id="etiquetas" name="etiquetas" placeholder="ficción, fantasía, aventura" value="<?php echo $etiquetas; ?>">
-                <small>Busca por hashtags del libro</small>
+                <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" value="<?php echo $etiquetas; ?>">
             </div>
 
             <div class="form-group">
                 <label for="editorial">Editorial:</label>
-                <input type="text" id="editorial" name="editorial" value="<?php echo $editorial; ?>" placeholder="Ej: Penguin Random House">
+                <input type="text" id="editorial" name="editorial" value="<?php echo $editorial; ?>">
             </div>
 
             <div class="form-group">
                 <label for="edicion">Edición:</label>
-                <input type="text" id="edicion" name="edicion" value="<?php echo $edicion; ?>" placeholder="Ej: Primera, Segunda">
+                <input type="text" id="edicion" name="edicion" value="<?php echo $edicion; ?>">
             </div>
 
             <div class="form-group">
                 <label for="categoria">Categoría:</label>
-                <input type="text" id="categoria" name="categoria" value="<?php echo $categoria; ?>" placeholder="Ej: Novela, Ensayo, Poesía">
+                <input type="text" id="categoria" name="categoria" value="<?php echo $categoria; ?>">
             </div>
 
             <div class="form-group">
                 <label for="tipoPublico">Tipo de Público:</label>
                 <select id="tipoPublico" name="tipoPublico">
-                    <option value="">Todos los públicos</option>
+                    <option value="">Seleccione...</option>
                     <option value="General" <?php echo ($tipoPublico === 'General' ? 'selected' : ''); ?>>General</option>
                     <option value="Infantil" <?php echo ($tipoPublico === 'Infantil' ? 'selected' : ''); ?>>Infantil</option>
                     <option value="Juvenil" <?php echo ($tipoPublico === 'Juvenil' ? 'selected' : ''); ?>>Juvenil</option>
@@ -879,158 +708,66 @@
                 </select>
             </div>
 
-            <div class="form-group dimensions-group full-width">
+            <div class="form-group dimensions-group">
                 <label>Dimensiones (cm):</label>
                 <div class="dimension-inputs">
                     <label for="baseMin">Base Mín:</label>
-                    <input type="number" id="baseMin" name="baseMin" step="0.1" min="0" value="<?php echo $baseMin; ?>" placeholder="10.0">
+                    <input type="number" id="baseMin" name="baseMin" step="0.1" min="0" value="<?php echo $baseMin; ?>">
                     <label for="baseMax">Base Máx:</label>
-                    <input type="number" id="baseMax" name="baseMax" step="0.1" min="0" value="<?php echo $baseMax; ?>" placeholder="30.0">
+                    <input type="number" id="baseMax" name="baseMax" step="0.1" min="0" value="<?php echo $baseMax; ?>">
                     <label for="alturaMin">Altura Mín:</label>
-                    <input type="number" id="alturaMin" name="alturaMin" step="0.1" min="0" value="<?php echo $alturaMin; ?>" placeholder="15.0">
+                    <input type="number" id="alturaMin" name="alturaMin" step="0.1" min="0" value="<?php echo $alturaMin; ?>">
                     <label for="alturaMax">Altura Máx:</label>
-                    <input type="number" id="alturaMax" name="alturaMax" step="0.1" min="0" value="<?php echo $alturaMax; ?>" placeholder="25.0">
+                    <input type="number" id="alturaMax" name="alturaMax" step="0.1" min="0" value="<?php echo $alturaMax; ?>">
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="paginasMin">Páginas Mínimas:</label>
-                <input type="number" id="paginasMin" name="paginasMin" min="1" value="<?php echo $paginasMin; ?>" placeholder="50">
+                <label for="paginasMin">Número de Páginas Mínimo:</label>
+                <input type="number" id="paginasMin" name="paginasMin" min="1" value="<?php echo $paginasMin; ?>">
             </div>
 
             <div class="form-group">
-                <label for="paginasMax">Páginas Máximas:</label>
-                <input type="number" id="paginasMax" name="paginasMax" min="1" value="<?php echo $paginasMax; ?>" placeholder="500">
+                <label for="paginasMax">Número de Páginas Máximo:</label>
+                <input type="number" id="paginasMax" name="paginasMax" min="1" value="<?php echo $paginasMax; ?>">
             </div>
 
             <div class="form-actions">
-                <a href="../home.php" class="cancel-button">
-                    <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                    </svg>
-                    Cancelar
-                </a>
-                <button type="submit" class="submit-button">
-                    <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                    </svg>
-                    Buscar Libros
-                </button>
+                <a href="../home.php" class="cancel-button">Cancelar</a>
+                <button type="submit" class="submit-button">Buscar</button>
             </div>
         </form>
-    </main>
 
-    <?php if ($_SERVER['REQUEST_METHOD'] === 'POST'): ?>
-        <section class="results-section">
-            <div class="results-header">
-                <h2>📚 Resultados de Búsqueda</h2>
-                <?php if (!empty($resultados)): ?>
-                    <span class="results-count"><?php echo count($resultados); ?> libro(s) encontrado(s)</span>
-                <?php endif; ?>
-            </div>
-
-            <div class="results-grid">
-                <?php if (empty($resultados)): ?>
-                    <div class="no-results">
-                        <div class="no-results-icon">📖</div>
-                        <h3>No se encontraron resultados</h3>
-                        <p>No hay libros que coincidan con los criterios de búsqueda especificados.</p>
-                        <p>Intenta modificar los filtros o usar menos criterios específicos.</p>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($resultados as $libro): ?>
-                        <div class="book-card" onclick="window.location.href='ver_libro.php?id=<?php echo $libro['idPublicacion']; ?>'">
-                            <div class="book-image">
-                                <?php if (!empty($libro['linkImagen1'])): ?>
-                                    <img src="../../uploads/<?php echo htmlspecialchars($libro['linkImagen1']); ?>" 
-                                         alt="<?php echo htmlspecialchars($libro['titulo']); ?>" 
-                                         loading="lazy">
+        <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($publicaciones)): ?>
+            <div class="results-section">
+                <h2 class="results-title">Resultados de la búsqueda (<?php echo count($publicaciones); ?> encontrados)</h2>
+                <div class="gallery">
+                    <?php foreach ($publicaciones as $publicacion): ?>
+                        <div class="card">
+                            <div class="card-image">
+                                <?php if (!empty($publicacion['linkImagen1'])): ?>
+                                    <img src="../../uploads/<?php echo htmlspecialchars($publicacion['linkImagen1']); ?>" alt="<?php echo htmlspecialchars($publicacion['titulo']); ?>">
                                 <?php else: ?>
-                                    <div class="image-placeholder">
-                                        <svg width="80" height="80" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
-                                        </svg>
-                                    </div>
+                                    <svg width="60" height="60" fill="rgba(0,0,0,0.1)" viewBox="0 0 24 24">
+                                        <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                                    </svg>
                                 <?php endif; ?>
-                                
-                                <?php if (!empty($libro['linkVideo'])): ?>
-                                    <div class="video-badge">
-                                        <svg width="12" height="12" fill="white" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                        Video
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <div class="price-badge <?php echo ($libro['precio'] == 0) ? 'free' : ''; ?>">
-                                    <?php echo formatearPrecio($libro['precio']); ?>
-                                </div>
                             </div>
-                            
-                            <div class="book-content">
-                                <h3 class="book-title"><?php echo htmlspecialchars($libro['titulo']); ?></h3>
-                                <div class="book-author">✍️ <?php echo htmlspecialchars($libro['autor']); ?></div>
-                                
-                                <?php if (!empty($libro['descripcion'])): ?>
-                                    <div class="book-description">
-                                        <?php echo htmlspecialchars($libro['descripcion']); ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <div class="book-details">
-                                    <?php if (!empty($libro['editorial'])): ?>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Editorial</span>
-                                            <span class="detail-value"><?php echo htmlspecialchars($libro['editorial']); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($libro['categoria'])): ?>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Categoría</span>
-                                            <span class="detail-value"><?php echo htmlspecialchars($libro['categoria']); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($libro['tipoPublico'])): ?>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Público</span>
-                                            <span class="detail-value"><?php echo htmlspecialchars($libro['tipoPublico']); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($libro['paginas'])): ?>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Páginas</span>
-                                            <span class="detail-value"><?php echo htmlspecialchars($libro['paginas']); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-
-                                <?php if (!empty($hashtags[$libro['idLibro']])): ?>
-                                    <div class="book-hashtags">
-                                        <?php foreach ($hashtags[$libro['idLibro']] as $hashtag): ?>
-                                            <span class="hashtag">#<?php echo htmlspecialchars($hashtag); ?></span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <div class="book-footer">
-                                    <span class="publication-date">📅 <?php echo formatearFecha($libro['fechaCreacion']); ?></span>
-                                    <a href="ver_libro.php?id=<?php echo $libro['idPublicacion']; ?>" class="view-button" onclick="event.stopPropagation();">
-                                        <svg width="14" height="14" fill="white" viewBox="0 0 24 24">
-                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                                        </svg>
-                                        Ver
-                                    </a>
+                            <div class="card-content">
+                                <div class="card-title"><?php echo htmlspecialchars($publicacion['titulo']); ?></div>
+                                <div class="card-author">Por: <?php echo htmlspecialchars($publicacion['autor']); ?></div>
+                                <div class="card-price">$<?php echo number_format($publicacion['precio'], 2); ?></div>
+                                <div class="card-actions">
+                                    <a href="detalle_publicacion.php?id=<?php echo $publicacion['idPublicacion']; ?>" class="btn-details">Ver Detalles</a>
+                                    <button class="btn-contact" onclick="abrirChat(<?php echo $publicacion['idUsuario']; ?>, '<?php echo htmlspecialchars($publicacion['userName']); ?>')">Contactar</button>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                <?php endif; ?>
+                </div>
             </div>
-        </section>
-    <?php endif; ?>
+        <?php endif; ?>
+    </main>
 
     <div class="bottombar">
         <a href="../home.php" class="bottom-button" title="Inicio">
@@ -1053,102 +790,17 @@
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Efectos visuales de foco para inputs
-            document.querySelectorAll('input, select, textarea').forEach(element => {
-                element.addEventListener('focus', function() {
-                    this.style.transform = 'translateY(-1px)';
-                });
-                
-                element.addEventListener('blur', function() {
-                    this.style.transform = 'translateY(0)';
-                });
+        // Efectos visuales de foco para inputs
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', function() {
+                this.style.transform = 'translateY(-1px)';
             });
-
-            // Animación de las tarjetas de resultados
-            const cards = document.querySelectorAll('.book-card');
-            cards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 0.1}s`;
-            });
-
-            // Validación del formulario
-            const form = document.querySelector('.search-form');
-            const submitButton = document.querySelector('.submit-button');
             
-            form.addEventListener('submit', function(e) {
-                const formData = new FormData(form);
-                let hasValue = false;
-                
-                for (let [key, value] of formData.entries()) {
-                    if (value.trim() !== '') {
-                        hasValue = true;
-                        break;
-                    }
-                }
-                
-                if (!hasValue) {
-                    e.preventDefault();
-                    alert('⚠️ Por favor, completa al menos un campo para realizar la búsqueda.');
-                    return;
-                }
-                
-                // Animación del botón
-                submitButton.innerHTML = `
-                    <svg width="16" height="16" fill="white" viewBox="0 0 24 24" class="spinning">
-                        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8z"/>
-                        <path d="m4 12c0-1.01.25-1.97.7-2.8L3.24 7.74C2.46 8.97 2 10.43 2 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6z"/>
-                    </svg>
-                    Buscando...
-                `;
-                submitButton.disabled = true;
+            element.addEventListener('blur', function() {
+                this.style.transform = 'translateY(0)';
             });
-
-            // Validación de rangos numéricos
-            function validateRange(minId, maxId) {
-                const minInput = document.getElementById(minId);
-                const maxInput = document.getElementById(maxId);
-                
-                function validate() {
-                    const minVal = parseFloat(minInput.value);
-                    const maxVal = parseFloat(maxInput.value);
-                    
-                    if (minVal && maxVal && minVal > maxVal) {
-                        maxInput.setCustomValidity(`El valor máximo debe ser mayor que ${minVal}`);
-                    } else {
-                        maxInput.setCustomValidity('');
-                    }
-                }
-                
-                minInput.addEventListener('input', validate);
-                maxInput.addEventListener('input', validate);
-            }
-            
-            validateRange('precioMin', 'precioMax');
-            validateRange('baseMin', 'baseMax');
-            validateRange('alturaMin', 'alturaMax');
-            validateRange('paginasMin', 'paginasMax');
-
-            // Scroll suave a resultados después de buscar
-            <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($resultados)): ?>
-                setTimeout(() => {
-                    document.querySelector('.results-section')?.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'start' 
-                    });
-                }, 100);
-            <?php endif; ?>
         });
 
-        // CSS para animaciones
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes spinning {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-            .spinning { animation: spinning 1s linear infinite; }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>
