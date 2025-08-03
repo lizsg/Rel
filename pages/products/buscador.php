@@ -7,30 +7,31 @@
         exit();
     }
 
-    require_once __DIR__ . '/../../config/database.php'; // Asegúrate de que esta ruta sea correcta
+    require_once __DIR__ . '/../../config/database.php';
 
-    $userId = $_SESSION['user_id']; // Obtener el ID del usuario de la sesión
+    $userId = $_SESSION['user_id']; 
 
-    $errores = []; // Array para almacenar mensajes de error de PHP
-    $mensaje_exito = ''; // Variable para mensaje de éxito
+    $errores = [];
+    $mensaje_exito = '';
 
-    // Inicializar variables para mantener los valores en el formulario si hay errores
-    // Se usa htmlspecialchars para prevenir XSS al mostrar los valores en el HTML
     $titulo = htmlspecialchars($_POST['titulo'] ?? '');
     $autor = htmlspecialchars($_POST['autor'] ?? '');
     $descripcion = htmlspecialchars($_POST['descripcion'] ?? '');
-    $precio = htmlspecialchars($_POST['precio'] ?? '');
+    $precioMin = htmlspecialchars($_POST['precioMin'] ?? '');
+    $precioMax = htmlspecialchars($_POST['precioMax'] ?? '');
     $etiquetas = htmlspecialchars($_POST['etiquetas'] ?? '');
     $editorial = htmlspecialchars($_POST['editorial'] ?? '');
     $edicion = htmlspecialchars($_POST['edicion'] ?? '');
     $categoria = htmlspecialchars($_POST['categoria'] ?? '');
     $tipoPublico = htmlspecialchars($_POST['tipoPublico'] ?? '');
-    $base = htmlspecialchars($_POST['base'] ?? '');
-    $altura = htmlspecialchars($_POST['altura'] ?? '');
-    $paginas = htmlspecialchars($_POST['paginas'] ?? '');
+    $baseMin = htmlspecialchars($_POST['baseMin'] ?? '');
+    $baseMax = htmlspecialchars($_POST['baseMax'] ?? '');
+    $alturaMin = htmlspecialchars($_POST['alturaMin'] ?? '');
+    $alturaMax = htmlspecialchars($_POST['alturaMax'] ?? '');
+    $paginasMin = htmlspecialchars($_POST['paginasMin'] ?? '');
+    $paginasMax = htmlspecialchars($_POST['paginasMax'] ?? '');
 
     try {
-        // Establecemos la conexión a la base de datos
         $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
         
         if ($conn->connect_error) {
@@ -40,45 +41,21 @@
         // Procesar el formulario solo si se ha enviado por POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validaciones básicas de campos de texto (lado del servidor)
-            if (empty(trim($titulo))) {
-                $errores[] = "El título es obligatorio.";
-            }
-            if (empty(trim($autor))) {
-                $errores[] = "El autor es obligatorio.";
-            }
-            if (empty(trim($descripcion))) {
-                $errores[] = "La descripción es obligatoria.";
-            }
-            // Validar precio si se proporciona
-            if (!empty($precio)) {
-                if (!is_numeric($precio) || (float)$precio < 0) {
-                    $errores[] = "El precio debe ser un número válido y no negativo.";
-                }
-            }
-            // Validar páginas si se proporciona
-            if (!empty($paginas)) {
-                if (!filter_var($paginas, FILTER_VALIDATE_INT, array("options" => array("min_range"=>1)))) {
-                    $errores[] = "El número de páginas debe ser un número entero positivo.";
-                }
-            }
-            // Validar dimensiones si se proporcionan
-            if (!empty($base)) {
-                if (!is_numeric($base) || (float)$base < 0) {
-                    $errores[] = "La base debe ser un número válido y no negativo.";
-                }
-            }
-            if (!empty($altura)) {
-                if (!is_numeric($altura) || (float)$altura < 0) {
-                    $errores[] = "La altura debe ser un número válido y no negativo.";
-                }
-            }
-            if (empty(trim($categoria))) {
-                $errores[] = "La categoría es obligatoria.";
-            }
-            if (empty(trim($tipoPublico))) {
-                $errores[] = "El tipo de público es obligatorio.";
-            }
+            if (empty(trim($titulo)) && empty(trim($autor)) && empty(trim($descripcion)) && !empty($precioMin) &&
+                !empty($precioMax) && !empty($paginas) && !empty($baseMin) && !empty($baseMax) && 
+                !empty($alturaMin) && !empty($alturaMax) && empty(trim($categoria)) && (empty(trim($tipoPublico))) ) {
+                $errores[] = "Tiene que haber al menos un capo lleno.";
+            } else {
+                $buscar = $conn->prepare("SELECT * FROM Libros WHERE ");
 
+                if(!empty(trim($titulo))){
+                    $filtroTitulo = "titulo LIKE '%" . $titulo . "%'";
+                } else {
+                    $filtroTitulo = "";
+                }
+
+
+            }
         }
     } catch (Exception $e) {
         // Captura cualquier excepción (ej. error de conexión a DB)
@@ -351,6 +328,7 @@
 </head>
 <body>
     <div class="topbar">
+        <div class="logo">RELEE</div> <!-- Nota a mi misma, poner el logo a la izquierda -->
         <div class="topbar-icon" title="Chat">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                 <path d="M12 2c.55 0 1 .45 1 1v1h4a2 2 0 0 1 2 2v2h1a1 1 0 1 1 0 2h-1v6a3 3 0 0 1-3 3h-1v1a1 1 0 1 1-2 0v-1H9v1a1 1 0 1 1-2 0v-1H6a3 3 0 0 1-3-3v-6H2a1 1 0 1 1 0-2h1V6a2 2 0 0 1 2-2h4V3c0-.55.45-1 1-1zm-5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
@@ -383,21 +361,9 @@
 
     <?php include '../../includes/chat-component.php'; ?>
 
-    <header>
-        <div class="logo">RELEE</div>
-        <div class="search-bar">
-            <input type="text" placeholder="Buscar libros, autores, géneros...">
-            <button>
-                <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                </svg>
-            </button>
-        </div>
-        <button class="user-button">Búsqueda Avanzada</button>
-    </header>
-
     <main class="add-publication-container">
-        <h1>Agregar Nueva Publicación</h1>
+        <h1>Buscador Avanzado</h1>
+        <p>Llene los compos con las caracteristicas del libro que busque, todos los campos son opcionales, pero con mas datos funcionara mejor el filtro</p>
         
         <?php if (!empty($errores)): ?>
             <div class="errores">
@@ -421,31 +387,33 @@
 
             <div class="form-group full-width">
                 <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="4" required><?php echo $descripcion; ?></textarea>
+                <textarea id="descripcion" name="descripcion" rows="4" required><?php echo htmlspecialchars($_POST['descripcion'] ?? ''); ?></textarea>
+                <small>Descripción detallada del libro</small>
             </div>
 
             <div class="form-group">
-                <label for="precio">Precio:</label>
-                <input type="number" id="precio" name="precio" step="0.01" min="0" value="<?php echo $precio; ?>">
-                <small>Opcional</small>
+                <label for="precio">Precio Mínimo:</label>
+                <input type="number" id="precio" name="precioMin" step="0.01" min="0" value="<?php echo $precio; ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="precio">Precio Máximo:</label>
+                <input type="number" id="precio" name="precioMax" step="0.01" min="0" value="<?php echo $precio; ?>">
             </div>
 
             <div class="form-group">
                 <label for="etiquetas">Etiquetas (separadas por comas):</label>
                 <input type="text" id="etiquetas" name="etiquetas" placeholder="ej: ficción, fantasía, aventura" value="<?php echo $etiquetas; ?>">
-                <small>Opcional</small>
             </div>
 
             <div class="form-group">
                 <label for="editorial">Editorial:</label>
                 <input type="text" id="editorial" name="editorial" value="<?php echo $editorial; ?>">
-                <small>Opcional</small>
             </div>
 
             <div class="form-group">
                 <label for="edicion">Edición:</label>
                 <input type="text" id="edicion" name="edicion" value="<?php echo $edicion; ?>">
-                <small>Opcional</small>
             </div>
 
             <div class="form-group">
@@ -467,49 +435,32 @@
             <div class="form-group dimensions-group">
                 <label>Dimensiones (cm):</label>
                 <div class="dimension-inputs">
-                    <label for="base">Base:</label>
-                    <input type="number" id="base" name="base" step="0.1" min="0" value="<?php echo $base; ?>">
-                    <label for="altura">Altura:</label>
-                    <input type="number" id="altura" name="altura" step="0.1" min="0" value="<?php echo $altura; ?>">
+                    <label for="base">Base Mínimo:</label>
+                    <input type="number" id="baseMin" name="baseMin" step="0.1" min="0" value="<?php echo $base; ?>">
+                    <label for="base">Base Máximo:</label>
+                    <input type="number" id="baseMax" name="baseMax" step="0.1" min="0" value="<?php echo $base; ?>">
+                    <label for="altura">Altura Mínimo:</label>
+                    <input type="number" id="alturaMin" name="alturaMin" step="0.1" min="0" value="<?php echo $altura; ?>">
+                    <label for="altura">Altura Máximo:</label>
+                    <input type="number" id="alturaMax" name="alturaMax" step="0.1" min="0" value="<?php echo $altura; ?>">
                 </div>
-                <small>Opcional</small>
             </div>
 
             <div class="form-group">
-                <label for="paginas">Número de Páginas:</label>
-                <input type="number" id="paginas" name="paginas" min="1" value="<?php echo $paginas; ?>">
-                <small>Opcional</small>
+                <label for="paginas">Número de Páginas Mínimo:</label>
+                <input type="number" id="paginasMin" name="paginasMin" min="1" value="<?php echo $paginas; ?>">
             </div>
 
-            <div class="form-group full-width">
-                <label for="uploadvideo">Video del libro (Subir):</label>
-                <input type="file" id="uploadvideo" name="uploadvideo" accept="video/*">
-                <small>Trata de subir un video donde se pueda ver claramente el estado del libro (Max 10MB)</small>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="uploadImagen1">Imagen de Portada (Subir):</label>
-                <input type="file" id="uploadImagen1" name="uploadImagen1" accept="image/*" required>
-                <small>Imagen obligatoria (Max 10MB)</small>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="uploadImagen2">Imagen Adicional 1 (Subir):</label>
-                <input type="file" id="uploadImagen2" name="uploadImagen2" accept="image/*">
-                <small>Si no sabes qué subir aquí, recomendamos una imagen de la contraportada (Max 10MB)</small>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="uploadImagen3">Imagen Adicional 2 (Subir):</label>
-                <input type="file" id="uploadImagen3" name="uploadImagen3" accept="image/*">
-                <small>Si no sabes qué subir aquí, recomendamos una foto que muestre el estado del libro (Max 10MB)</small>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="submit-button">Guardar Publicación</button>
-                <button type="button" class="cancel-button" onclick="window.history.back()">Cancelar</button>
+            <div class="form-group">
+                <label for="paginas">Número de Páginas Máximo:</label>
+                <input type="number" id="paginasMax" name="paginasMax" min="1" value="<?php echo $paginas; ?>">
             </div>
         </form>
+
+        <div class="form-actions">
+            <a href="../home.php" class="cancel-button">Cancelar</a>
+            <button type="submit" class="submit-button">Buscar</button>
+        </div>
     </main>
 
     <div class="bottombar">
@@ -533,74 +484,6 @@
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
-        // Tus funciones JS actuales
-        function openChatModal() {
-            console.log('Abriendo chat principal...');
-            // Implementa la lógica para tu modal de chat aquí
-        }
-
-        function openChatModal2() {
-            console.log('Abriendo chat secundario...');
-            // Implementa la lógica para tu segundo modal de chat aquí
-        }
-
-        document.querySelector('.publication-form').addEventListener('submit', function(e) {
-            // Validaciones del lado del cliente (JS) para mejorar la UX
-            const titulo = document.getElementById('titulo').value.trim();
-            const autor = document.getElementById('autor').value.trim();
-            const descripcion = document.getElementById('descripcion').value.trim();
-            const categoria = document.getElementById('categoria').value.trim();
-            const tipoPublico = document.getElementById('tipoPublico').value;
-            const imagen1 = document.getElementById('uploadImagen1');
-            
-            let erroresJS = [];
-
-            if (!titulo) {
-                erroresJS.push('El título es obligatorio.');
-            }
-            if (!autor) {
-                erroresJS.push('El autor es obligatorio.');
-            }
-            if (!descripcion) {
-                erroresJS.push('La descripción es obligatoria.');
-            }
-            if (!categoria) {
-                erroresJS.push('La categoría es obligatoria.');
-            }
-            if (!tipoPublico) {
-                erroresJS.push('El tipo de público es obligatorio.');
-            }
-            if (imagen1.files.length === 0) {
-                erroresJS.push('La imagen de portada es obligatoria.');
-            }
-
-            const precio = document.getElementById('precio').value.trim();
-            if (precio !== '' && (isNaN(precio) || parseFloat(precio) < 0)) {
-                erroresJS.push('El precio debe ser un número válido y no negativo.');
-            }
-
-            const paginas = document.getElementById('paginas').value.trim();
-            if (paginas !== '' && (isNaN(paginas) || parseInt(paginas) < 1)) {
-                erroresJS.push('El número de páginas debe ser un número entero positivo.');
-            }
-
-            const base = document.getElementById('base').value.trim();
-            if (base !== '' && (isNaN(base) || parseFloat(base) < 0)) {
-                erroresJS.push('La base debe ser un número válido y no negativo.');
-            }
-
-            const altura = document.getElementById('altura').value.trim();
-            if (altura !== '' && (isNaN(altura) || parseFloat(altura) < 0)) {
-                erroresJS.push('La altura debe ser un número válido y no negativo.');
-            }
-
-            if (erroresJS.length > 0) {
-                e.preventDefault(); // Detener el envío del formulario
-                alert('Por favor corrige los siguientes errores:\n\n' + erroresJS.join('\n'));
-                return false;
-            }
-        });
-
         // Efectos visuales de foco para inputs
         document.querySelectorAll('input, select, textarea').forEach(element => {
             element.addEventListener('focus', function() {
