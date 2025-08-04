@@ -978,8 +978,9 @@ function formatearDimensiones($base, $altura) {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             function realizarBusquedaPersonal() {
-                const searchInput = document.getElementById('search-input');
-                const searchTerm = searchInput.value.toLowerCase().trim();
+                // Obtener el valor del search-bar del header
+                const searchInput = document.querySelector('.search-bar input');
+                const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 const cards = document.querySelectorAll('.publication-card');
                 let visibleCount = 0;
 
@@ -1069,24 +1070,23 @@ function formatearDimensiones($base, $altura) {
                 }
             }
 
-            // Configurar eventos de búsqueda
-            const searchInput = document.getElementById('search-input');
-            const searchButton = document.getElementById('search-button');
-            
-            if (searchInput && searchButton) {
+            const headerSearchInput = document.querySelector('.search-bar input');
+            const headerSearchButton = document.querySelector('.search-bar button');
+
+            if (headerSearchInput && headerSearchButton) {
                 let searchTimeout;
                 
                 // Búsqueda en tiempo real mientras escribe
-                searchInput.addEventListener('input', function() {
+                headerSearchInput.addEventListener('input', function() {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(realizarBusquedaPersonal, 300);
                 });
                 
                 // Búsqueda al hacer clic en el botón
-                searchButton.addEventListener('click', realizarBusquedaPersonal);
+                headerSearchButton.addEventListener('click', realizarBusquedaPersonal);
                 
                 // Búsqueda al presionar Enter
-                searchInput.addEventListener('keypress', function(e) {
+                headerSearchInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         realizarBusquedaPersonal();
@@ -1208,59 +1208,6 @@ function formatearDimensiones($base, $altura) {
                     }
                 });
             });
-
-            // Búsqueda en tiempo real (si tienes implementada la funcionalidad)
-            const searchInput = document.querySelector('.search-bar input');
-            if (searchInput) {
-                let searchTimeout;
-                
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        const searchTerm = this.value.toLowerCase().trim();
-                        const cards = document.querySelectorAll('.publication-card');
-                        let visibleCount = 0;
-                        
-                        cards.forEach(card => {
-                            const title = card.querySelector('.card-title').textContent.toLowerCase();
-                            const author = card.querySelector('.card-author').textContent.toLowerCase();
-                            const description = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
-                            const hashtags = Array.from(card.querySelectorAll('.hashtag')).map(tag => tag.textContent.toLowerCase()).join(' ');
-                            
-                            const matches = title.includes(searchTerm) || 
-                                          author.includes(searchTerm) || 
-                                          description.includes(searchTerm) ||
-                                          hashtags.includes(searchTerm);
-                            
-                            if (matches || searchTerm === '') {
-                                card.style.display = 'block';
-                                card.style.animation = 'fadeInUp 0.5s ease forwards';
-                                visibleCount++;
-                            } else {
-                                card.style.display = 'none';
-                            }
-                        });
-                        
-                        // Mostrar mensaje si no hay resultados
-                        let noResultsMsg = document.querySelector('.no-results-message');
-                        if (visibleCount === 0 && searchTerm !== '') {
-                            if (!noResultsMsg) {
-                                noResultsMsg = document.createElement('div');
-                                noResultsMsg.className = 'no-results-message empty-state';
-                                noResultsMsg.innerHTML = `
-                                    <div class="empty-state-icon">🔍</div>
-                                    <h3>No se encontraron resultados</h3>
-                                    <p>No encontramos publicaciones que coincidan con "<strong>${searchTerm}</strong>"</p>
-                                    <p>Intenta con otros términos de búsqueda.</p>
-                                `;
-                                document.querySelector('.gallery').appendChild(noResultsMsg);
-                            }
-                        } else if (noResultsMsg) {
-                            noResultsMsg.remove();
-                        }
-                    }, 300);
-                });
-            }
 
             // Mensaje de carga automático al crear nueva publicación
             const newButton = document.querySelector('.new-button');
