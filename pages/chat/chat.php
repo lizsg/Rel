@@ -409,6 +409,20 @@
             });
         }
     });
+
+    // Al final del JavaScript de chat.php, agrega:
+document.addEventListener('DOMContentLoaded', function() {
+    // Si hay una conversación en la URL, seleccionarla automáticamente
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversacionId = urlParams.get('conversacion');
+    
+    if (conversacionId) {
+        const conversationItem = document.querySelector(`[data-conversation-id="${conversacionId}"]`);
+        if (conversationItem) {
+            conversationItem.click();
+        }
+    }
+});
 </script>
 </body>
 </html>

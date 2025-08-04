@@ -1175,7 +1175,7 @@
                 <div class="empty-state-icon">📚</div>
                 <h3>¡Bienvenido a RELEE!</h3>
                 <p>Aún no hay publicaciones recientes. Sé el primero en compartir un libro con la comunidad.</p>
-                <a href="products/NuevaPublicacion.php" class="view-button" style="display: inline-flex; margin-top: 20px;">
+                <a href="products/detalle_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">
                     <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
                         <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
                     </svg>
@@ -1250,13 +1250,14 @@
                         </div>
 
                         <div class="card-actions">
+                            <button class="card-button contact-button" onclick="abrirChat(<?php echo $publicacion['idUsuario']; ?>, '<?php echo htmlspecialchars(addslashes($publicacion['nombreUsuario'])); ?>')">
                             <a href="products/ver_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">
                                 <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                                     <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                                 </svg>
                                 Ver Detalles
                             </a>
-                            <a href="chat/chat.php?usuario_id=<?php echo htmlspecialchars($publicacion['idUsuario']); ?>" class="card-button contact-button">
+                            <button class="card-button contact-button" onclick="abrirChat(<?php echo $publicacion['idUsuario']; ?>, '<?php echo htmlspecialchars(addslashes($publicacion['nombreUsuario'])); ?>')">
                                 <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                                     <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
                                 </svg>
@@ -1290,6 +1291,29 @@
     <script src="../assets/js/home-script.js"></script>
     <script src="../assets/js/chat-script.js"></script>
     <script>
+        // Busca el final del script y agrega:
+        function abrirChat(userId, userName) {
+            fetch('../api/create_conversation.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'other_user_id=' + userId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'chat/chat.php?conversacion=' + data.conversationId;
+                } else {
+                    alert('Error al abrir el chat: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al conectar con el servidor');
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Funcionalidad de búsqueda en tiempo real
             const searchInput = document.querySelector('.search-bar input');
