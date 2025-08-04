@@ -58,17 +58,18 @@
     ";
 
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("ii", $publicacionId, $userId);
+        $stmt->bind_param("i", $publicacionId);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($publicacion && $publicacion['idUsuario'] == $userId) {
-            $error = "No puedes ver los detalles de tus propias publicaciones aquí.";
-            $publicacion = null;
-        }
-
         if ($result->num_rows > 0) {
             $publicacion = $result->fetch_assoc();
+            
+            // Verificar si es su propia publicación DESPUÉS de obtener los datos
+            if ($publicacion['idUsuario'] == $userId) {
+                $error = "No puedes ver los detalles de tus propias publicaciones aquí.";
+                $publicacion = null;
+            }
         } else {
             $error = "Publicación no encontrada. ID: " . $publicacionId;
             error_log("Publicación no encontrada. ID: " . $publicacionId . " | Usuario: " . $userId);
@@ -598,23 +599,20 @@
             thumbnail.classList.add('active');
         }
 
-        // Función para abrir chat con un usuario específico
         function abrirChat(userId, userName) {
-            // Crear o encontrar una conversación existente con el usuario
-            fetch('../chat/crear_conversacion.php', {
+            fetch('../../api/create_conversation.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'otherUserId=' + userId
+                body: 'other_user_id=' + userId
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirigir al chat con el ID de la conversación
-                    window.location.href = '../chat/chat.php?conversacion=' + data.conversationId;
+                    window.location.href = '../chat/chat.php?conversacion=' + data.conversationId + '&other_user_id=' + userId + '&other_user_name=' + encodeURIComponent(userName);
                 } else {
-                    alert('Error al abrir el chat: ' + data.error);
+                    alert('Error al abrir el chat: ' + data.message);
                 }
             })
             .catch(error => {

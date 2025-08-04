@@ -323,6 +323,8 @@
     });
 
     function openChat(conversationId, otherUserId, otherUserName) {
+        window.currentConversationId = conversationId; // Guardar ID globalmente
+        
         // Mostrar el área de chat activo
         document.getElementById('chatPlaceholder').style.display = 'none';
         const activeChat = document.getElementById('activeChat');
@@ -332,7 +334,7 @@
         document.getElementById('chatUserName').textContent = otherUserName;
         document.getElementById('chatUserAvatar').textContent = otherUserName.charAt(0).toUpperCase();
         
-        // Cargar los mensajes (necesitarás implementar esta función)
+        // Cargar los mensajes
         loadMessages(conversationId);
     }
     
@@ -341,6 +343,72 @@
         console.log("Cargando mensajes para la conversación: " + conversationId);
         // Aquí deberías hacer una petición a get_messages.php
     }
+
+    function loadMessages(conversationId) {
+        fetch('../../api/get_messages.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'conversacion_id=' + conversationId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayMessages(data.messages);
+            } else {
+                console.error('Error al cargar mensajes:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function displayMessages(messages) {
+        const container = document.getElementById('messagesContainer');
+        container.innerHTML = '';
+        
+        messages.forEach(message => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = message.idRemitente == currentUserId ? 'message-sent' : 'message-received';
+            messageDiv.innerHTML = `
+                <div class="message-content">${message.contenido}</div>
+                <div class="message-time">${new Date(message.fechaEnvio).toLocaleTimeString()}</div>
+            `;
+            container.appendChild(messageDiv);
+        });
+        
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Agregar event listener para enviar mensajes
+    document.getElementById('sendButton').addEventListener('click', function() {
+        const messageText = document.getElementById('messageText');
+        const content = messageText.value.trim();
+        
+        if (content && window.currentConversationId) {
+            fetch('../../api/send_message.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `conversacion_id=${window.currentConversationId}&contenido=${encodeURIComponent(content)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageText.value = '';
+                    loadMessages(window.currentConversationId);
+                } else {
+                    alert('Error al enviar mensaje: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
 </script>
 </body>
 </html>
