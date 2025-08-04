@@ -1112,14 +1112,14 @@
     <header>
         <div class="logo">RELEE</div>
         <div class="search-bar">
-            <input type="text" placeholder="Buscar libros, autores, géneros...">
-            <button>
+            <input type="text" id="search-input" placeholder="Buscar libros, autores, géneros...">
+            <button type="button" id="search-button">
                 <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
             </button>
         </div>
-        <button class="user-button">Búsqueda Avanzada</button>
+        <a href="products/buscador.php" class="user-button">Búsqueda Avanzada</a>
     </header>
 
     <div class="hero-section">
@@ -1300,7 +1300,119 @@
     <script src="../assets/js/home-script.js"></script>
     <script src="../assets/js/chat-script.js"></script>
     <script>
-        // Busca el final del script y agrega:
+        function realizarBusqueda() {
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.card');
+            let visibleCount = 0;
+
+            // Remover mensaje anterior de no resultados
+            const previousNoResults = document.querySelector('.no-results-message');
+            if (previousNoResults) {
+                previousNoResults.remove();
+            }
+
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+                const author = card.querySelector('.card-author')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
+                const hashtags = Array.from(card.querySelectorAll('.hashtag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+                const publisher = card.querySelector('.card-publisher')?.textContent.toLowerCase() || '';
+
+                const matches = searchTerm === '' || 
+                            title.includes(searchTerm) || 
+                            author.includes(searchTerm) || 
+                            description.includes(searchTerm) ||
+                            hashtags.includes(searchTerm) ||
+                            publisher.includes(searchTerm);
+
+                if (matches) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeInUp 0.5s ease forwards';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Mostrar mensaje si no hay resultados
+            if (visibleCount === 0 && searchTerm !== '') {
+                const noResultsMsg = document.createElement('div');
+                noResultsMsg.className = 'no-results-message';
+                noResultsMsg.innerHTML = `
+                    <div class="empty-state-icon">🔍</div>
+                    <h3>No se encontraron resultados</h3>
+                    <p>No encontramos publicaciones que coincidan con "<strong>${searchTerm}</strong>"</p>
+                    <p>Intenta con otros términos de búsqueda.</p>
+                `;
+                document.querySelector('.gallery').appendChild(noResultsMsg);
+            }
+
+            // Actualizar estadísticas
+            updateStats(visibleCount, searchTerm);
+        }
+
+        // Eventos de búsqueda
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            
+            if (searchInput && searchButton) {
+                let searchTimeout;
+                
+                // Búsqueda en tiempo real mientras escribe
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(realizarBusqueda, 300);
+                });
+                
+                // Búsqueda al hacer clic en el botón
+                searchButton.addEventListener('click', realizarBusqueda);
+                
+                // Búsqueda al presionar Enter
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        realizarBusqueda();
+                    }
+                });
+            }
+        });
+
+        const searchStyles = document.createElement('style');
+        searchStyles.textContent = `
+            .no-results-message {
+                grid-column: 1 / -1;
+                background: rgba(255, 253, 252, 0.95);
+                backdrop-filter: blur(20px);
+                border-radius: var(--border-radius);
+                padding: 60px 40px;
+                text-align: center;
+                border: 2px dashed rgba(163, 177, 138, 0.3);
+                animation: fadeInUp 0.5s ease forwards;
+                color: var(--text-secondary);
+                margin: 20px 0;
+            }
+            
+            .no-results-message h3 {
+                color: var(--text-primary);
+                font-weight: 700;
+                margin-bottom: 15px;
+                font-size: 1.8em;
+            }
+            
+            .no-results-message p {
+                margin: 10px 0;
+                line-height: 1.6;
+            }
+            
+            .no-results-message strong {
+                color: var(--green-dark);
+                font-weight: 700;
+            }
+        `;
+        document.head.appendChild(searchStyles);
+
         function abrirChat(userId, userName) {
             fetch('../api/create_conversation.php', {
                 method: 'POST',

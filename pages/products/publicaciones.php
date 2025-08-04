@@ -712,18 +712,17 @@ function formatearDimensiones($base, $altura) {
 
     <?php include '../../includes/chat-component.php'; ?>
 
-    <!-- Tu header existente -->
     <header>
         <div class="logo">RELEE</div>
         <div class="search-bar">
-            <input type="text" placeholder="Buscar libros, autores, géneros...">
-            <button>
+            <input type="text" id="search-input" placeholder="Buscar en mis publicaciones...">
+            <button type="button" id="search-button">
                 <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
             </button>
         </div>
-        <button class="user-button">Búsqueda Avanzada</button>
+        <a href="buscador.php" class="user-button">Búsqueda Avanzada</a>
     </header>
 
     <div class="page-header">
@@ -978,6 +977,123 @@ function formatearDimensiones($base, $altura) {
     <script src="../../assets/js/chat-script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            function realizarBusquedaPersonal() {
+                const searchInput = document.getElementById('search-input');
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const cards = document.querySelectorAll('.publication-card');
+                let visibleCount = 0;
+
+                // Remover mensaje anterior de no resultados
+                const previousNoResults = document.querySelector('.no-results-personal');
+                if (previousNoResults) {
+                    previousNoResults.remove();
+                }
+
+                cards.forEach(card => {
+                    const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+                    const author = card.querySelector('.card-author')?.textContent.toLowerCase() || '';
+                    const description = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
+                    const hashtags = Array.from(card.querySelectorAll('.hashtag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+                    const details = Array.from(card.querySelectorAll('.detail-value')).map(detail => detail.textContent.toLowerCase()).join(' ');
+
+                    const matches = searchTerm === '' || 
+                                title.includes(searchTerm) || 
+                                author.includes(searchTerm) || 
+                                description.includes(searchTerm) ||
+                                hashtags.includes(searchTerm) ||
+                                details.includes(searchTerm);
+
+                    if (matches) {
+                        card.style.display = 'block';
+                        card.style.animation = 'fadeInUp 0.5s ease forwards';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Mostrar mensaje si no hay resultados
+                if (visibleCount === 0 && searchTerm !== '') {
+                    const noResultsMsg = document.createElement('div');
+                    noResultsMsg.className = 'no-results-personal';
+                    noResultsMsg.innerHTML = `
+                        <div class="empty-state-icon">🔍</div>
+                        <h3>No se encontró en tus publicaciones</h3>
+                        <p>No encontramos publicaciones tuyas que coincidan con "<strong>${searchTerm}</strong>"</p>
+                        <p>Intenta con otros términos o <a href="NuevaPublicacion.php" style="color: var(--primary-color); text-decoration: underline;">crea una nueva publicación</a>.</p>
+                    `;
+                    document.querySelector('.gallery').appendChild(noResultsMsg);
+                }
+
+                // Actualizar estadísticas dinámicamente
+                updatePersonalStats(visibleCount, searchTerm);
+            }
+
+            // Función para actualizar estadísticas
+            function updatePersonalStats(visibleCount, searchTerm) {
+                const statsContainer = document.querySelector('.stats-container');
+                if (!statsContainer) return;
+
+                if (searchTerm !== '') {
+                    // Crear estadísticas filtradas
+                    const visibleCards = Array.from(document.querySelectorAll('.publication-card')).filter(card => 
+                        card.style.display !== 'none'
+                    );
+                    
+                    const freeCount = visibleCards.filter(card => 
+                        card.querySelector('.price-badge')?.classList.contains('free')
+                    ).length;
+                    
+                    const videoCount = visibleCards.filter(card => 
+                        card.querySelector('.video-indicator')
+                    ).length;
+                    
+                    const paidCount = visibleCards.filter(card => 
+                        !card.querySelector('.price-badge')?.classList.contains('free')
+                    ).length;
+
+                    // Actualizar números
+                    const statNumbers = statsContainer.querySelectorAll('.stat-number');
+                    const statLabels = statsContainer.querySelectorAll('.stat-label');
+                    
+                    if (statNumbers[0]) statNumbers[0].textContent = visibleCount;
+                    if (statNumbers[1]) statNumbers[1].textContent = freeCount;
+                    if (statNumbers[2]) statNumbers[2].textContent = videoCount;
+                    if (statNumbers[3]) statNumbers[3].textContent = paidCount;
+                    
+                    // Cambiar etiquetas para mostrar que son resultados filtrados
+                    if (statLabels[0]) statLabels[0].textContent = 'Encontradas';
+                } else {
+                    // Restaurar estadísticas originales
+                    location.reload(); // Simple reload para restaurar estadísticas originales
+                }
+            }
+
+            // Configurar eventos de búsqueda
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            
+            if (searchInput && searchButton) {
+                let searchTimeout;
+                
+                // Búsqueda en tiempo real mientras escribe
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(realizarBusquedaPersonal, 300);
+                });
+                
+                // Búsqueda al hacer clic en el botón
+                searchButton.addEventListener('click', realizarBusquedaPersonal);
+                
+                // Búsqueda al presionar Enter
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        realizarBusquedaPersonal();
+                    }
+                });
+            }
+
             // Funcionalidad de cambio de imágenes
             document.querySelectorAll('.publication-card').forEach(card => {
                 const indicators = card.querySelectorAll('.image-indicator');
@@ -989,13 +1105,9 @@ function formatearDimensiones($base, $altura) {
                             e.preventDefault();
                             e.stopPropagation();
                             
-                            // Remover clase active de todos los indicadores
                             indicators.forEach(ind => ind.classList.remove('active'));
-                            
-                            // Agregar clase active al clickeado
                             this.classList.add('active');
                             
-                            // Cambiar imagen
                             const newSrc = this.dataset.src;
                             if (newSrc) {
                                 mainImage.style.opacity = '0.5';
@@ -1003,17 +1115,6 @@ function formatearDimensiones($base, $altura) {
                                     mainImage.src = '../../uploads/' + newSrc;
                                     mainImage.style.opacity = '1';
                                 }, 200);
-                            }
-                        });
-                        
-                        // Efecto hover en indicadores
-                        indicator.addEventListener('mouseenter', function() {
-                            this.style.transform = 'scale(1.3)';
-                        });
-                        
-                        indicator.addEventListener('mouseleave', function() {
-                            if (!this.classList.contains('active')) {
-                                this.style.transform = 'scale(1)';
                             }
                         });
                     });
@@ -1239,6 +1340,45 @@ function formatearDimensiones($base, $altura) {
             }
         `;
         document.head.appendChild(additionalStyles);
+
+        const personalSearchStyles = document.createElement('style');
+        personalSearchStyles.textContent = `
+            .no-results-personal {
+                grid-column: 1 / -1;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                border-radius: var(--border-radius);
+                padding: 60px 40px;
+                text-align: center;
+                border: 2px dashed rgba(102, 126, 234, 0.3);
+                animation: fadeInUp 0.5s ease forwards;
+                color: #718096;
+                margin: 20px 0;
+            }
+            
+            .no-results-personal h3 {
+                color: #4a5568;
+                font-weight: 800;
+                margin-bottom: 15px;
+                font-size: 1.8em;
+            }
+            
+            .no-results-personal p {
+                margin: 10px 0;
+                line-height: 1.6;
+                font-size: 1.1em;
+            }
+            
+            .no-results-personal strong {
+                color: #667eea;
+                font-weight: 700;
+            }
+            
+            .no-results-personal a:hover {
+                color: #764ba2 !important;
+            }
+        `;
+        document.head.appendChild(personalSearchStyles);
     </script>
 </body>
 </html>
