@@ -1414,6 +1414,33 @@
         document.head.appendChild(searchStyles);
 
         function abrirChat(userId, userName) {
+            // Prevenir múltiples clicks
+            const button = event.target.closest('.contact-button');
+            if (button.disabled || button.classList.contains('processing')) {
+                return false;
+            }
+            
+            // Deshabilitar botón inmediatamente
+            button.disabled = true;
+            button.classList.add('processing');
+            
+            // Cambiar texto del botón para dar feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = `
+                <svg width="16" height="16" fill="white" viewBox="0 0 24 24" class="spinning">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                Conectando...
+            `;
+            
+            // Función para restaurar botón
+            function restaurarBoton() {
+                button.disabled = false;
+                button.classList.remove('processing');
+                button.innerHTML = originalText;
+            }
+            
             fetch('../api/create_conversation.php', {
                 method: 'POST',
                 headers: {
@@ -1423,17 +1450,230 @@
             })
             .then(response => response.json())
             .then(data => {
+                restaurarBoton();
                 if (data.success) {
+                    // Redirigir inmediatamente sin permitir más clicks
                     window.location.href = 'chat/chat.php?conversacion=' + data.conversationId;
                 } else {
                     alert('Error al abrir el chat: ' + data.message);
                 }
             })
             .catch(error => {
+                restaurarBoton();
                 console.error('Error:', error);
                 alert('Error al conectar con el servidor');
             });
+            
+            return false;
         }
+        let enviandoMensaje = false;
+
+        document.getElementById('sendButton').addEventListener('click', function() {
+        // Prevenir envío múltiple
+        if (enviandoMensaje) {
+            return false;
+        }
+        
+        const messageText = document.getElementById('messageText');
+        const content = messageText.value.trim();
+        
+        if (!content || !window.currentConversationId) {
+            return false;
+        }
+        
+        // Marcar como enviando
+        enviandoMensaje = true;
+        
+        // Deshabilitar botón y campo de texto
+        this.disabled = true;
+        messageText.disabled = true;
+        
+        // Cambiar icono a loading
+        const originalIcon = this.innerHTML;
+        this.innerHTML = `
+            <svg width="20" height="20" fill="white" viewBox="0 0 24 24" class="spinning">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/>
+                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+        `;
+        
+        // Limpiar campo inmediatamente para evitar reenvío
+        messageText.value = '';
+        
+        // Función para restaurar elementos
+        function restaurarElementos() {
+            enviandoMensaje = false;
+            document.getElementById('sendButton').disabled = false;
+            messageText.disabled = false;
+            document.getElementById('sendButton').innerHTML = originalIcon;
+            messageText.focus();
+        }
+        
+        fetch('../../api/send_message.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `conversacion_id=${window.currentConversationId}&contenido=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            restaurarElementos();
+            if (data.success) {
+                loadMessages(window.currentConversationId);
+            } else {
+                // Si hay error, restaurar el texto
+                messageText.value = content;
+                alert('Error al enviar mensaje: ' + data.message);
+            }
+        })
+        .catch(error => {
+            restaurarElementos();
+            messageText.value = content; // Restaurar texto en caso de error
+            console.error('Error:', error);
+            alert('Error de conexión');
+        });
+    });
+
+    // 3. PREVENIR ENVÍO CON ENTER EN MÓVILES
+    document.getElementById('messageText').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            
+            // Solo enviar si no estamos ya enviando
+            if (!enviandoMensaje) {
+                document.getElementById('sendButton').click();
+            }
+        }
+    });
+
+    // 4. DEBOUNCE PARA CLICKS RÁPIDOS
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // 5. APLICAR DEBOUNCE A TODOS LOS BOTONES CRÍTICOS
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aplicar prevención a todos los botones de contactar
+        document.querySelectorAll('.contact-button').forEach(button => {
+            // Remover listeners existentes
+            button.onclick = null;
+            
+            // Agregar listener con debounce
+            button.addEventListener('click', debounce(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Obtener datos del botón
+                const userId = this.getAttribute('onclick').match(/\d+/)[0];
+                const userName = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                
+                abrirChat(userId, userName);
+            }, 300));
+        });
+        
+        // Aplicar a botones de nueva conversación
+        document.querySelectorAll('.user-result').forEach(userResult => {
+            userResult.addEventListener('click', debounce(function() {
+                const userId = this.dataset.userid;
+                const userName = this.dataset.username;
+                
+                if (userId && userName) {
+                    abrirChat(userId, userName);
+                }
+            }, 300));
+        });
+        
+        // Prevenir doble tap en iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    });
+
+    // 6. MEJORAR FEEDBACK VISUAL EN MÓVILES
+    function mejorarFeedbackMovil() {
+        // Agregar estilos para mejor feedback táctil
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Mejores estados hover para móviles */
+            @media (max-width: 768px) {
+                .contact-button:active {
+                    transform: scale(0.95);
+                    background: linear-gradient(135deg, #5a4a3e 0%, #4a3a2e 100%) !important;
+                }
+                
+                .contact-button.processing {
+                    background: linear-gradient(135deg, #888 0%, #666 100%) !important;
+                    cursor: not-allowed;
+                    pointer-events: none;
+                }
+                
+                .spinning {
+                    animation: spin 1s linear infinite;
+                }
+                
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                
+                /* Prevenir selección de texto en botones */
+                .contact-button, .card-button {
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                }
+                
+                /* Mejorar área de toque */
+                .contact-button {
+                    min-height: 44px;
+                    min-width: 44px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Ejecutar mejoras al cargar
+    mejorarFeedbackMovil();
+
+    // 7. LIMPIAR CONVERSACIONES DUPLICADAS AUTOMÁTICAMENTE
+    function limpiarConversacionesDuplicadas() {
+        // Esta función la puedes llamar periódicamente o al cargar la página
+        fetch('../api/cleanup_conversations.php', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.cleaned > 0) {
+                console.log(`✅ Se limpiaron ${data.cleaned} conversaciones duplicadas`);
+            }
+        })
+        .catch(error => {
+            console.log('Error en limpieza automática:', error);
+        });
+    }
+
+    // Ejecutar limpieza al cargar la página (opcional)
+    // limpiarConversacionesDuplicadas();
+
+    console.log('✅ Protección contra duplicados en móviles activada');
+        
 
         document.addEventListener('DOMContentLoaded', function() {
             // Funcionalidad de búsqueda en tiempo real
