@@ -296,5 +296,51 @@
         const currentUserId = <?php echo json_encode($userId); ?>;
     </script>
     <script src="../../assets/js/chatUsuarios-script.js"></script>
+
+    <script>
+    // Cargar la conversación si hay un parámetro en la URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const conversationId = urlParams.get('conversacion');
+        
+        if (conversationId) {
+            const otherUserId = urlParams.get('other_user_id');
+            const otherUserName = urlParams.get('other_user_name');
+            
+            if (otherUserId && otherUserName) {
+                // Simular click en la conversación
+                openChat(conversationId, otherUserId, otherUserName);
+            } else {
+                // Buscar la conversación en la lista
+                const conversationItem = document.querySelector(`.conversation-item[data-conversation-id="${conversationId}"]`);
+                if (conversationItem) {
+                    const otherUserId = conversationItem.dataset.otherUserId;
+                    const otherUserName = conversationItem.dataset.otherUserName;
+                    openChat(conversationId, otherUserId, otherUserName);
+                }
+            }
+        }
+    });
+
+    function openChat(conversationId, otherUserId, otherUserName) {
+        // Mostrar el área de chat activo
+        document.getElementById('chatPlaceholder').style.display = 'none';
+        const activeChat = document.getElementById('activeChat');
+        activeChat.style.display = 'block';
+        
+        // Establecer información del usuario
+        document.getElementById('chatUserName').textContent = otherUserName;
+        document.getElementById('chatUserAvatar').textContent = otherUserName.charAt(0).toUpperCase();
+        
+        // Cargar los mensajes (necesitarás implementar esta función)
+        loadMessages(conversationId);
+    }
+    
+    function loadMessages(conversationId) {
+        // Implementa esta función para cargar los mensajes usando AJAX
+        console.log("Cargando mensajes para la conversación: " + conversationId);
+        // Aquí deberías hacer una petición a get_messages.php
+    }
+</script>
 </body>
 </html>

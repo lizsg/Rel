@@ -28,44 +28,50 @@
 
         // Obtener los detalles completos de la publicación
         $query = "
-            SELECT 
-                p.idPublicacion,
-                p.idLibro,
-                p.idUsuario,
-                p.precio,
-                p.fechaCreacion,
-                l.titulo,
-                l.autor,
-                l.descripcion,
-                l.linkImagen1,
-                l.linkImagen2,
-                l.linkImagen3,
-                l.linkVideo,
-                l.editorial,
-                l.edicion,
-                l.categoria,
-                l.tipoPublico,
-                l.base,
-                l.altura,
-                l.paginas,
-                l.fechaPublicacion,
-                u.usuario as nombreUsuario,
-                u.userName
-            FROM Publicaciones p
-            JOIN Libros l ON p.idLibro = l.idLibro
-            JOIN Usuarios u ON p.idUsuario = u.idUsuario
-            WHERE p.idPublicacion = ? AND p.idUsuario != ?
-        ";
+        SELECT 
+            p.idPublicacion,
+            p.idLibro,
+            p.idUsuario,
+            p.precio,
+            p.fechaCreacion,
+            l.titulo,
+            l.autor,
+            l.descripcion,
+            l.linkImagen1,
+            l.linkImagen2,
+            l.linkImagen3,
+            l.linkVideo,
+            l.editorial,
+            l.edicion,
+            l.categoria,
+            l.tipoPublico,
+            l.base,
+            l.altura,
+            l.paginas,
+            l.fechaPublicacion,
+            u.userName as nombreUsuario,
+            u.nombre
+        FROM Publicaciones p
+        JOIN Libros l ON p.idLibro = l.idLibro
+        JOIN Usuarios u ON p.idUsuario = u.idUsuario
+        WHERE p.idPublicacion = ?
+    ";
 
         $stmt = $conn->prepare($query);
         $stmt->bind_param("ii", $publicacionId, $userId);
         $stmt->execute();
         $result = $stmt->get_result();
 
+        if ($publicacion && $publicacion['idUsuario'] == $userId) {
+            $error = "No puedes ver los detalles de tus propias publicaciones aquí.";
+            $publicacion = null;
+        }
+
         if ($result->num_rows > 0) {
             $publicacion = $result->fetch_assoc();
         } else {
-            $error = "Publicación no encontrada o no tienes permisos para verla.";
+            $error = "Publicación no encontrada. ID: " . $publicacionId;
+            error_log("Publicación no encontrada. ID: " . $publicacionId . " | Usuario: " . $userId);
         }
 
         $stmt->close();

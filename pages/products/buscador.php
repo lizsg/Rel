@@ -821,7 +821,6 @@
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
-        // Función para abrir chat con un usuario específico
         function abrirChat(userId, userName) {
             fetch('../../api/create_conversation.php', {
                 method: 'POST',

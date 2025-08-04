@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 session_start();
 
 if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    error_log("Error: No autorizado - Sesión no válida");
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit();
 }
