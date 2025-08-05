@@ -1289,12 +1289,6 @@
         <a href="products/publicaciones.php" class="bottom-button bottom-button-wide" title="Mis Publicaciones">
             <span>Mis Publicaciones</span>
         </a>
-        <button class="bottom-button" title="Menú">
-            <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
-                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-            </svg>
-            <span>Menú</span>
-        </button>
     </div>
 
     <script src="../assets/js/home-script.js"></script>
@@ -1414,6 +1408,11 @@
         document.head.appendChild(searchStyles);
 
         function abrirChat(userId, userName) {
+
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             // Prevenir múltiples clics/taps
             const button = event.target.closest('.contact-button');
             if (button.disabled) return;
@@ -1466,6 +1465,10 @@
         let enviandoMensaje = false;
 
         document.getElementById('sendButton').addEventListener('click', function() {
+        if (this.dataset.sending === 'true') {
+            return false;
+        }
+        this.dataset.sending = 'true';
         // Prevenir envío múltiple
         if (enviandoMensaje) {
             return false;
@@ -1525,6 +1528,7 @@
             }
         })
         .catch(error => {
+            this.dataset.sending = 'false';
             restaurarElementos();
             messageText.value = content; // Restaurar texto en caso de error
             console.error('Error:', error);
@@ -2076,6 +2080,16 @@
                 }, 0);
             });
         }
+        let lastClickTime = 0;
+        document.addEventListener('click', function(e) {
+            const now = Date.now();
+            if (now - lastClickTime < 300) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            lastClickTime = now;
+        }, true);
     </script>
 </body>
 </html>

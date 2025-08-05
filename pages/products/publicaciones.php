@@ -153,6 +153,17 @@ function formatearDimensiones($base, $altura) {
     if (empty($altura)) return "Base: {$base} cm";
     return "{$base} x {$altura} cm";
 }
+
+function tiempoTranscurrido($fecha) {
+    $tiempo = time() - strtotime($fecha);
+    
+    if ($tiempo < 60) return 'Hace un momento';
+    if ($tiempo < 3600) return 'Hace ' . floor($tiempo/60) . ' minutos';
+    if ($tiempo < 86400) return 'Hace ' . floor($tiempo/3600) . ' horas';
+    if ($tiempo < 604800) return 'Hace ' . floor($tiempo/86400) . ' días';
+    if ($tiempo < 2592000) return 'Hace ' . floor($tiempo/604800) . ' semanas';
+    return 'Hace ' . floor($tiempo/2592000) . ' meses';
+}
 ?>
 
 <!DOCTYPE html>
@@ -164,28 +175,36 @@ function formatearDimensiones($base, $altura) {
     <link rel="stylesheet" href="../../assets/css/home-styles.css">
     <link rel="stylesheet" href="../../assets/css/chat-styles.css">
     <style>
-        /* Variables CSS para personalización fácil */
+        /* Variables CSS consistentes con home.php */
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            --hover-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            --primary-brown: #6b4226;
+            --secondary-brown: #8b5a3c;
+            --light-brown: #d6c1b2;
+            --cream-bg: #f8f6f3;
+            --cream-light: #fffdfb;
+            --green-primary: #a3b18a;
+            --green-secondary: #588157;
+            --green-dark: #3a5a40;
+            --text-primary: #2c2016;
+            --text-secondary: #6f5c4d;
+            --text-muted: #888;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
             --border-radius: 20px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--cream-bg) 0%, #f0ede8 100%);
+            color: var(--text-primary);
             margin: 0;
             padding-bottom: 80px;
             min-height: 100vh;
-            color: #2d3748;
             position: relative;
         }
 
-        /* Overlay pattern */
+        /* Patrón de fondo sutil igual que home.php */
         body::before {
             content: '';
             position: fixed;
@@ -194,83 +213,225 @@ function formatearDimensiones($base, $altura) {
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+                radial-gradient(circle at 20% 80%, rgba(163, 177, 138, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(107, 66, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(214, 193, 178, 0.1) 0%, transparent 50%);
             z-index: -1;
         }
 
-        .page-header {
-            text-align: center;
-            padding: 40px 20px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            margin-bottom: 30px;
+        /* Topbar con el mismo estilo de home.php */
+        .topbar {
+            background: linear-gradient(135deg, #f5f0ea 0%, #ede6dd 100%);
+            backdrop-filter: blur(10px);
+            padding: 8px 25px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(211, 197, 184, 0.3);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
         }
 
-        .page-header h1 {
-            font-size: 3em;
+        .topbar-icon {
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 3px 10px rgba(163, 177, 138, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .topbar-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .topbar-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(163, 177, 138, 0.4);
+        }
+
+        .topbar-icon:hover::before {
+            left: 100%;
+        }
+
+        /* Header con el mismo estilo de home.php */
+        header {
+            background: rgba(255, 253, 251, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 25px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(224, 214, 207, 0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 28px;
             font-weight: 800;
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin: 0 0 15px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .search-bar {
+            flex: 1;
+            margin: 0 30px;
+            display: flex;
+            border: 2px solid transparent;
+            border-radius: 50px;
+            overflow: hidden;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(135deg, var(--green-primary), var(--green-secondary)) border-box;
+            box-shadow: 0 8px 32px rgba(163, 177, 138, 0.15);
+            transition: var(--transition);
+        }
+
+        .search-bar:focus-within {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 40px rgba(163, 177, 138, 0.25);
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            background-color: transparent;
+            color: var(--text-primary);
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-bar button {
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
+            color: white;
+            padding: 0 25px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .search-bar button:hover {
+            background: linear-gradient(135deg, var(--green-dark) 0%, #2d4732 100%);
+        }
+
+        .user-button {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, #5b4a3e 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: var(--transition);
+            box-shadow: 0 6px 20px rgba(107, 66, 38, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+        }
+
+        .user-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(107, 66, 38, 0.4);
+        }
+
+        /* Hero Section adaptado para publicaciones */
+        .hero-section {
+            background: rgba(255, 253, 252, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(224, 214, 207, 0.2);
+            padding: 50px 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero-title {
+            font-size: 3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 20px 0;
             letter-spacing: -2px;
         }
 
-        .page-header p {
-            color: #718096;
+        .hero-subtitle {
+            color: var(--text-secondary);
             font-size: 1.2em;
-            margin: 0;
+            margin: 0 0 30px 0;
             font-weight: 500;
         }
 
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto 40px auto;
-            padding: 0 20px;
+        .stats-banner {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 30px;
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: var(--border-radius);
-            padding: 30px;
-            text-align: center;
-            box-shadow: var(--card-shadow);
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 25px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: var(--transition);
         }
 
-        .stat-card:hover {
+        .stat-item:hover {
             transform: translateY(-5px);
-            box-shadow: var(--hover-shadow);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
         }
 
         .stat-number {
-            font-size: 2.5em;
+            font-size: 2.2em;
             font-weight: 800;
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            display: block;
-            margin-bottom: 10px;
         }
 
         .stat-label {
-            color: #718096;
+            color: var(--text-secondary);
+            font-size: 0.95em;
             font-weight: 600;
-            font-size: 1.1em;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
+        /* Botón de nueva publicación con estilo consistente */
         .new-button-container {
             display: flex;
             justify-content: center;
@@ -282,7 +443,7 @@ function formatearDimensiones($base, $altura) {
             display: inline-flex;
             align-items: center;
             gap: 12px;
-            background: var(--secondary-gradient);
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
             color: white;
             padding: 18px 35px;
             border: none;
@@ -290,7 +451,7 @@ function formatearDimensiones($base, $altura) {
             font-size: 16px;
             font-weight: 700;
             text-decoration: none;
-            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
+            box-shadow: 0 8px 25px rgba(88, 129, 87, 0.4);
             transition: var(--transition);
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -298,27 +459,41 @@ function formatearDimensiones($base, $altura) {
 
         .new-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(245, 87, 108, 0.6);
+            box-shadow: 0 15px 35px rgba(88, 129, 87, 0.6);
         }
 
+        /* Gallery con el mismo estilo de home.php */
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 30px;
-            padding: 0 20px;
+            padding: 0 40px 60px 40px;
             max-width: 1400px;
             margin: 0 auto;
         }
 
         .publication-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 253, 252, 0.95);
             backdrop-filter: blur(20px);
             border-radius: var(--border-radius);
-            overflow: hidden;
             box-shadow: var(--card-shadow);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
             transition: var(--transition);
             position: relative;
+        }
+
+        .publication-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.05) 0%, rgba(107, 66, 38, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: var(--border-radius);
         }
 
         .publication-card:hover {
@@ -326,11 +501,19 @@ function formatearDimensiones($base, $altura) {
             box-shadow: var(--hover-shadow);
         }
 
+        .publication-card:hover::before {
+            opacity: 1;
+        }
+
         .card-images {
-            position: relative;
-            height: 280px;
+            width: 100%;
+            height: 240px;
             overflow: hidden;
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--light-brown) 0%, #c4a68a 100%);
+            position: relative;
         }
 
         .main-image {
@@ -342,6 +525,22 @@ function formatearDimensiones($base, $altura) {
 
         .publication-card:hover .main-image {
             transform: scale(1.1);
+        }
+
+        .card-images::after {
+            content: '📚';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            opacity: 0.3;
+            filter: grayscale(0.2);
+            display: var(--book-icon-display, block);
+        }
+
+        .card-images img + * {
+            --book-icon-display: none;
         }
 
         .image-indicators {
@@ -363,7 +562,7 @@ function formatearDimensiones($base, $altura) {
         }
 
         .image-indicator.active {
-            background: var(--secondary-gradient);
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
             transform: scale(1.2);
         }
 
@@ -371,44 +570,51 @@ function formatearDimensiones($base, $altura) {
             position: absolute;
             top: 15px;
             left: 15px;
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
             color: white;
             padding: 8px 15px;
-            border-radius: 25px;
+            border-radius: 20px;
             font-size: 0.85em;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+            box-shadow: 0 4px 15px rgba(107, 66, 38, 0.4);
+        }
+
+        .publication-date {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(88, 129, 87, 0.4);
         }
 
         .card-content {
             padding: 30px;
-        }
-
-        .publication-date {
-            background: var(--primary-gradient);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 20px;
-            display: inline-block;
+            position: relative;
+            z-index: 2;
         }
 
         .card-title {
             font-size: 1.5em;
-            font-weight: 800;
-            color: #2d3748;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
             line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .card-author {
-            color: #718096;
+            color: var(--text-secondary);
             font-weight: 600;
             margin-bottom: 15px;
             font-size: 1.1em;
@@ -416,29 +622,30 @@ function formatearDimensiones($base, $altura) {
 
         .price-badge {
             display: inline-block;
-            background: var(--secondary-gradient);
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
             color: white;
-            padding: 8px 20px;
+            padding: 10px 20px;
             border-radius: 25px;
             font-weight: 700;
             font-size: 1em;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+            margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(107, 66, 38, 0.3);
         }
 
         .price-badge.free {
-            background: var(--success-gradient);
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
+            box-shadow: 0 4px 12px rgba(88, 129, 87, 0.3);
         }
 
         .card-description {
-            color: #4a5568;
+            color: var(--text-secondary);
             line-height: 1.6;
             margin-bottom: 20px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            font-size: 0.95em;
         }
 
         .book-details {
@@ -449,16 +656,15 @@ function formatearDimensiones($base, $altura) {
         }
 
         .detail-item {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.15) 0%, rgba(88, 129, 87, 0.15) 100%);
             padding: 12px 16px;
             border-radius: 12px;
-            border-left: 4px solid;
-            border-image: var(--primary-gradient) 1;
+            border-left: 4px solid var(--green-secondary);
         }
 
         .detail-label {
             font-weight: 700;
-            color: #4c51bf;
+            color: var(--green-dark);
             display: block;
             margin-bottom: 4px;
             font-size: 0.85em;
@@ -467,7 +673,7 @@ function formatearDimensiones($base, $altura) {
         }
 
         .detail-value {
-            color: #2d3748;
+            color: var(--text-primary);
             font-weight: 500;
         }
 
@@ -477,20 +683,21 @@ function formatearDimensiones($base, $altura) {
 
         .hashtag {
             display: inline-block;
-            background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
-            color: #3182ce;
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.15) 0%, rgba(88, 129, 87, 0.15) 100%);
+            color: var(--green-dark);
             padding: 6px 14px;
-            border-radius: 20px;
+            border-radius: 15px;
             font-size: 0.85em;
             font-weight: 600;
             margin: 3px 6px 3px 0;
-            border: 1px solid rgba(79, 172, 254, 0.3);
+            border: 1px solid rgba(163, 177, 138, 0.2);
             transition: var(--transition);
         }
 
         .hashtag:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.25) 0%, rgba(88, 129, 87, 0.25) 100%);
         }
 
         .card-actions {
@@ -501,11 +708,10 @@ function formatearDimensiones($base, $altura) {
         }
 
         .card-button {
-            padding: 14px 20px;
+            padding: 14px 18px;
             border: none;
             border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
+            font-weight: 600;
             transition: var(--transition);
             text-align: center;
             text-decoration: none;
@@ -516,46 +722,52 @@ function formatearDimensiones($base, $altura) {
             font-size: 0.9em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            cursor: pointer;
         }
 
         .view-button {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(88, 129, 87, 0.3);
         }
 
         .view-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 8px 25px rgba(88, 129, 87, 0.4);
         }
 
         .edit-button {
             background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.4);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
         }
 
         .edit-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.6);
+            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.4);
         }
 
         .delete-button {
             background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
         }
 
         .delete-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.6);
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4);
         }
 
+        /* Empty State con el mismo estilo de home.php */
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
             padding: 100px 20px;
-            color: #718096;
+            color: var(--text-secondary);
+            background: rgba(255, 253, 252, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            border: 2px dashed rgba(163, 177, 138, 0.3);
         }
 
         .empty-state-icon {
@@ -566,9 +778,9 @@ function formatearDimensiones($base, $altura) {
 
         .empty-state h3 {
             font-size: 2em;
-            margin-bottom: 15px;
-            color: #4a5568;
-            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-weight: 700;
         }
 
         .empty-state p {
@@ -580,25 +792,162 @@ function formatearDimensiones($base, $altura) {
             line-height: 1.6;
         }
 
-        .success-message, .error-display {
-            max-width: 1200px;
-            margin: 20px auto;
+        /* Messages con el mismo estilo de home.php */
+        .error-display, .success-message {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.9) 0%, rgba(229, 62, 62, 0.9) 100%);
+            color: white;
             padding: 20px 30px;
             border-radius: var(--border-radius);
-            font-weight: 600;
+            margin: 20px auto;
+            max-width: 1200px;
             text-align: center;
+            font-weight: 600;
             box-shadow: var(--card-shadow);
-            animation: slideInDown 0.5s ease;
+            backdrop-filter: blur(10px);
         }
 
         .success-message {
-            background: linear-gradient(135deg, #68d391 0%, #38a169 100%);
-            color: white;
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.9) 0%, rgba(88, 129, 87, 0.9) 100%);
         }
 
-        .error-display {
-            background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+        /* Bottom bar con el mismo estilo de home.php */
+        .bottombar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 65px;
+            background: linear-gradient(135deg, rgba(245, 240, 234, 0.95) 0%, rgba(237, 230, 221, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(224, 214, 207, 0.3);
+            box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
             color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .bottom-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .bottom-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(163, 177, 138, 0.4);
+        }
+
+        .bottom-button:hover::before {
+            left: 100%;
+        }
+
+        .bottom-button span {
+            font-size: 10px;
+            margin-top: 3px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .bottom-button-wide {
+            width: 110px;
+            height: 50px;
+            font-size: 11px;
+            padding: 5px;
+        }
+
+        .bottom-button-wide span {
+            font-size: 11px;
+            margin-top: 0;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .logout-button {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, #5b4a3e 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(107, 66, 38, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(107, 66, 38, 0.4);
+        }
+
+        form.logout-form {
+            margin: 0;
+        }
+
+        /* Debug info styles */
+        .debug-info {
+            background: rgba(255, 253, 252, 0.95);
+            border: 2px solid #ed8936;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 1200px;
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+        }
+
+        .debug-info h4 {
+            color: #dd6b20;
+            margin-top: 0;
+        }
+
+        .debug-info pre {
+            background: rgba(247, 250, 252, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid rgba(224, 214, 207, 0.3);
+        }
+
+        /* Animaciones igual que home.php */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes slideInDown {
@@ -612,34 +961,61 @@ function formatearDimensiones($base, $altura) {
             }
         }
 
-        @keyframes fadeInUp {
+        @keyframes slideOutUp {
             from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
                 opacity: 1;
                 transform: translateY(0);
             }
+            to {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        @keyframes spinning {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .publication-card {
             animation: fadeInUp 0.6s ease forwards;
         }
 
+        .success-message, .error-display {
+            animation: slideInDown 0.5s ease;
+        }
+
+        .spinning {
+            animation: spinning 1s linear infinite;
+        }
+
+        /* Responsive Design igual que home.php */
         @media (max-width: 768px) {
             .gallery {
                 grid-template-columns: 1fr;
-                padding: 0 15px;
+                padding: 0 20px 60px 20px;
             }
             
-            .page-header h1 {
+            .hero-title {
                 font-size: 2.2em;
             }
             
-            .stats-container {
-                grid-template-columns: 1fr;
-                gap: 15px;
+            .hero-subtitle {
+                font-size: 1.1em;
+            }
+            
+            .stats-banner {
+                flex-direction: column;
+                gap: 20px;
+                align-items: center;
+            }
+            
+            .stat-item {
+                width: 100%;
+                max-width: 300px;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 20px 25px;
             }
             
             .card-actions {
@@ -650,35 +1026,89 @@ function formatearDimensiones($base, $altura) {
             .book-details {
                 grid-template-columns: 1fr;
             }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .search-bar {
+                width: 100%;
+                margin: 0;
+            }
+
+            .topbar {
+                padding: 8px 15px;
+                gap: 10px;
+            }
+
+            .logo {
+                font-size: 24px;
+            }
+
+            .bottom-button-wide {
+                width: 95px;
+                font-size: 10px;
+            }
+
+            .bottom-button-wide span {
+                font-size: 10px;
+            }
+
+            .card-content {
+                padding: 25px;
+            }
+
+            .card-title {
+                font-size: 1.3em;
+            }
         }
 
-        /* Debug info styles */
-        .debug-info {
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid #ed8936;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 1200px;
-            color: #2d3748;
+        @media (max-width: 480px) {
+            .hero-section {
+                padding: 40px 15px;
+            }
+            
+            .hero-title {
+                font-size: 1.8em;
+            }
+            
+            .gallery {
+                padding: 0 15px 60px 15px;
+            }
+            
+            .card-content {
+                padding: 20px;
+            }
+            
+            .stat-item {
+                padding: 15px 20px;
+            }
         }
 
-        .debug-info h4 {
-            color: #dd6b20;
-            margin-top: 0;
+        /* Scrollbar personalizado igual que home.php */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .debug-info pre {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 0.9em;
+        ::-webkit-scrollbar-track {
+            background: rgba(224, 214, 207, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
         }
     </style>
 </head>
 <body>
-    <!-- Tu topbar existente -->
+    <!-- Topbar igual que home.php -->
     <div class="topbar">
         <div class="topbar-icon" title="Chat">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
@@ -712,6 +1142,7 @@ function formatearDimensiones($base, $altura) {
 
     <?php include '../../includes/chat-component.php'; ?>
 
+    <!-- Header igual que home.php -->
     <header>
         <div class="logo">RELEE</div>
         <div class="search-bar">
@@ -725,33 +1156,34 @@ function formatearDimensiones($base, $altura) {
         <a href="buscador.php" class="user-button">Búsqueda Avanzada</a>
     </header>
 
-    <div class="page-header">
-        <h1>📚 Mis Publicaciones</h1>
-        <p>Gestiona y visualiza toda tu biblioteca digital</p>
+    <!-- Hero Section adaptado -->
+    <div class="hero-section">
+        <h1 class="hero-title">📚 Mis Publicaciones</h1>
+        <p class="hero-subtitle">Gestiona y visualiza toda tu biblioteca digital personal</p>
+        
+        <?php if (!empty($publicaciones)): ?>
+        <div class="stats-banner">
+            <div class="stat-item">
+                <span class="stat-number"><?php echo count($publicaciones); ?></span>
+                <span class="stat-label">Total Publicaciones</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] == 0; })); ?></span>
+                <span class="stat-label">Libros Gratis</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return !empty($p['linkVideo']); })); ?></span>
+                <span class="stat-label">Con Video</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] > 0; })); ?></span>
+                <span class="stat-label">De Pago</span>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
-    <!-- Estadísticas mejoradas -->
-    <?php if (!empty($publicaciones)): ?>
-    <div class="stats-container">
-        <div class="stat-card">
-            <span class="stat-number"><?php echo count($publicaciones); ?></span>
-            <span class="stat-label">Total Publicaciones</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] == 0; })); ?></span>
-            <span class="stat-label">Libros Gratis</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return !empty($p['linkVideo']); })); ?></span>
-            <span class="stat-label">Con Video</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] > 0; })); ?></span>
-            <span class="stat-label">De Pago</span>
-        </div>
-    </div>
-    <?php endif; ?>
-
+    <!-- Botón de nueva publicación -->
     <div class="new-button-container">
         <a href="NuevaPublicacion.php" class="new-button">
             <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -786,6 +1218,7 @@ function formatearDimensiones($base, $altura) {
         </div>
     <?php endif; ?>
 
+    <!-- Gallery de publicaciones -->
     <main class="gallery">
         <?php if (empty($publicaciones)): ?>
             <div class="empty-state">
@@ -808,20 +1241,18 @@ function formatearDimensiones($base, $altura) {
                                  alt="<?php echo htmlspecialchars($publicacion['titulo']); ?>" 
                                  class="main-image"
                                  loading="lazy">
-                        <?php else: ?>
-                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);">
-                                <svg width="100" height="100" fill="rgba(0,0,0,0.2)" viewBox="0 0 24 24">
-                                    <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
-                                </svg>
-                            </div>
                         <?php endif; ?>
+                        
+                        <div class="publication-date">
+                            ⏰ <?php echo tiempoTranscurrido($publicacion['fechaCreacion']); ?>
+                        </div>
                         
                         <?php if (!empty($publicacion['linkVideo'])): ?>
                             <div class="video-indicator">
                                 <svg width="12" height="12" fill="white" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                 </svg>
-                                Video Disponible
+                                Video
                             </div>
                         <?php endif; ?>
                         
@@ -841,21 +1272,14 @@ function formatearDimensiones($base, $altura) {
                     </div>
                     
                     <div class="card-content">
-                        <div class="publication-date">
-                            📅 <?php echo formatearFecha($publicacion['fechaCreacion']); ?>
+                        <h3 class="card-title"><?php echo htmlspecialchars($publicacion['titulo']); ?></h3>
+                        <div class="card-author">✍️ <?php echo htmlspecialchars($publicacion['autor']); ?></div>
+                        <div class="card-author" style="font-size: 0.9em; opacity: 0.8;">
+                            👤 <?php echo htmlspecialchars($publicacion['nombreUsuario']); ?>
                         </div>
                         
-                        <div class="card-header">
-                            <h3 class="card-title"><?php echo htmlspecialchars($publicacion['titulo']); ?></h3>
-                            <div class="card-author">
-                                <strong>✍️ <?php echo htmlspecialchars($publicacion['autor']); ?></strong>
-                            </div>
-                            <div class="card-author" style="font-size: 0.9em; opacity: 0.8;">
-                                👤 <?php echo htmlspecialchars($publicacion['nombreUsuario']); ?>
-                            </div>
-                            <div class="price-badge <?php echo ($publicacion['precio'] == 0) ? 'free' : ''; ?>">
-                                <?php echo formatearPrecio($publicacion['precio']); ?>
-                            </div>
+                        <div class="price-badge <?php echo ($publicacion['precio'] == 0) ? 'free' : ''; ?>">
+                            <?php echo formatearPrecio($publicacion['precio']); ?>
                         </div>
 
                         <?php if (!empty($publicacion['descripcion'])): ?>
@@ -924,7 +1348,7 @@ function formatearDimensiones($base, $altura) {
                         <?php endif; ?>
 
                         <div class="card-actions">
-                            <a href="ver_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">
+                            <a href="detalle_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">
                                 <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                                     <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                                 </svg>
@@ -954,7 +1378,7 @@ function formatearDimensiones($base, $altura) {
         <?php endif; ?>
     </main>
 
-    <!-- Tu bottombar existente -->
+    <!-- Bottom bar igual que home.php -->
     <div class="bottombar">
         <a href="../home.php" class="bottom-button" title="Inicio">
             <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
@@ -977,8 +1401,8 @@ function formatearDimensiones($base, $altura) {
     <script src="../../assets/js/chat-script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Funcionalidad de búsqueda específica para publicaciones personales
             function realizarBusquedaPersonal() {
-                // Obtener el valor del search-bar del header
                 const searchInput = document.querySelector('.search-bar input');
                 const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 const cards = document.querySelectorAll('.publication-card');
@@ -1021,7 +1445,7 @@ function formatearDimensiones($base, $altura) {
                         <div class="empty-state-icon">🔍</div>
                         <h3>No se encontró en tus publicaciones</h3>
                         <p>No encontramos publicaciones tuyas que coincidan con "<strong>${searchTerm}</strong>"</p>
-                        <p>Intenta con otros términos o <a href="NuevaPublicacion.php" style="color: var(--primary-color); text-decoration: underline;">crea una nueva publicación</a>.</p>
+                        <p>Intenta con otros términos o <a href="NuevaPublicacion.php" style="color: var(--green-dark); text-decoration: underline;">crea una nueva publicación</a>.</p>
                     `;
                     document.querySelector('.gallery').appendChild(noResultsMsg);
                 }
@@ -1032,7 +1456,7 @@ function formatearDimensiones($base, $altura) {
 
             // Función para actualizar estadísticas
             function updatePersonalStats(visibleCount, searchTerm) {
-                const statsContainer = document.querySelector('.stats-container');
+                const statsContainer = document.querySelector('.stats-banner');
                 if (!statsContainer) return;
 
                 if (searchTerm !== '') {
@@ -1053,23 +1477,35 @@ function formatearDimensiones($base, $altura) {
                         !card.querySelector('.price-badge')?.classList.contains('free')
                     ).length;
 
-                    // Actualizar números
+                    // Actualizar números manteniendo la estructura original
                     const statNumbers = statsContainer.querySelectorAll('.stat-number');
                     const statLabels = statsContainer.querySelectorAll('.stat-label');
                     
-                    if (statNumbers[0]) statNumbers[0].textContent = visibleCount;
-                    if (statNumbers[1]) statNumbers[1].textContent = freeCount;
-                    if (statNumbers[2]) statNumbers[2].textContent = videoCount;
-                    if (statNumbers[3]) statNumbers[3].textContent = paidCount;
-                    
-                    // Cambiar etiquetas para mostrar que son resultados filtrados
-                    if (statLabels[0]) statLabels[0].textContent = 'Encontradas';
+                    if (statNumbers[0]) {
+                        statNumbers[0].textContent = visibleCount;
+                        statLabels[0].textContent = 'Encontradas';
+                    }
+                    if (statNumbers[1]) {
+                        statNumbers[1].textContent = freeCount;
+                        statLabels[1].textContent = 'Gratis';
+                    }
+                    if (statNumbers[2]) {
+                        statNumbers[2].textContent = videoCount;
+                        statLabels[2].textContent = 'Con Video';
+                    }
+                    if (statNumbers[3]) {
+                        statNumbers[3].textContent = paidCount;
+                        statLabels[3].textContent = 'De Pago';
+                    }
                 } else {
-                    // Restaurar estadísticas originales
-                    location.reload(); // Simple reload para restaurar estadísticas originales
+                    // Restaurar estadísticas originales recargando la página
+                    if (window.location.search.includes('search=')) {
+                        window.location.href = window.location.pathname;
+                    }
                 }
             }
 
+            // Event listeners para búsqueda
             const headerSearchInput = document.querySelector('.search-bar input');
             const headerSearchButton = document.querySelector('.search-bar button');
 
@@ -1131,19 +1567,21 @@ function formatearDimensiones($base, $altura) {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const statNumber = entry.target.querySelector('.stat-number');
-                        const finalValue = parseInt(statNumber.textContent);
-                        let currentValue = 0;
-                        const increment = Math.ceil(finalValue / 30);
-                        
-                        const countAnimation = setInterval(() => {
-                            currentValue += increment;
-                            if (currentValue >= finalValue) {
-                                statNumber.textContent = finalValue;
-                                clearInterval(countAnimation);
-                            } else {
-                                statNumber.textContent = currentValue;
-                            }
-                        }, 50);
+                        if (statNumber) {
+                            const finalValue = parseInt(statNumber.textContent);
+                            let currentValue = 0;
+                            const increment = Math.ceil(finalValue / 30);
+                            
+                            const countAnimation = setInterval(() => {
+                                currentValue += increment;
+                                if (currentValue >= finalValue) {
+                                    statNumber.textContent = finalValue;
+                                    clearInterval(countAnimation);
+                                } else {
+                                    statNumber.textContent = currentValue;
+                                }
+                            }, 50);
+                        }
                         
                         statsObserver.unobserve(entry.target);
                     }
@@ -1151,8 +1589,8 @@ function formatearDimensiones($base, $altura) {
             }, observerOptions);
 
             // Observar las tarjetas de estadísticas
-            document.querySelectorAll('.stat-card').forEach(card => {
-                statsObserver.observe(card);
+            document.querySelectorAll('.stat-item').forEach(item => {
+                statsObserver.observe(item);
             });
 
             // Animación de entrada escalonada para las tarjetas
@@ -1180,14 +1618,25 @@ function formatearDimensiones($base, $altura) {
             });
 
             // Efecto parallax sutil en las tarjetas
-            window.addEventListener('scroll', () => {
+            let ticking = false;
+            
+            function updateParallax() {
                 const scrolled = window.pageYOffset;
                 const parallaxElements = document.querySelectorAll('.publication-card');
                 
                 parallaxElements.forEach((element, index) => {
-                    const rate = scrolled * -0.02 * (index % 3 + 1);
+                    const rate = scrolled * -0.01 * ((index % 4) + 1);
                     element.style.transform = `translateY(${rate}px)`;
                 });
+                
+                ticking = false;
+            }
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(updateParallax);
+                    ticking = true;
+                }
             });
 
             // Mejorar la confirmación de eliminación
@@ -1225,7 +1674,7 @@ function formatearDimensiones($base, $altura) {
                 });
             }
 
-            // Auto-hide mensajes de éxito/error después de 8 segundos
+            // Auto-hide mensajes de éxito/error después de 6 segundos
             const messages = document.querySelectorAll('.success-message, .error-display');
             messages.forEach(message => {
                 setTimeout(() => {
@@ -1233,45 +1682,128 @@ function formatearDimensiones($base, $altura) {
                     setTimeout(() => {
                         message.remove();
                     }, 500);
-                }, 8000);
+                }, 6000);
+            });
+
+            // Lazy loading mejorado para imágenes
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.classList.remove('lazy');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+
+            // Gestión de errores de imágenes
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('error', function() {
+                    // Mostrar placeholder si la imagen no carga
+                    this.style.display = 'none';
+                    const cardImage = this.closest('.card-images');
+                    if (cardImage) {
+                        cardImage.style.setProperty('--book-icon-display', 'block');
+                    }
+                });
+                
+                img.addEventListener('load', function() {
+                    // Ocultar placeholder cuando la imagen carga
+                    this.style.opacity = '1';
+                    const cardImage = this.closest('.card-images');
+                    if (cardImage) {
+                        cardImage.style.setProperty('--book-icon-display', 'none');
+                    }
+                });
+            });
+
+            // Mejorar la experiencia de los botones
+            document.querySelectorAll('.card-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Efecto de ripple
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        pointer-events: none;
+                    `;
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
             });
 
             console.log('✅ Página de publicaciones cargada correctamente');
-            console.log(`📚 Se encontraron ${document.querySelectorAll('.publication-card').length} publicaciones`);
+            console.log(`📚 Se encontraron ${document.querySelectorAll('.publication-card').length} publicaciones personales`);
+            console.log('🎨 Tema aplicado: Colores tierra y naturales (consistente con home.php)');
         });
 
-        // CSS para animaciones adicionales
+        // CSS para animaciones adicionales y estilos de búsqueda
         const additionalStyles = document.createElement('style');
         additionalStyles.textContent = `
-            @keyframes spinning {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-            
-            .spinning {
-                animation: spinning 1s linear infinite;
-            }
-            
-            @keyframes slideOutUp {
-                from {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
+            @keyframes ripple {
                 to {
+                    transform: scale(4);
                     opacity: 0;
-                    transform: translateY(-30px);
                 }
             }
             
-            .no-results-message {
+            .no-results-personal {
                 grid-column: 1 / -1;
-                background: rgba(255, 255, 255, 0.95);
+                background: rgba(255, 253, 252, 0.95);
                 backdrop-filter: blur(20px);
                 border-radius: var(--border-radius);
                 padding: 60px 40px;
                 text-align: center;
-                border: 2px dashed rgba(102, 126, 234, 0.3);
+                border: 2px dashed rgba(163, 177, 138, 0.3);
                 animation: fadeInUp 0.5s ease forwards;
+                color: var(--text-secondary);
+                margin: 20px 0;
+            }
+            
+            .no-results-personal h3 {
+                color: var(--text-primary);
+                font-weight: 700;
+                margin-bottom: 15px;
+                font-size: 1.8em;
+            }
+            
+            .no-results-personal p {
+                margin: 10px 0;
+                line-height: 1.6;
+                font-size: 1.1em;
+            }
+            
+            .no-results-personal strong {
+                color: var(--green-dark);
+                font-weight: 700;
+            }
+            
+            .no-results-personal a:hover {
+                color: var(--primary-brown) !important;
             }
             
             .main-image {
@@ -1285,47 +1817,63 @@ function formatearDimensiones($base, $altura) {
             .image-indicator.active {
                 transform: scale(1.2);
             }
+            
+            /* Mejoras para dispositivos móviles */
+            @media (max-width: 768px) {
+                .no-results-personal {
+                    padding: 40px 20px;
+                }
+                
+                .no-results-personal h3 {
+                    font-size: 1.5em;
+                }
+                
+                .no-results-personal p {
+                    font-size: 1em;
+                }
+            }
         `;
         document.head.appendChild(additionalStyles);
 
-        const personalSearchStyles = document.createElement('style');
-        personalSearchStyles.textContent = `
-            .no-results-personal {
-                grid-column: 1 / -1;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(20px);
-                border-radius: var(--border-radius);
-                padding: 60px 40px;
-                text-align: center;
-                border: 2px dashed rgba(102, 126, 234, 0.3);
-                animation: fadeInUp 0.5s ease forwards;
-                color: #718096;
-                margin: 20px 0;
-            }
+        // Detectar si el usuario prefiere animaciones reducidas
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        
+        if (prefersReducedMotion.matches) {
+            // Reducir animaciones para usuarios que lo prefieren
+            document.documentElement.style.setProperty('--transition', 'all 0.1s ease');
+            document.querySelectorAll('.publication-card').forEach(card => {
+                card.style.animation = 'none';
+                card.style.opacity = '1';
+                card.style.transform = 'none';
+            });
+        }
+
+        // Mejorar rendimiento en dispositivos móviles
+        if (window.innerWidth <= 768) {
+            // Deshabilitar parallax en móviles para mejor rendimiento
+            window.removeEventListener('scroll', updateParallax);
             
-            .no-results-personal h3 {
-                color: #4a5568;
-                font-weight: 800;
-                margin-bottom: 15px;
-                font-size: 1.8em;
-            }
-            
-            .no-results-personal p {
-                margin: 10px 0;
-                line-height: 1.6;
-                font-size: 1.1em;
-            }
-            
-            .no-results-personal strong {
-                color: #667eea;
-                font-weight: 700;
-            }
-            
-            .no-results-personal a:hover {
-                color: #764ba2 !important;
-            }
-        `;
-        document.head.appendChild(personalSearchStyles);
+            // Optimizar animaciones para móviles
+            document.querySelectorAll('.publication-card').forEach(card => {
+                card.style.willChange = 'auto';
+            });
+        }
+
+        // Gestión de rendimiento
+        if (window.performance && window.performance.measure) {
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    const navigation = performance.getEntriesByType('navigation')[0];
+                    const loadTime = navigation.loadEventEnd - navigation.loadEventStart;
+                    
+                    if (loadTime > 3000) {
+                        console.warn('⚠️ Tiempo de carga lento detectado:', loadTime + 'ms');
+                    } else {
+                        console.log('⚡ Página cargada rápidamente:', loadTime + 'ms');
+                    }
+                }, 0);
+            });
+        }
     </script>
 </body>
 </html>

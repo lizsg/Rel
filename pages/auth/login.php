@@ -144,11 +144,14 @@
     }
 
     .logo-icon {
-      width: 80px;
-      height: 80px;
+      width: 140px;
+      height: 140px;
       margin-bottom: 20px;
       position: relative;
       animation: logoFloat 3s ease-in-out infinite;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(107, 66, 38, 0.2);
     }
 
     @keyframes logoFloat {
@@ -156,11 +159,17 @@
       50% { transform: translateY(-5px); }
     }
 
-    /* Recreación del logo SVG */
-    .book-logo {
+    /* Estilo para la imagen del logo */
+    .logo-image {
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 4px 12px rgba(107, 66, 38, 0.2));
+      object-fit: cover;
+      object-position: center;
+      transition: transform 0.3s ease;
+    }
+
+    .logo-icon:hover .logo-image {
+      transform: scale(1.05);
     }
 
     .login-container h2 {
@@ -366,8 +375,8 @@
       }
 
       .logo-icon {
-        width: 70px;
-        height: 70px;
+        width: 110px;
+        height: 110px;
       }
 
       .input-group input,
@@ -402,27 +411,8 @@
   <form class="login-container" method="POST" action="">
     <div class="logo-container">
       <div class="logo-icon">
-        <svg class="book-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <!-- Libro abierto -->
-          <path d="M50 60 Q50 40 70 40 L100 40 L100 140 Q100 150 90 150 L70 150 Q50 150 50 130 Z" 
-                fill="#6b4226" stroke="#8b5a3c" stroke-width="2"/>
-          <path d="M150 60 Q150 40 130 40 L100 40 L100 140 Q100 150 110 150 L130 150 Q150 150 150 130 Z" 
-                fill="#3a5a40" stroke="#588157" stroke-width="2"/>
-          <!-- Páginas internas -->
-          <path d="M55 50 Q55 45 60 45 L95 45 L95 135 Q95 140 90 140 L60 140 Q55 140 55 135 Z" 
-                fill="#f8f6f3" opacity="0.9"/>
-          <path d="M145 50 Q145 45 140 45 L105 45 L105 135 Q105 140 110 140 L140 140 Q145 140 145 135 Z" 
-                fill="#f8f6f3" opacity="0.9"/>
-          <!-- Líneas del texto -->
-          <line x1="65" y1="60" x2="85" y2="60" stroke="#a3b18a" stroke-width="1.5" opacity="0.7"/>
-          <line x1="65" y1="70" x2="85" y2="70" stroke="#a3b18a" stroke-width="1.5" opacity="0.7"/>
-          <line x1="65" y1="80" x2="80" y2="80" stroke="#a3b18a" stroke-width="1.5" opacity="0.7"/>
-          <line x1="115" y1="60" x2="135" y2="60" stroke="#a3b18a" stroke-width="1.5" opacity="0.7"/>
-          <line x1="115" y1="70" x2="135" y2="70" stroke="#a3b18a" stroke-width="1.5" opacity="0.7"/>
-          <line x1="115" y1="80" x2="130" y2="80" stroke="#a3b18a" stroke-width="1.5" opacity="0.7"/>
-        </svg>
+        <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
       </div>
-      <h2>RELEE</h2>
       <p class="subtitle">Bienvenido</p>
     </div>
 
@@ -454,8 +444,6 @@
     </a>
   </form>
 
-  <script src="../../assets/js/auth-script.js"></script>
-  <script>
   <script src="../../assets/js/auth-script.js"></script>
   <script>
     function togglePassword() {

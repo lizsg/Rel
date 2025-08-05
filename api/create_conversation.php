@@ -34,7 +34,7 @@ try {
     }
     
     // Prevenir condiciones de carrera con bloqueo
-    $conn->query("LOCK TABLES Conversaciones WRITE");
+    $conn->query("LOCK TABLES Conversaciones WRITE, Usuarios READ");
     
     // Verificar si ya existe una conversación entre estos usuarios
     // Buscar en ambas direcciones (user1->user2 y user2->user1)

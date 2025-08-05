@@ -365,6 +365,18 @@
         });
     }
 
+    document.addEventListener('click', function(e) {
+    if (e.target.closest('.user-result')) {
+        const userResult = e.target.closest('.user-result');
+        const userId = userResult.dataset.userid;
+        const userName = userResult.dataset.username;
+        
+        if (userId && userName) {
+            abrirChat(parseInt(userId), userName);
+        }
+    }
+});
+
     function displayMessages(messages) {
         const container = document.getElementById('messagesContainer');
         container.innerHTML = '';
@@ -410,7 +422,6 @@
         }
     });
 
-    // Al final del JavaScript de chat.php, agrega:
 document.addEventListener('DOMContentLoaded', function() {
     // Si hay una conversación en la URL, seleccionarla automáticamente
     const urlParams = new URLSearchParams(window.location.search);
@@ -423,6 +434,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+let lastClickTime = 0;
+        document.addEventListener('click', function(e) {
+            const now = Date.now();
+            if (now - lastClickTime < 300) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            lastClickTime = now;
+        }, true);
 </script>
 </body>
 </html>
