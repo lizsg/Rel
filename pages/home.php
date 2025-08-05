@@ -1414,32 +1414,19 @@
         document.head.appendChild(searchStyles);
 
         function abrirChat(userId, userName) {
-            // Prevenir múltiples clicks
+            // Prevenir múltiples clics/taps
             const button = event.target.closest('.contact-button');
-            if (button.disabled || button.classList.contains('processing')) {
-                return false;
-            }
+            if (button.disabled) return;
             
-            // Deshabilitar botón inmediatamente
+            // Deshabilitar temporalmente el botón
             button.disabled = true;
-            button.classList.add('processing');
-            
-            // Cambiar texto del botón para dar feedback
-            const originalText = button.innerHTML;
+            button.style.opacity = '0.6';
             button.innerHTML = `
-                <svg width="16" height="16" fill="white" viewBox="0 0 24 24" class="spinning">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/>
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 2v4.23c-.84 0-1.66.23-2.37.69-.72.46-1.31 1.12-1.73 1.93C7.48 9.66 7.25 10.61 7.25 11.59s.23 1.93.65 2.74c.42.81 1.01 1.47 1.73 1.93.71.46 1.53.69 2.37.69s1.66-.23 2.37-.69c.72-.46 1.31-1.12 1.73-1.93.42-.81.65-1.76.65-2.74s-.23-1.93-.65-2.74c-.42-.81-1.01-1.47-1.73-1.93-.71-.46-1.53-.69-2.37-.69V2z"/>
                 </svg>
                 Conectando...
             `;
-            
-            // Función para restaurar botón
-            function restaurarBoton() {
-                button.disabled = false;
-                button.classList.remove('processing');
-                button.innerHTML = originalText;
-            }
             
             fetch('../api/create_conversation.php', {
                 method: 'POST',
@@ -1450,22 +1437,32 @@
             })
             .then(response => response.json())
             .then(data => {
-                restaurarBoton();
                 if (data.success) {
-                    // Redirigir inmediatamente sin permitir más clicks
                     window.location.href = 'chat/chat.php?conversacion=' + data.conversationId;
                 } else {
                     alert('Error al abrir el chat: ' + data.message);
+                    // Restaurar botón
+                    restoreButton(button);
                 }
             })
             .catch(error => {
-                restaurarBoton();
                 console.error('Error:', error);
                 alert('Error al conectar con el servidor');
+                // Restaurar botón
+                restoreButton(button);
             });
-            
-            return false;
         }
+        function restoreButton(button) {
+            button.disabled = false;
+            button.style.opacity = '1';
+            button.innerHTML = `
+                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+                Contactar
+            `;
+        }
+        
         let enviandoMensaje = false;
 
         document.getElementById('sendButton').addEventListener('click', function() {
