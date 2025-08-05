@@ -283,15 +283,45 @@ function tiempoTranscurrido($fecha) {
             z-index: 100;
         }
 
-        .logo {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-        }
+        /* LOGO IMAGEN*/
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-icon {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    animation: logoFloat 3s ease-in-out infinite;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(107, 66, 38, 0.2);
+    transition: all 0.3s ease;
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+}
+
+.logo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+}
+
+.logo-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(107, 66, 38, 0.3);
+}
+
+.logo-icon:hover .logo-image {
+    transform: scale(1.05);
+}
 
         .search-bar {
             flex: 1;
@@ -1143,18 +1173,22 @@ function tiempoTranscurrido($fecha) {
     <?php include '../../includes/chat-component.php'; ?>
 
     <!-- Header igual que home.php -->
-    <header>
-        <div class="logo">RELEE</div>
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Buscar en mis publicaciones...">
-            <button type="button" id="search-button">
-                <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                </svg>
-            </button>
+ <header>
+    <div class="logo">
+        <div class="logo-icon">
+            <img src="../../assets/images/REELEE.jpeg" alt="REELE Logo" class="logo-image" />
         </div>
-        <a href="buscador.php" class="user-button">Búsqueda Avanzada</a>
-    </header>
+    </div>
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Buscar en mis publicaciones...">
+        <button type="button" id="search-button">
+            <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+        </button>
+    </div>
+    <a href="buscador.php" class="user-button">Búsqueda Avanzada</a>
+</header>
 
     <!-- Hero Section adaptado -->
     <div class="hero-section">
@@ -1348,7 +1382,7 @@ function tiempoTranscurrido($fecha) {
                         <?php endif; ?>
 
                         <div class="card-actions">
-                            <a href="detalle_publicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">
+                            <a href="verdetallespublicacion.php?id=<?php echo htmlspecialchars($publicacion['idPublicacion']); ?>" class="card-button view-button">
                                 <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                                     <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                                 </svg>
