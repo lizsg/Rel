@@ -20,7 +20,7 @@ try {
     
     $conn->begin_transaction();
     
-    // 1. Encontrar conversaciones duplicadas
+    // Encontrar conversaciones duplicadas
     $duplicatesQuery = "
         SELECT 
             MIN(idConversacion) as keep_id,
@@ -47,7 +47,7 @@ try {
         if (!empty($duplicateIds)) {
             $duplicateIdsStr = implode(',', $duplicateIds);
             
-            // 2. Mover todos los mensajes de las conversaciones duplicadas a la conversación principal
+            // Mover todos los mensajes de las conversaciones duplicadas a la conversación principal
             $moveMessagesQuery = "
                 UPDATE Mensajes 
                 SET idConversacion = ? 
@@ -59,7 +59,7 @@ try {
             $mergedMessages += $stmt->affected_rows;
             $stmt->close();
             
-            // 3. Actualizar el último mensaje de la conversación principal
+            // Actualizar el último mensaje de la conversación principal
             $updateLastMessageQuery = "
                 UPDATE Conversaciones 
                 SET ultimoMensaje = (
@@ -76,14 +76,14 @@ try {
             $stmt->execute();
             $stmt->close();
             
-            // 4. Eliminar las conversaciones duplicadas
+            // Eliminar las conversaciones duplicadas
             $deleteQuery = "DELETE FROM Conversaciones WHERE idConversacion IN ($duplicateIdsStr)";
             $conn->query($deleteQuery);
             $cleanedConversations += count($duplicateIds);
         }
     }
     
-    // 5. Limpiar mensajes duplicados (mismo contenido, mismo remitente, misma conversación, tiempo similar)
+    // Limpiar mensajes duplicados (mismo contenido, mismo remitente, misma conversación, tiempo similar)
     $cleanDuplicateMessagesQuery = "
         DELETE m1 FROM Mensajes m1
         INNER JOIN Mensajes m2 

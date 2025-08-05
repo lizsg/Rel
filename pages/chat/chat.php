@@ -10,7 +10,7 @@
     // Usamos un require con los datos para ingresar a la base de datos
     require_once __DIR__ . '/../../config/database.php';
 
-    // Obtenemos el id del usuario, en caso de que sea null, mandar a login
+    // Obtenemos el id del usuario, en caso de que sea null, mandamos regreso a login
     $userId = $_SESSION['user_id'] ?? null;
     if (!$userId) {
         header("Location: ../auth/login.php");
@@ -256,7 +256,7 @@
                 </div>
 
                 <div class="messages-container" id="messagesContainer">
-                    <!-- Los mensajes se cargarán aquí -->
+                    <!-- Los mensajes van a cargar en esta partecita -->
                 </div>
 
                 <div class="message-input-container">
@@ -283,12 +283,6 @@
         <a href="../products/publicaciones.php" class="bottom-button bottom-button-wide">
             <span>Mis Publicaciones</span>
         </a>
-        <button class="bottom-button">
-            <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
-                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-            </svg>
-            <span>Menú</span>
-        </button>
     </div>
 
     <script>

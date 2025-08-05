@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $base = !empty($_POST['base']) ? (float)$_POST['base'] : null;
             $altura = !empty($_POST['altura']) ? (float)$_POST['altura'] : null;
             $paginas = !empty($_POST['paginas']) ? (int)$_POST['paginas'] : null;
-            $fechaPublicacion = !empty($_POST['fechaPublicacion']) ? $_POST['fechaPublicacion'] : null;
+            $fechaPublicacion = isset($_POST['fechaPublicacion']) && !empty($_POST['fechaPublicacion']) ? $_POST['fechaPublicacion'] : NULL;
             $precio = !empty($_POST['precio']) ? (float)$_POST['precio'] : null;
 
             $insertLibro->bind_param("sssssssddiissss",
@@ -635,11 +635,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <small>Opcional</small>
             </div>
 
-            <div class="form-group">
-                <label for="fechaPublicacion">Fecha de Publicación:</label>
-                <input type="date" id="fechaPublicacion" name="fechaPublicacion" value="<?php echo htmlspecialchars($_POST['fechaPublicacion'] ?? ''); ?>">
-                <small>Opcional - Fecha original de publicación del libro</small>
-            </div>
 
             <div class="form-group">
                 <label for="precio">Precio:</label>
@@ -706,132 +701,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="publicaciones.php" class="bottom-button bottom-button-wide" title="Mis Publicaciones">
             <span>Mis Publicaciones</span>
         </a>
-        
     </div>
 
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
-    <script>
-        function updateCharCounter(inputId, counterId, maxLength) {
-            const input = document.getElementById(inputId);
-            const counter = document.getElementById(counterId);
-            
-            function updateCounter() {
-                const currentLength = input.value.length;
-                counter.textContent = `${currentLength}/${maxLength} caracteres`;
-                
-                if (currentLength > maxLength * 0.8) {
-                    counter.className = 'char-counter warning';
-                } else if (currentLength >= maxLength) {
-                    counter.className = 'char-counter error';
-                } else {
-                    counter.className = 'char-counter';
-                }
-            }
-            
-            input.addEventListener('input', updateCounter);
-            updateCounter();
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCharCounter('editorial', 'editorial-counter', 50);
-            updateCharCounter('edicion', 'edicion-counter', 20);
-            updateCharCounter('categoria', 'categoria-counter', 20);
-        });
-
-        document.querySelectorAll('input[type="file"]').forEach(input => {
-            input.addEventListener('change', function() {
-                const label = this.parentElement.querySelector('.file-label');
-                if (this.files.length > 0) {
-                    const fileName = this.files[0].name;
-                    const fileSize = (this.files[0].size / (1024 * 1024)).toFixed(2);
-                    
-                    if (this.id === 'uploadVideo') {
-                        label.textContent = `Video seleccionado: ${fileName} (${fileSize}MB)`;
-                    } else {
-                        label.textContent = `Imagen seleccionada: ${fileName} (${fileSize}MB)`;
-                    }
-                    label.style.color = '#588157';
-                } else {
-                    if (this.id === 'uploadVideo') {
-                        label.textContent = 'Seleccionar video del libro (Max 500MB)';
-                    } else if (this.id === 'uploadImagen1') {
-                        label.textContent = 'Seleccionar imagen de portada (Max 10MB)';
-                    } else {
-                        label.textContent = 'Seleccionar imagen adicional (Max 10MB)';
-                    }
-                    label.style.color = '';
-                }
-            });
-        });
-
-        document.querySelector('.publication-form').addEventListener('submit', function(e) {
-            const titulo = document.getElementById('titulo').value.trim();
-            const autor = document.getElementById('autor').value.trim();
-            const descripcion = document.getElementById('descripcion').value.trim();
-            const imagen1 = document.getElementById('uploadImagen1');
-            
-            let erroresJS = [];
-
-            if (!titulo) erroresJS.push('El título es obligatorio');
-            if (!autor) erroresJS.push('El autor es obligatorio');
-            if (!descripcion) erroresJS.push('La descripción es obligatoria');
-            if (imagen1.files.length === 0) erroresJS.push('La imagen de portada es obligatoria');
-
-            const editorial = document.getElementById('editorial').value;
-            if (editorial.length > 50) erroresJS.push('La editorial no puede exceder los 50 caracteres');
-
-            const edicion = document.getElementById('edicion').value;
-            if (edicion.length > 20) erroresJS.push('La edición no puede exceder los 20 caracteres');
-
-            const categoria = document.getElementById('categoria').value;
-            if (categoria.length > 20) erroresJS.push('La categoría no puede exceder los 20 caracteres');
-
-            const precio = document.getElementById('precio').value.trim();
-            if (precio !== '' && (isNaN(precio) || parseFloat(precio) < 0)) {
-                erroresJS.push('El precio debe ser un número válido y no negativo');
-            }
-
-            const paginas = document.getElementById('paginas').value.trim();
-            if (paginas !== '' && (isNaN(paginas) || parseInt(paginas) < 1)) {
-                erroresJS.push('El número de páginas debe ser un número entero positivo');
-            }
-
-            const base = document.getElementById('base').value.trim();
-            if (base !== '' && (isNaN(base) || parseFloat(base) < 0)) {
-                erroresJS.push('La base debe ser un número válido y no negativo');
-            }
-
-            const altura = document.getElementById('altura').value.trim();
-            if (altura !== '' && (isNaN(altura) || parseFloat(altura) < 0)) {
-                erroresJS.push('La altura debe ser un número válido y no negativo');
-            }
-
-            if (erroresJS.length > 0) {
-                e.preventDefault();
-                const erroresContainer = document.createElement('div');
-                erroresContainer.className = 'errores';
-                
-                erroresJS.forEach(error => {
-                    const p = document.createElement('p');
-                    p.textContent = error;
-                    erroresContainer.appendChild(p);
-                });
-
-                const existingErrores = document.querySelector('.errores');
-                if (existingErrores) {
-                    existingErrores.replaceWith(erroresContainer);
-                } else {
-                    const form = document.querySelector('.publication-form');
-                    form.insertBefore(erroresContainer, form.firstChild);
-                }
-
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    </script>
 </body>
 </html>

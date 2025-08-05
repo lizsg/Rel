@@ -530,7 +530,7 @@ function tiempoTranscurrido($fecha) {
                     Volver
                 </a>
                 <h1 class="detail-title">Detalles de Publicación</h1>
-                <div style="width: 100px;"></div> <!-- Spacer for centering -->
+                <div style="width: 100px;"></div> 
             </div>
 
             <div class="detail-content">

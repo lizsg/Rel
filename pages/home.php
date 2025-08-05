@@ -171,7 +171,6 @@
     <link rel="stylesheet" href="../assets/css/home-styles.css">
     <link rel="stylesheet" href="../assets/css/chat-styles.css">
     <style>
-        /* Variables CSS consistentes con tu diseño */
         :root {
             --primary-brown: #6b4226;
             --secondary-brown: #8b5a3c;
@@ -215,7 +214,6 @@
             z-index: -1;
         }
 
-        /* Topbar con tu estilo */
         .topbar {
             background: linear-gradient(135deg, #f5f0ea 0%, #ede6dd 100%);
             backdrop-filter: blur(10px);
@@ -264,7 +262,6 @@
             left: 100%;
         }
 
-        /* Header con tu estilo */
         header {
             background: rgba(255, 253, 251, 0.95);
             backdrop-filter: blur(20px);
@@ -279,14 +276,69 @@
             z-index: 100;
         }
 
-        .logo {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
+        /* DISEÑO DE LA IMAGEN DE NUESTRO LOGO */
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-icon {
+            width: 85px;
+            height: 85px;
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(107, 66, 38, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(107, 66, 38, 0.35);
+        }
+
+        .logo-icon:hover .logo-image {
+            transform: scale(1.1);
+        }
+
+        /* Ajustes para responsive */
+        @media (max-width: 768px) {
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+            
+            .logo-container {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 12px;
+            }
         }
 
         .search-bar {
@@ -426,7 +478,7 @@
             letter-spacing: 1px;
         }
 
-        /* Gallery */
+        /* Galleria */
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -687,7 +739,6 @@
             box-shadow: 0 8px 25px rgba(107, 66, 38, 0.4);
         }
 
-        /* Empty State */
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
@@ -739,7 +790,7 @@
             background: linear-gradient(135deg, rgba(163, 177, 138, 0.9) 0%, rgba(88, 129, 87, 0.9) 100%);
         }
 
-        /* Bottom bar con tu estilo */
+        /* Bottom bar */
         .bottombar {
             position: fixed;
             bottom: 0;
@@ -916,7 +967,7 @@
             animation: slideInDown 0.5s ease;
         }
 
-        /* Responsive Design */
+        /* Responsive */
         @media (max-width: 768px) {
             .gallery {
                 grid-template-columns: 1fr;
@@ -1010,7 +1061,7 @@
             }
         }
 
-        /* Mejoras visuales adicionales */
+        /* Adicionales */
         .no-results-message {
             grid-column: 1 / -1;
             background: rgba(255, 253, 252, 0.95);
@@ -1029,7 +1080,7 @@
             margin-bottom: 15px;
         }
 
-        /* Efectos hover mejorados */
+        /* Efectos hover */
         .hashtag:hover {
             background: linear-gradient(135deg, rgba(163, 177, 138, 0.25) 0%, rgba(88, 129, 87, 0.25) 100%);
         }
@@ -1075,6 +1126,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="topbar">
         <div class="topbar-icon" title="Chat">
@@ -1112,18 +1164,22 @@
     <?php include '../includes/chat-component.php'; ?>
 
     <header>
-        <div class="logo">RELEE</div>
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Buscar en publicaciones">
-            <button type="button" id="search-button">
-                <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                </svg>
-            </button>
+         <div class="logo-container">
+        <div class="logo-icon">
+            <img src="../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
         </div>
-        <a href="products/buscador.php" class="user-button">Búsqueda Avanzada</a>
-    </header>
-
+    </div>
+    
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Buscar en publicaciones">
+        <button type="button" id="search-button">
+            <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+        </button>
+    </div>
+    <a href="products/buscador.php" class="user-button">Búsqueda Avanzada</a>
+</header>
     <div class="hero-section">
         <h1 class="hero-title">📚 Descubre Libros Increíbles</h1>
         <p class="hero-subtitle">Explora las publicaciones más recientes de nuestra comunidad</p>
@@ -1163,7 +1219,7 @@
         </div>
     <?php endif; ?>
 
-    <!-- Información de debug (solo si hay error y se solicita) -->
+    <!-- Información de debug (solo si hay error) -->
     <?php if (!empty($errorMessage) && isset($_GET['debug'])): ?>
         <div class="debug-info">
             <h4>🔧 Información de Debug</h4>
@@ -1256,6 +1312,7 @@
                         </div>
 
                         <article class="card" style="animation-delay: <?php echo $index * 0.1; ?>s;">
+
                         <!-- Contenido de la tarjeta... -->
                         
                         <div class="card-actions">
@@ -1471,6 +1528,7 @@
             return false;
         }
         this.dataset.sending = 'true';
+
         // Prevenir envío múltiple
         if (enviandoMensaje) {
             return false;
@@ -1538,7 +1596,7 @@
         });
     });
 
-    // 3. PREVENIR ENVÍO CON ENTER EN MÓVILES
+    // Prevenir envio con enter en moviles
     document.getElementById('messageText').addEventListener('keypress', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -1550,7 +1608,7 @@
         }
     });
 
-    // 4. DEBOUNCE PARA CLICKS RÁPIDOS
+    // Debounce para manejar clicks rápidos
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -1563,7 +1621,7 @@
         };
     }
 
-    // 5. APLICAR DEBOUNCE A TODOS LOS BOTONES CRÍTICOS
+    // Aplicardebounce a todos los notones
     document.addEventListener('DOMContentLoaded', function() {
         // Aplicar prevención a todos los botones de contactar
         document.querySelectorAll('.contact-button').forEach(button => {
@@ -1606,7 +1664,7 @@
         }, false);
     });
 
-    // 6. MEJORAR FEEDBACK VISUAL EN MÓVILES
+    // FeedBack en moviles
     function mejorarFeedbackMovil() {
         // Agregar estilos para mejor feedback táctil
         const style = document.createElement('style');
@@ -1655,9 +1713,8 @@
     // Ejecutar mejoras al cargar
     mejorarFeedbackMovil();
 
-    // 7. LIMPIAR CONVERSACIONES DUPLICADAS AUTOMÁTICAMENTE
+    // Limpiar conversaciones automaticamente
     function limpiarConversacionesDuplicadas() {
-        // Esta función la puedes llamar periódicamente o al cargar la página
         fetch('../api/cleanup_conversations.php', {
             method: 'POST'
         })
@@ -1672,82 +1729,78 @@
         });
     }
 
-    // Ejecutar limpieza al cargar la página (opcional)
-    // limpiarConversacionesDuplicadas();
-
     console.log('✅ Protección contra duplicados en móviles activada');
-        
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Funcionalidad de búsqueda en tiempo real
-            const searchInput = document.querySelector('.search-bar input');
-            if (searchInput) {
-                let searchTimeout;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Funcionalidad de búsqueda en tiempo real
+        const searchInput = document.querySelector('.search-bar input');
+        if (searchInput) {
+            let searchTimeout;
                 
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        const searchTerm = this.value.toLowerCase().trim();
-                        const cards = document.querySelectorAll('.card');
-                        let visibleCount = 0;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const cards = document.querySelectorAll('.card');
+                    let visibleCount = 0;
                         
-                        cards.forEach(card => {
-                            const title = card.querySelector('.card-title').textContent.toLowerCase();
-                            const author = card.querySelector('.card-author').textContent.toLowerCase();
-                            const description = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
-                            const hashtags = Array.from(card.querySelectorAll('.hashtag')).map(tag => tag.textContent.toLowerCase()).join(' ');
-                            const publisher = card.querySelector('.card-publisher')?.textContent.toLowerCase() || '';
+                    cards.forEach(card => {
+                        const title = card.querySelector('.card-title').textContent.toLowerCase();
+                        const author = card.querySelector('.card-author').textContent.toLowerCase();
+                        const description = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
+                        const hashtags = Array.from(card.querySelectorAll('.hashtag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+                        const publisher = card.querySelector('.card-publisher')?.textContent.toLowerCase() || '';
                             
-                            const matches = title.includes(searchTerm) || 
-                                          author.includes(searchTerm) || 
-                                          description.includes(searchTerm) ||
-                                          hashtags.includes(searchTerm) ||
-                                          publisher.includes(searchTerm);
+                        const matches = title.includes(searchTerm) || 
+                            author.includes(searchTerm) || 
+                            description.includes(searchTerm) ||
+                            hashtags.includes(searchTerm) ||
+                            publisher.includes(searchTerm);
                             
-                            if (matches || searchTerm === '') {
-                                card.style.display = 'block';
-                                card.style.animation = 'fadeInUp 0.5s ease forwards';
+                        if (matches || searchTerm === '') {
+                            card.style.display = 'block';
+                            card.style.animation = 'fadeInUp 0.5s ease forwards';
                                 visibleCount++;
-                            } else {
-                                card.style.display = 'none';
-                            }
-                        });
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                         
-                        // Mostrar mensaje si no hay resultados
-                        let noResultsMsg = document.querySelector('.no-results-message');
-                        if (visibleCount === 0 && searchTerm !== '') {
-                            if (!noResultsMsg) {
-                                noResultsMsg = document.createElement('div');
-                                noResultsMsg.className = 'no-results-message empty-state';
-                                noResultsMsg.innerHTML = `
-                                    <div class="empty-state-icon">🔍</div>
+                    // Mostrar mensaje si no hay resultados
+                    let noResultsMsg = document.querySelector('.no-results-message');
+                    if (visibleCount === 0 && searchTerm !== '') {
+                        if (!noResultsMsg) {
+                            noResultsMsg = document.createElement('div');
+                            noResultsMsg.className = 'no-results-message empty-state';
+                            noResultsMsg.innerHTML = `
+                                <div class="empty-state-icon">🔍</div>
                                     <h3>No se encontraron resultados</h3>
                                     <p>No encontramos publicaciones que coincidan con "<strong>${searchTerm}</strong>"</p>
                                     <p>Intenta con otros términos de búsqueda.</p>
                                 `;
-                                document.querySelector('.gallery').appendChild(noResultsMsg);
-                            }
-                        } else if (noResultsMsg) {
-                            noResultsMsg.remove();
+                            document.querySelector('.gallery').appendChild(noResultsMsg);
                         }
-                        
-                        // Actualizar estadísticas en tiempo real
-                        updateStats(visibleCount, searchTerm);
-                    }, 300);
-                });
-            }
-
-            // Función para actualizar estadísticas
-            function updateStats(visibleCount, searchTerm) {
-                const statsBanner = document.querySelector('.stats-banner');
-                if (statsBanner && searchTerm !== '') {
-                    const originalStats = statsBanner.cloneNode(true);
-                    originalStats.setAttribute('data-original', 'true');
-                    
-                    if (!document.querySelector('[data-original="true"]')) {
-                        statsBanner.parentNode.insertBefore(originalStats, statsBanner);
-                        originalStats.style.display = 'none';
+                    } else if (noResultsMsg) {
+                        noResultsMsg.remove();
                     }
+                        
+                    // Actualizar estadísticas en tiempo real
+                    updateStats(visibleCount, searchTerm);
+                }, 300);
+            });
+        }
+
+        // Función para actualizar estadísticas
+        function updateStats(visibleCount, searchTerm) {
+            const statsBanner = document.querySelector('.stats-banner');
+            if (statsBanner && searchTerm !== '') {
+                const originalStats = statsBanner.cloneNode(true);
+                originalStats.setAttribute('data-original', 'true');
+                
+                if (!document.querySelector('[data-original="true"]')) {
+                    statsBanner.parentNode.insertBefore(originalStats, statsBanner);
+                    originalStats.style.display = 'none';
+                }
                     
                     const visibleCards = Array.from(document.querySelectorAll('.card')).filter(card => 
                         card.style.display !== 'none'
@@ -1886,7 +1939,7 @@
                 }, 6000);
             });
 
-            // Lazy loading mejorado para imágenes
+            // Lazy loading para imágenes
             if ('IntersectionObserver' in window) {
                 const imageObserver = new IntersectionObserver((entries, observer) => {
                     entries.forEach(entry => {
@@ -1936,7 +1989,7 @@
                 });
             });
 
-            // Efecto hover mejorado para las tarjetas
+            // Efecto hover
             document.querySelectorAll('.card').forEach(card => {
                 card.addEventListener('mouseenter', function() {
                     // Pausar animación parallax mientras se hace hover
@@ -2004,7 +2057,6 @@
                 document.body.appendChild(loadingIndicator);
             });
 
-            // Inicialización completa
             console.log('✅ Página de inicio cargada correctamente');
             console.log(`📚 Se encontraron ${document.querySelectorAll('.card').length} publicaciones recientes`);
             console.log('🎨 Tema aplicado: Colores tierra y naturales');
@@ -2020,8 +2072,6 @@
             
             console.log('🔧 Funcionalidades activas:', features);
         });
-
-        // Utilidades adicionales para mejorar la experiencia
         
         // Detectar si el usuario prefiere animaciones reducidas
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');

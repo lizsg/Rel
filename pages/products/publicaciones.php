@@ -20,7 +20,6 @@ try {
         throw new Exception("Error de conexión: " . $conn->connect_error);
     }
 
-    // SOLUCIÓN: Verificar primero la estructura real de la tabla Usuarios
     $checkColumns = $conn->query("SHOW COLUMNS FROM Usuarios");
     $columnas_usuarios = [];
     
@@ -47,8 +46,6 @@ try {
         $usar_id_como_nombre = false;
     }
 
-    // Consulta corregida - Basada en tu estructura real
-    // Nota: Según tu diagrama, parece que Usuarios es realmente la tabla Publicaciones
     $stmt = $conn->prepare("
         SELECT 
             p.idPublicacion,
@@ -93,7 +90,7 @@ try {
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
-        // Si estamos usando ID como nombre, formatearlo mejor
+        // Si estamos usando ID como nombre
         if ($usar_id_como_nombre && $row['nombreUsuario'] == $_SESSION['user_id']) {
             $row['nombreUsuario'] = 'Mi Usuario (#' . $_SESSION['user_id'] . ')';
         }
@@ -175,7 +172,6 @@ function tiempoTranscurrido($fecha) {
     <link rel="stylesheet" href="../../assets/css/home-styles.css">
     <link rel="stylesheet" href="../../assets/css/chat-styles.css">
     <style>
-        /* Variables CSS consistentes con home.php */
         :root {
             --primary-brown: #6b4226;
             --secondary-brown: #8b5a3c;
@@ -204,7 +200,7 @@ function tiempoTranscurrido($fecha) {
             position: relative;
         }
 
-        /* Patrón de fondo sutil igual que home.php */
+        /* Patrón de fondo sutil */
         body::before {
             content: '';
             position: fixed;
@@ -219,7 +215,7 @@ function tiempoTranscurrido($fecha) {
             z-index: -1;
         }
 
-        /* Topbar con el mismo estilo de home.php */
+        /* Topbar */
         .topbar {
             background: linear-gradient(135deg, #f5f0ea 0%, #ede6dd 100%);
             backdrop-filter: blur(10px);
@@ -268,7 +264,7 @@ function tiempoTranscurrido($fecha) {
             left: 100%;
         }
 
-        /* Header con el mismo estilo de home.php */
+        /* Header */
         header {
             background: rgba(255, 253, 251, 0.95);
             backdrop-filter: blur(20px);
@@ -284,44 +280,69 @@ function tiempoTranscurrido($fecha) {
         }
 
         /* LOGO IMAGEN*/
-.logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
 
-.logo-icon {
-    width: 60px;
-    height: 60px;
-    position: relative;
-    animation: logoFloat 3s ease-in-out infinite;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(107, 66, 38, 0.2);
-    transition: all 0.3s ease;
-}
+        .logo-icon {
+            width: 85px;
+            height: 85px;
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(107, 66, 38, 0.25);
+            transition: all 0.3s ease;
+        }
 
-@keyframes logoFloat {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-3px); }
-}
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
 
-.logo-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    transition: transform 0.3s ease;
-}
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s ease;
+        }
 
-.logo-icon:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(107, 66, 38, 0.3);
-}
+        .logo-icon:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(107, 66, 38, 0.35);
+        }
 
-.logo-icon:hover .logo-image {
-    transform: scale(1.05);
-}
+        .logo-icon:hover .logo-image {
+            transform: scale(1.1);
+        }
+
+        /* Ajustes para responsive */
+        @media (max-width: 768px) {
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+            
+            .logo-container {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 12px;
+            }
+        }
 
         .search-bar {
             flex: 1;
@@ -389,7 +410,7 @@ function tiempoTranscurrido($fecha) {
             box-shadow: 0 10px 30px rgba(107, 66, 38, 0.4);
         }
 
-        /* Hero Section adaptado para publicaciones */
+        /* Hero Section */
         .hero-section {
             background: rgba(255, 253, 252, 0.95);
             backdrop-filter: blur(20px);
@@ -461,7 +482,7 @@ function tiempoTranscurrido($fecha) {
             letter-spacing: 1px;
         }
 
-        /* Botón de nueva publicación con estilo consistente */
+        /* Botón de nueva publicación */
         .new-button-container {
             display: flex;
             justify-content: center;
@@ -492,7 +513,7 @@ function tiempoTranscurrido($fecha) {
             box-shadow: 0 15px 35px rgba(88, 129, 87, 0.6);
         }
 
-        /* Gallery con el mismo estilo de home.php */
+        /* Gallery */
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -788,7 +809,7 @@ function tiempoTranscurrido($fecha) {
             box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4);
         }
 
-        /* Empty State con el mismo estilo de home.php */
+        /* Empty State */
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
@@ -822,7 +843,7 @@ function tiempoTranscurrido($fecha) {
             line-height: 1.6;
         }
 
-        /* Messages con el mismo estilo de home.php */
+        /* Messages */
         .error-display, .success-message {
             background: linear-gradient(135deg, rgba(245, 101, 101, 0.9) 0%, rgba(229, 62, 62, 0.9) 100%);
             color: white;
@@ -840,7 +861,7 @@ function tiempoTranscurrido($fecha) {
             background: linear-gradient(135deg, rgba(163, 177, 138, 0.9) 0%, rgba(88, 129, 87, 0.9) 100%);
         }
 
-        /* Bottom bar con el mismo estilo de home.php */
+        /* Bottom bar */
         .bottombar {
             position: fixed;
             bottom: 0;
@@ -968,7 +989,7 @@ function tiempoTranscurrido($fecha) {
             border: 1px solid rgba(224, 214, 207, 0.3);
         }
 
-        /* Animaciones igual que home.php */
+        /* Animaciones */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -1019,7 +1040,7 @@ function tiempoTranscurrido($fecha) {
             animation: spinning 1s linear infinite;
         }
 
-        /* Responsive Design igual que home.php */
+        /* Responsive Design */
         @media (max-width: 768px) {
             .gallery {
                 grid-template-columns: 1fr;
@@ -1117,7 +1138,7 @@ function tiempoTranscurrido($fecha) {
             }
         }
 
-        /* Scrollbar personalizado igual que home.php */
+        /* Scrollbar personalizado */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -1138,7 +1159,6 @@ function tiempoTranscurrido($fecha) {
     </style>
 </head>
 <body>
-    <!-- Topbar igual que home.php -->
     <div class="topbar">
         <div class="topbar-icon" title="Chat">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
@@ -1172,7 +1192,6 @@ function tiempoTranscurrido($fecha) {
 
     <?php include '../../includes/chat-component.php'; ?>
 
-    <!-- Header igual que home.php -->
  <header>
     <div class="logo">
         <div class="logo-icon">
@@ -1190,7 +1209,7 @@ function tiempoTranscurrido($fecha) {
     <a href="buscador.php" class="user-button">Búsqueda Avanzada</a>
 </header>
 
-    <!-- Hero Section adaptado -->
+    
     <div class="hero-section">
         <h1 class="hero-title">📚 Mis Publicaciones</h1>
         <p class="hero-subtitle">Gestiona y visualiza toda tu biblioteca digital personal</p>
@@ -1217,7 +1236,7 @@ function tiempoTranscurrido($fecha) {
         <?php endif; ?>
     </div>
 
-    <!-- Botón de nueva publicación -->
+    
     <div class="new-button-container">
         <a href="NuevaPublicacion.php" class="new-button">
             <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -1227,7 +1246,7 @@ function tiempoTranscurrido($fecha) {
         </a>
     </div>
 
-    <!-- Mensajes de éxito y error -->
+
     <?php if (isset($_SESSION['mensaje_exito'])): ?>
         <div class="success-message">
             ✅ <?php echo htmlspecialchars($_SESSION['mensaje_exito']); unset($_SESSION['mensaje_exito']); ?>
@@ -1240,7 +1259,7 @@ function tiempoTranscurrido($fecha) {
         </div>
     <?php endif; ?>
 
-    <!-- Información de debug (solo si hay error y se solicita) -->
+    
     <?php if (!empty($errorMessage) && isset($_GET['debug'])): ?>
         <div class="debug-info">
             <h4>🔧 Información de Debug</h4>
@@ -1252,7 +1271,7 @@ function tiempoTranscurrido($fecha) {
         </div>
     <?php endif; ?>
 
-    <!-- Gallery de publicaciones -->
+
     <main class="gallery">
         <?php if (empty($publicaciones)): ?>
             <div class="empty-state">
@@ -1412,7 +1431,6 @@ function tiempoTranscurrido($fecha) {
         <?php endif; ?>
     </main>
 
-    <!-- Bottom bar igual que home.php -->
     <div class="bottombar">
         <a href="../home.php" class="bottom-button" title="Inicio">
             <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
@@ -1423,26 +1441,20 @@ function tiempoTranscurrido($fecha) {
         <a href="publicaciones.php" class="bottom-button bottom-button-wide" title="Mis Publicaciones">
             <span>Mis Publicaciones</span>
         </a>
-        <button class="bottom-button" title="Menú">
-            <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
-                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-            </svg>
-            <span>Menú</span>
-        </button>
     </div>
 
     <script src="../../assets/js/home-script.js"></script>
     <script src="../../assets/js/chat-script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Funcionalidad de búsqueda específica para publicaciones personales
+            
             function realizarBusquedaPersonal() {
                 const searchInput = document.querySelector('.search-bar input');
                 const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 const cards = document.querySelectorAll('.publication-card');
                 let visibleCount = 0;
 
-                // Remover mensaje anterior de no resultados
+               
                 const previousNoResults = document.querySelector('.no-results-personal');
                 if (previousNoResults) {
                     previousNoResults.remove();
@@ -1471,7 +1483,7 @@ function tiempoTranscurrido($fecha) {
                     }
                 });
 
-                // Mostrar mensaje si no hay resultados
+                
                 if (visibleCount === 0 && searchTerm !== '') {
                     const noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results-personal';
@@ -1484,17 +1496,16 @@ function tiempoTranscurrido($fecha) {
                     document.querySelector('.gallery').appendChild(noResultsMsg);
                 }
 
-                // Actualizar estadísticas dinámicamente
+                
                 updatePersonalStats(visibleCount, searchTerm);
             }
 
-            // Función para actualizar estadísticas
             function updatePersonalStats(visibleCount, searchTerm) {
                 const statsContainer = document.querySelector('.stats-banner');
                 if (!statsContainer) return;
 
                 if (searchTerm !== '') {
-                    // Crear estadísticas filtradas
+                   
                     const visibleCards = Array.from(document.querySelectorAll('.publication-card')).filter(card => 
                         card.style.display !== 'none'
                     );
@@ -1511,7 +1522,7 @@ function tiempoTranscurrido($fecha) {
                         !card.querySelector('.price-badge')?.classList.contains('free')
                     ).length;
 
-                    // Actualizar números manteniendo la estructura original
+                    
                     const statNumbers = statsContainer.querySelectorAll('.stat-number');
                     const statLabels = statsContainer.querySelectorAll('.stat-label');
                     
@@ -1532,30 +1543,29 @@ function tiempoTranscurrido($fecha) {
                         statLabels[3].textContent = 'De Pago';
                     }
                 } else {
-                    // Restaurar estadísticas originales recargando la página
+             
                     if (window.location.search.includes('search=')) {
                         window.location.href = window.location.pathname;
                     }
                 }
             }
 
-            // Event listeners para búsqueda
+          
             const headerSearchInput = document.querySelector('.search-bar input');
             const headerSearchButton = document.querySelector('.search-bar button');
 
             if (headerSearchInput && headerSearchButton) {
                 let searchTimeout;
                 
-                // Búsqueda en tiempo real mientras escribe
+                
                 headerSearchInput.addEventListener('input', function() {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(realizarBusquedaPersonal, 300);
                 });
                 
-                // Búsqueda al hacer clic en el botón
+         
                 headerSearchButton.addEventListener('click', realizarBusquedaPersonal);
                 
-                // Búsqueda al presionar Enter
                 headerSearchInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1564,7 +1574,6 @@ function tiempoTranscurrido($fecha) {
                 });
             }
 
-            // Funcionalidad de cambio de imágenes
             document.querySelectorAll('.publication-card').forEach(card => {
                 const indicators = card.querySelectorAll('.image-indicator');
                 const mainImage = card.querySelector('.main-image');
@@ -1591,7 +1600,7 @@ function tiempoTranscurrido($fecha) {
                 }
             });
 
-            // Animación de las estadísticas con conteo
+        
             const observerOptions = {
                 threshold: 0.5,
                 rootMargin: '0px 0px -10px 0px'
@@ -1622,12 +1631,11 @@ function tiempoTranscurrido($fecha) {
                 });
             }, observerOptions);
 
-            // Observar las tarjetas de estadísticas
             document.querySelectorAll('.stat-item').forEach(item => {
                 statsObserver.observe(item);
             });
 
-            // Animación de entrada escalonada para las tarjetas
+         
             const cardObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -1641,7 +1649,7 @@ function tiempoTranscurrido($fecha) {
                 rootMargin: '0px 0px -50px 0px'
             });
 
-            // Aplicar animación inicial y observar tarjetas
+            
             document.querySelectorAll('.publication-card').forEach((card, index) => {
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(50px)';
@@ -1651,7 +1659,7 @@ function tiempoTranscurrido($fecha) {
                 cardObserver.observe(card);
             });
 
-            // Efecto parallax sutil en las tarjetas
+          
             let ticking = false;
             
             function updateParallax() {
@@ -1673,12 +1681,12 @@ function tiempoTranscurrido($fecha) {
                 }
             });
 
-            // Mejorar la confirmación de eliminación
+       
             document.querySelectorAll('form[action="eliminar_publicacion.php"]').forEach(form => {
                 form.addEventListener('submit', function(e) {
                     const titulo = this.closest('.publication-card').querySelector('.card-title').textContent;
                     
-                    // Crear modal de confirmación personalizado
+                    
                     const confirmDelete = confirm(
                         `🗑️ ¿Eliminar "${titulo}"?\n\n` +
                         `⚠️ Esta acción es permanente y no se puede deshacer.\n` +
@@ -1692,7 +1700,7 @@ function tiempoTranscurrido($fecha) {
                 });
             });
 
-            // Mensaje de carga automático al crear nueva publicación
+   
             const newButton = document.querySelector('.new-button');
             if (newButton) {
                 newButton.addEventListener('click', function(e) {
@@ -1708,7 +1716,7 @@ function tiempoTranscurrido($fecha) {
                 });
             }
 
-            // Auto-hide mensajes de éxito/error después de 6 segundos
+    
             const messages = document.querySelectorAll('.success-message, .error-display');
             messages.forEach(message => {
                 setTimeout(() => {
@@ -1719,7 +1727,6 @@ function tiempoTranscurrido($fecha) {
                 }, 6000);
             });
 
-            // Lazy loading mejorado para imágenes
             if ('IntersectionObserver' in window) {
                 const imageObserver = new IntersectionObserver((entries, observer) => {
                     entries.forEach(entry => {
@@ -1736,7 +1743,6 @@ function tiempoTranscurrido($fecha) {
                 });
             }
 
-            // Gestión de errores de imágenes
             document.querySelectorAll('img').forEach(img => {
                 img.addEventListener('error', function() {
                     // Mostrar placeholder si la imagen no carga
@@ -1748,7 +1754,7 @@ function tiempoTranscurrido($fecha) {
                 });
                 
                 img.addEventListener('load', function() {
-                    // Ocultar placeholder cuando la imagen carga
+                    
                     this.style.opacity = '1';
                     const cardImage = this.closest('.card-images');
                     if (cardImage) {
@@ -1757,7 +1763,6 @@ function tiempoTranscurrido($fecha) {
                 });
             });
 
-            // Mejorar la experiencia de los botones
             document.querySelectorAll('.card-button').forEach(button => {
                 button.addEventListener('click', function(e) {
                     // Efecto de ripple
@@ -1795,7 +1800,7 @@ function tiempoTranscurrido($fecha) {
             console.log('🎨 Tema aplicado: Colores tierra y naturales (consistente con home.php)');
         });
 
-        // CSS para animaciones adicionales y estilos de búsqueda
+        // animaciones
         const additionalStyles = document.createElement('style');
         additionalStyles.textContent = `
             @keyframes ripple {
