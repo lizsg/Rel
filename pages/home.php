@@ -1402,60 +1402,106 @@
         `;
         document.head.appendChild(searchStyles);
 
+        // Funcion abrir Chat
         function abrirChat(userId, userName) {
-
+            // Prevenir múltiples clics
+            if (window.chatProcessing) {
+                return false;
+            }
+            
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
             }
-            // Prevenir múltiples clics/taps
-            const button = event.target.closest('.contact-button');
-            if (button.disabled) return;
             
-            // Deshabilitar temporalmente el botón
-            button.disabled = true;
-            button.style.opacity = '0.6';
-            button.innerHTML = `
-                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                    <path d="M12 2v4.23c-.84 0-1.66.23-2.37.69-.72.46-1.31 1.12-1.73 1.93C7.48 9.66 7.25 10.61 7.25 11.59s.23 1.93.65 2.74c.42.81 1.01 1.47 1.73 1.93.71.46 1.53.69 2.37.69s1.66-.23 2.37-.69c.72-.46 1.31-1.12 1.73-1.93.42-.81.65-1.76.65-2.74s-.23-1.93-.65-2.74c-.42-.81-1.01-1.47-1.73-1.93-.71-.46-1.53-.69-2.37-.69V2z"/>
-                </svg>
-                Conectando...
-            `;
+            // Marcar como procesando
+            window.chatProcessing = true;
             
-            fetch('../api/create_conversation.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'other_user_id=' + userId
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = 'chat/chat.php?conversacion=' + data.conversationId;
-                } else {
-                    alert('Error al abrir el chat: ' + data.message);
-                    // Restaurar botón
-                    restoreButton(button);
+            const button = event?.target.closest('.contact-button');
+            if (button) {
+                if (button.disabled) {
+                    window.chatProcessing = false;
+                    return false;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al conectar con el servidor');
-                // Restaurar botón
-                restoreButton(button);
-            });
+                
+                // Deshabilitar botón inmediatamente
+                button.disabled = true;
+                button.style.pointerEvents = 'none';
+                button.style.opacity = '0.6';
+                
+                const originalHTML = button.innerHTML;
+                button.innerHTML = `
+                    <svg width="16" height="16" fill="white" viewBox="0 0 24 24" class="spinning">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/>
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    Conectando...
+                `;
+                
+                // Función para restaurar botón
+                const restoreButton = () => {
+                    if (button) {
+                        button.disabled = false;
+                        button.style.pointerEvents = 'auto';
+                        button.style.opacity = '1';
+                        button.innerHTML = originalHTML;
+                    }
+                    window.chatProcessing = false;
+                };
+                
+                // Timeout de seguridad
+                const timeout = setTimeout(restoreButton, 10000);
+                
+                fetch('../api/create_conversation.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'other_user_id=' + encodeURIComponent(userId)
+                })
+                .then(response => {
+                    clearTimeout(timeout);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Navegar al chat
+                        window.location.href = 'chat/chat.php?conversacion=' + data.conversationId;
+                    } else {
+                        restoreButton();
+                        alert('Error al abrir el chat: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeout);
+                    restoreButton();
+                    console.error('Error:', error);
+                    alert('Error al conectar con el servidor');
+                });
+            }
+            
+            return false;
         }
-        function restoreButton(button) {
-            button.disabled = false;
-            button.style.opacity = '1';
-            button.innerHTML = `
-                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                </svg>
-                Contactar
-            `;
-        }
+
+        let lastGlobalClick = 0;
+        document.addEventListener('click', function(e) {
+            const now = Date.now();
+            if (now - lastGlobalClick < 300) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            lastGlobalClick = now;
+        }, true);
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
         
         let enviandoMensaje = false;
 
@@ -1559,46 +1605,98 @@
 
     // Aplicardebounce a todos los notones
     document.addEventListener('DOMContentLoaded', function() {
-        // Aplicar prevención a todos los botones de contactar
-        document.querySelectorAll('.contact-button').forEach(button => {
-            // Remover listeners existentes
-            button.onclick = null;
+        const style = document.createElement('style');
+        style.textContent = `
+            .spinning {
+                animation: spin 1s linear infinite !important;
+            }
             
-            // Agregar listener con debounce
-            button.addEventListener('click', debounce(function(e) {
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            .contact-button:disabled {
+                cursor: not-allowed !important;
+                pointer-events: none !important;
+            }
+            
+            @media (max-width: 768px) {
+                .contact-button:active {
+                    transform: scale(0.95);
+                }
+                
+                .contact-button, .card-button {
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                    min-height: 44px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Limpiar conversaciones duplicadas al cargar
+        cleanupDuplicateConversations();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.contact-button').forEach(button => {
+            // Clonar el botón para remover todos los event listeners
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Agregar nuevo listener con protección
+            newButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Obtener datos del botón
-                const userId = this.getAttribute('onclick').match(/\d+/)[0];
-                const userName = this.getAttribute('onclick').match(/'([^']+)'/)[1];
-                
-                abrirChat(userId, userName);
-            }, 300));
-        });
-        
-        // Aplicar a botones de nueva conversación
-        document.querySelectorAll('.user-result').forEach(userResult => {
-            userResult.addEventListener('click', debounce(function() {
-                const userId = this.dataset.userid;
-                const userName = this.dataset.username;
-                
-                if (userId && userName) {
-                    abrirChat(userId, userName);
+                if (this.disabled || window.chatProcessing) {
+                    return false;
                 }
-            }, 300));
+                
+                // Extraer datos del onclick original si existe
+                const onclickAttr = this.getAttribute('onclick');
+                if (onclickAttr) {
+                    const userIdMatch = onclickAttr.match(/abrirChat\((\d+)/);
+                    const userNameMatch = onclickAttr.match(/'([^']+)'/);
+                    
+                    if (userIdMatch && userNameMatch) {
+                        const userId = parseInt(userIdMatch[1]);
+                        const userName = userNameMatch[1];
+                        
+                        // Crear evento simulado para abrirChat
+                        window.event = e;
+                        abrirChat(userId, userName);
+                    }
+                }
+                
+                return false;
+            });
+            
+            // Limpiar onclick original para evitar conflictos
+            newButton.removeAttribute('onclick');
         });
         
-        // Prevenir doble tap en iOS
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
+        console.log('✅ Event handlers de chat optimizados para móvil');
     });
+
+    function cleanupDuplicateConversations() {
+        fetch('../api/clean_duplicates.php', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.cleaned > 0) {
+                console.log(`✅ Limpieza automática: ${data.cleaned} conversaciones duplicadas eliminadas`);
+            }
+        })
+        .catch(error => {
+            console.log('Limpieza automática no disponible:', error);
+        });
+    }
 
     // FeedBack en moviles
     function mejorarFeedbackMovil() {

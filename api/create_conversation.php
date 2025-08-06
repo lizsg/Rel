@@ -28,16 +28,31 @@ header('Content-Type: application/json');
 
 try {
     $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
+    $conn->set_charset("utf8mb4");
     
     if ($conn->connect_error) {
         throw new Exception("Error de conexión: " . $conn->connect_error);
     }
     
-    // Prevenir condiciones de carrera con bloqueo
-    $conn->query("LOCK TABLES Conversaciones WRITE, Usuarios READ");
+    // Comenzar transacción para consistencia
+    $conn->begin_transaction();
     
-    // Verificar si ya existe una conversación entre estos usuarios
-    // Buscar en ambas direcciones (user1->user2 y user2->user1)
+    // Verificar que el otro usuario existe
+    $userCheckQuery = "SELECT idUsuario FROM Usuarios WHERE idUsuario = ?";
+    $userStmt = $conn->prepare($userCheckQuery);
+    $userStmt->bind_param("i", $otherUserId);
+    $userStmt->execute();
+    $userResult = $userStmt->get_result();
+    
+    if ($userResult->num_rows == 0) {
+        $userStmt->close();
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
+        exit();
+    }
+    $userStmt->close();
+    
+    // Buscar conversación existente (en ambas direcciones)
     $checkQuery = "
         SELECT idConversacion 
         FROM Conversaciones 
@@ -56,7 +71,7 @@ try {
         $row = $result->fetch_assoc();
         $conversationId = $row['idConversacion'];
         $stmt->close();
-        $conn->query("UNLOCK TABLES");
+        $conn->commit();
         
         echo json_encode([
             'success' => true, 
@@ -67,23 +82,8 @@ try {
         // Crear nueva conversación
         $stmt->close();
         
-        // Verificar que el otro usuario existe
-        $userCheckQuery = "SELECT idUsuario FROM Usuarios WHERE idUsuario = ?";
-        $userStmt = $conn->prepare($userCheckQuery);
-        $userStmt->bind_param("i", $otherUserId);
-        $userStmt->execute();
-        $userResult = $userStmt->get_result();
-        
-        if ($userResult->num_rows == 0) {
-            $userStmt->close();
-            $conn->query("UNLOCK TABLES");
-            echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
-            exit();
-        }
-        $userStmt->close();
-        
         // Crear la conversación con los usuarios ordenados consistentemente
-        // Esto ayuda a prevenir duplicados adicionales
+        // Esto previene duplicados adicionales
         $user1 = min($currentUserId, $otherUserId);
         $user2 = max($currentUserId, $otherUserId);
         
@@ -98,7 +98,7 @@ try {
         if ($insertStmt->execute()) {
             $conversationId = $conn->insert_id;
             $insertStmt->close();
-            $conn->query("UNLOCK TABLES");
+            $conn->commit();
             
             echo json_encode([
                 'success' => true, 
@@ -107,22 +107,45 @@ try {
             ]);
         } else {
             $insertStmt->close();
-            $conn->query("UNLOCK TABLES");
-            throw new Exception("Error al crear la conversación: " . $conn->error);
+            $conn->rollback();
+            
+            // Verificar si fue error por duplicado
+            if ($conn->errno == 1062) { // Duplicate entry error
+                // Intentar buscar la conversación que se creó entre tanto
+                $retryStmt = $conn->prepare($checkQuery);
+                $retryStmt->bind_param("iiii", $currentUserId, $otherUserId, $otherUserId, $currentUserId);
+                $retryStmt->execute();
+                $retryResult = $retryStmt->get_result();
+                
+                if ($retryResult->num_rows > 0) {
+                    $row = $retryResult->fetch_assoc();
+                    $conversationId = $row['idConversacion'];
+                    $retryStmt->close();
+                    
+                    echo json_encode([
+                        'success' => true, 
+                        'conversationId' => $conversationId,
+                        'message' => 'Conversación encontrada después del conflicto'
+                    ]);
+                } else {
+                    $retryStmt->close();
+                    throw new Exception("Error de duplicado sin resolver");
+                }
+            } else {
+                throw new Exception("Error al crear la conversación: " . $conn->error);
+            }
         }
     }
     
 } catch (Exception $e) {
-    // Asegurar que las tablas se desbloqueen en caso de error
-    $conn->query("UNLOCK TABLES");
+    if (isset($conn)) {
+        $conn->rollback();
+        $conn->close();
+    }
     
     echo json_encode([
         'success' => false, 
         'message' => 'Error del servidor: ' . $e->getMessage()
     ]);
-} finally {
-    if (isset($conn)) {
-        $conn->close();
-    }
 }
 ?>

@@ -287,9 +287,13 @@
     </div>
 
     <script>
-        // Pasamos el user name al script
+        // Pasamos el user ID al script
         const currentUserId = <?php echo json_encode($userId); ?>;
+        
+        // Variable global para evitar múltiples inicializaciones
+        window.chatInitialized = false;
     </script>
+    <!-- Cargar el script principal del chat -->
     <script src="../../assets/js/chatUsuarios-script.js"></script>
 
     <script>
@@ -318,26 +322,19 @@
     });
 
     function openChat(conversationId, otherUserId, otherUserName) {
-        window.currentConversationId = conversationId; // Guardar ID globalmente
-        
-        // Mostrar el área de chat activo
-        document.getElementById('chatPlaceholder').style.display = 'none';
-        const activeChat = document.getElementById('activeChat');
-        activeChat.style.display = 'block';
-        
-        // Establecer información del usuario
-        document.getElementById('chatUserName').textContent = otherUserName;
-        document.getElementById('chatUserAvatar').textContent = otherUserName.charAt(0).toUpperCase();
-        
-        // Cargar los mensajes
-        loadMessages(conversationId);
+        if (window.chatApp) {
+            window.chatApp.openConversation(conversationId, otherUserId, otherUserName);
+        } else {
+            console.error('Chat no inicializado');
+        }
     }
     
     function loadMessages(conversationId) {
-        // Implementa esta función para cargar los mensajes usando AJAX
-        console.log("Cargando mensajes para la conversación: " + conversationId);
-        // Aquí deberías hacer una petición a get_messages.php
+        if (window.chatApp) {
+            window.chatApp.loadMessages();
+        }
     }
+
 
     function loadMessages(conversationId) {
         fetch('../../api/get_messages.php', {
@@ -361,32 +358,21 @@
     }
 
     document.addEventListener('click', function(e) {
-    if (e.target.closest('.user-result')) {
-        const userResult = e.target.closest('.user-result');
-        const userId = userResult.dataset.userid;
-        const userName = userResult.dataset.username;
-        
-        if (userId && userName) {
-            abrirChat(parseInt(userId), userName);
+        if (e.target.closest('.user-result')) {
+            const userResult = e.target.closest('.user-result');
+            const userId = userResult.dataset.userid;
+            const userName = userResult.dataset.username;
+            
+            if (userId && userName) {
+                abrirChat(parseInt(userId), userName);
+            }
         }
-    }
-});
+    });
 
     function displayMessages(messages) {
-        const container = document.getElementById('messagesContainer');
-        container.innerHTML = '';
-        
-        messages.forEach(message => {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = message.idRemitente == currentUserId ? 'message-sent' : 'message-received';
-            messageDiv.innerHTML = `
-                <div class="message-content">${message.contenido}</div>
-                <div class="message-time">${new Date(message.fechaEnvio).toLocaleTimeString()}</div>
-            `;
-            container.appendChild(messageDiv);
-        });
-        
-        container.scrollTop = container.scrollHeight;
+        if (window.chatApp) {
+            window.chatApp.displayMessages(messages);
+        }
     }
 
     // Agregar event listener para enviar mensajes
@@ -417,29 +403,162 @@
         }
     });
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Si hay una conversación en la URL, seleccionarla automáticamente
-    const urlParams = new URLSearchParams(window.location.search);
-    const conversacionId = urlParams.get('conversacion');
-    
-    if (conversacionId) {
-        const conversationItem = document.querySelector(`[data-conversation-id="${conversacionId}"]`);
-        if (conversationItem) {
-            conversationItem.click();
-        }
-    }
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Esperar a que el chat esté inicializado
+        const waitForChat = setInterval(() => {
+            if (window.chatApp && !window.chatInitialized) {
+                window.chatInitialized = true;
+                clearInterval(waitForChat);
+                
+                // Procesar parámetros URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const conversationId = urlParams.get('conversacion');
+                
+                if (conversationId) {
+                    const otherUserId = urlParams.get('other_user_id');
+                    const otherUserName = urlParams.get('other_user_name');
+                    
+                    if (otherUserId && otherUserName) {
+                        // Usar parámetros de URL
+                        window.chatApp.openConversation(conversationId, otherUserId, otherUserName);
+                    } else {
+                        // Buscar en la lista de conversaciones
+                        const conversationItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+                        if (conversationItem) {
+                            const otherUserId = conversationItem.dataset.otherUserId;
+                            const otherUserName = conversationItem.dataset.otherUserName;
+                            window.chatApp.openConversation(conversationId, otherUserId, otherUserName);
+                        }
+                    }
+                }
+            }
+        }, 100);
+        
+        // Timeout de seguridad
+        setTimeout(() => {
+            clearInterval(waitForChat);
+            if (!window.chatInitialized) {
+                console.error('Timeout: Chat no se pudo inicializar');
+            }
+        }, 5000);
+    });
 
-let lastClickTime = 0;
-        document.addEventListener('click', function(e) {
-            const now = Date.now();
-            if (now - lastClickTime < 300) {
-                e.preventDefault();
-                e.stopPropagation();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Si hay una conversación en la URL, seleccionarla automáticamente
+        const urlParams = new URLSearchParams(window.location.search);
+        const conversacionId = urlParams.get('conversacion');
+        
+        if (conversacionId) {
+            const conversationItem = document.querySelector(`[data-conversation-id="${conversacionId}"]`);
+            if (conversationItem) {
+                conversationItem.click();
+            }
+        }
+    });
+
+    let lastClickTime = 0;
+    document.addEventListener('click', function(e) {
+        const now = Date.now();
+        if (now - lastClickTime < 300) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        lastClickTime = now;
+    }, true);
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.user-result')) {
+            e.preventDefault();
+            const userResult = e.target.closest('.user-result');
+            
+            // Prevenir si ya está procesando
+            if (userResult.classList.contains('processing')) {
                 return false;
             }
-            lastClickTime = now;
-        }, true);
+            
+            userResult.classList.add('processing');
+            
+            const userId = userResult.dataset.userid;
+            const userName = userResult.dataset.username;
+            
+            if (userId && userName && window.chatApp) {
+                window.chatApp.startNewConversation(parseInt(userId), userName);
+            }
+            
+            // Remover clase de procesamiento después de un tiempo
+            setTimeout(() => {
+                userResult.classList.remove('processing');
+            }, 3000);
+            
+            return false;
+        }
+    });
+
+    // Mejorar el envío de mensajes con Enter :D
+    document.getElementById('sendButton')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (window.chatApp && !window.chatApp.sendingMessage) {
+            window.chatApp.sendMessage();
+        }
+        
+        return false;
+    });
+
+    // Estilos adicionales para móvil
+    const mobileStyles = document.createElement('style');
+    mobileStyles.textContent = `
+        .user-result.processing {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .temp-message {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 0.7; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .message-input-container {
+                position: relative !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+            }
+            
+            .messages-container {
+                padding-bottom: 10px;
+            }
+            
+            .chat-active .chat-sidebar {
+                display: none !important;
+            }
+            
+            .chat-active .chat-area {
+                width: 100% !important;
+            }
+        }
+    `;
+    document.head.appendChild(mobileStyles);
+
+    // Función de limpieza al salir
+    window.addEventListener('beforeunload', function() {
+        if (window.chatApp && window.chatApp.messageInterval) {
+            clearInterval(window.chatApp.messageInterval);
+        }
+    });
+
+    // Debug info
+    console.log('✅ Chat PHP mejorado cargado');
+    console.log('📱 Dispositivo móvil:', window.innerWidth <= 768);
+    console.log('👤 Usuario actual:', currentUserId);
+
 </script>
 </body>
 </html>

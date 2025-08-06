@@ -6,11 +6,14 @@ class ChatApp {
         this.currentOtherUserName = '';
         this.messageInterval = null;
         this.loadingMessages = false;
+        this.sendingMessage = false;
         this.isMobile = window.innerWidth <= 768;
+        this.lastMessageTime = 0;
         
         this.initializeElements();
         this.bindEvents();
         this.handleResize();
+        this.preventDuplicateClicks();
     }
 
     initializeElements() {
@@ -32,27 +35,69 @@ class ChatApp {
         this.chatArea = document.querySelector('.chat-area');
     }
 
+    preventDuplicateClicks() {
+        let lastClickTime = 0;
+        const clickDelay = 300;
+
+        document.addEventListener('click', (e) => {
+            const now = Date.now();
+            if (now - lastClickTime < clickDelay) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            lastClickTime = now;
+        }, true);
+
+        // Prevenir doble tap en iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (event) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    }
+
     bindEvents() {
+        // Remover event listeners existentes para evitar duplicados
+        this.unbindExistingEvents();
+
         this.newChatBtn?.addEventListener('click', () => this.showSearch());
         this.startChatBtn?.addEventListener('click', () => this.showSearch());
         this.cancelSearch?.addEventListener('click', () => this.hideSearch());
         this.backButton?.addEventListener('click', () => this.closeChat());
-        this.sendButton?.addEventListener('click', () => this.sendMessage());
 
-        this.messageText?.addEventListener('input', (e) => {
-            e.target.style.height = 'auto';
-            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-        });
-
-        this.messageText?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        // Event listener único para enviar mensaje
+        if (this.sendButton) {
+            this.sendButton.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 this.sendMessage();
-            }
-        });
+            });
+        }
 
+        if (this.messageText) {
+            this.messageText.addEventListener('input', (e) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            });
+
+            this.messageText.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!this.sendingMessage) {
+                        this.sendMessage();
+                    }
+                }
+            });
+        }
+
+        // Delegación de eventos para conversaciones y usuarios
         document.addEventListener('click', (e) => {
             if (e.target.closest('.conversation-item')) {
+                e.preventDefault();
                 const item = e.target.closest('.conversation-item');
                 const conversationId = item.dataset.conversationId;
                 const otherUserId = item.dataset.otherUserId;
@@ -61,6 +106,7 @@ class ChatApp {
             }
 
             if (e.target.closest('.user-result')) {
+                e.preventDefault();
                 const item = e.target.closest('.user-result');
                 const userId = item.dataset.userid;
                 const userName = item.dataset.username;
@@ -75,6 +121,23 @@ class ChatApp {
                 clearInterval(this.messageInterval);
             }
         });
+
+        // Prevenir envío múltiple en formularios
+        document.addEventListener('submit', (e) => {
+            if (e.target.id === 'messageForm') {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    unbindExistingEvents() {
+        // Limpiar event listeners duplicados si existen
+        if (this.sendButton) {
+            const newSendButton = this.sendButton.cloneNode(true);
+            this.sendButton.parentNode.replaceChild(newSendButton, this.sendButton);
+            this.sendButton = newSendButton;
+        }
     }
 
     handleResize() {
@@ -136,30 +199,57 @@ class ChatApp {
     }
 
     showSearch() {
-        this.searchSection.style.display = 'block';
-        this.conversationsList.style.display = 'none';
-        document.getElementById('searchInput')?.focus();
+        if (this.searchSection) {
+            this.searchSection.style.display = 'block';
+        }
+        if (this.conversationsList) {
+            this.conversationsList.style.display = 'none';
+        }
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.focus();
+        }
     }
 
     hideSearch() {
-        this.searchSection.style.display = 'none';
-        this.conversationsList.style.display = 'block';
-        document.getElementById('searchForm')?.reset();
+        if (this.searchSection) {
+            this.searchSection.style.display = 'none';
+        }
+        if (this.conversationsList) {
+            this.conversationsList.style.display = 'block';
+        }
+        const searchForm = document.getElementById('searchForm');
+        if (searchForm) {
+            searchForm.reset();
+        }
         if (window.location.search) {
             window.location.href = window.location.pathname;
         }
     }
 
     openConversation(conversationId, otherUserId, otherUserName) {
+        // Prevenir múltiples llamadas simultáneas
+        if (this.currentConversationId === conversationId) {
+            return;
+        }
+
         this.currentConversationId = conversationId;
         this.currentOtherUserId = otherUserId;
         this.currentOtherUserName = otherUserName;
 
-        this.chatUserName.textContent = otherUserName;
-        this.chatUserAvatar.textContent = otherUserName.charAt(0).toUpperCase();
+        if (this.chatUserName) {
+            this.chatUserName.textContent = otherUserName;
+        }
+        if (this.chatUserAvatar) {
+            this.chatUserAvatar.textContent = otherUserName.charAt(0).toUpperCase();
+        }
         
-        this.chatPlaceholder.style.display = 'none';
-        this.activeChat.style.display = 'flex';
+        if (this.chatPlaceholder) {
+            this.chatPlaceholder.style.display = 'none';
+        }
+        if (this.activeChat) {
+            this.activeChat.style.display = 'flex';
+        }
         
         if (this.isMobile) {
             this.showMobileChat();
@@ -172,7 +262,7 @@ class ChatApp {
                 if (messagesContainer && chatHeader && messageInput) {
                     const headerHeight = chatHeader.offsetHeight;
                     const inputHeight = messageInput.offsetHeight;
-                    const availableHeight = window.innerHeight - 70 - headerHeight - inputHeight; // 70px del bottombar
+                    const availableHeight = window.innerHeight - 70 - headerHeight - inputHeight;
                     
                     messagesContainer.style.height = availableHeight + 'px';
                     messagesContainer.style.maxHeight = availableHeight + 'px';
@@ -183,7 +273,10 @@ class ChatApp {
         document.querySelectorAll('.conversation-item').forEach(item => {
             item.classList.remove('active');
         });
-        document.querySelector(`[data-conversation-id="${conversationId}"]`)?.classList.add('active');
+        const activeConv = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+        if (activeConv) {
+            activeConv.classList.add('active');
+        }
 
         this.loadMessages();
         
@@ -197,6 +290,12 @@ class ChatApp {
             return;
         }
 
+        // Prevenir múltiples llamadas
+        if (this.sendingMessage) {
+            return;
+        }
+        this.sendingMessage = true;
+
         fetch('../../api/create_conversation.php', {
             method: 'POST',
             headers: {
@@ -206,9 +305,11 @@ class ChatApp {
         })
         .then(response => response.json())
         .then(data => {
+            this.sendingMessage = false;
             if (data.success) {
                 this.hideSearch();
                 this.openConversation(data.conversationId, userId, userName);
+                // Recargar después de un delay para evitar conflictos
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
@@ -217,27 +318,29 @@ class ChatApp {
             }
         })
         .catch(error => {
+            this.sendingMessage = false;
             console.error('Error:', error);
             alert('Error de conexión');
         });
     }
 
     closeChat() {
-        this.activeChat.style.display = 'none';
-        this.chatPlaceholder.style.display = 'flex';
+        if (this.activeChat) {
+            this.activeChat.style.display = 'none';
+        }
+        if (this.chatPlaceholder) {
+            this.chatPlaceholder.style.display = 'flex';
+        }
         
-        // En móvil, mostrar sidebar
         if (this.isMobile) {
             this.showMobileSidebar();
         }
         
-        // Limpiar polling
         if (this.messageInterval) {
             clearInterval(this.messageInterval);
             this.messageInterval = null;
         }
         
-        // Limpiar selección activa
         document.querySelectorAll('.conversation-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -272,11 +375,14 @@ class ChatApp {
     }
 
     displayMessages(messages) {
+        if (!this.messagesContainer) return;
+
         const wasAtBottom = this.messagesContainer.scrollHeight - this.messagesContainer.scrollTop <= this.messagesContainer.clientHeight + 50;
         
-        const existingMessages = Array.from(this.messagesContainer.querySelectorAll('.message')).map(msg => 
-            msg.querySelector('.message-content').textContent.trim()
-        );
+        const existingMessages = Array.from(this.messagesContainer.querySelectorAll('.message')).map(msg => {
+            const content = msg.querySelector('.message-content');
+            return content ? content.textContent.trim() : '';
+        });
         
         if (messages.length === 0) {
             if (this.messagesContainer.innerHTML.indexOf('no-messages') === -1) {
@@ -317,17 +423,35 @@ class ChatApp {
     }
 
     sendMessage() {
-        if (!this.currentConversationId) return;
+        // Prevenir múltiples envíos
+        if (this.sendingMessage || !this.currentConversationId || !this.messageText) {
+            return;
+        }
         
         const content = this.messageText.value.trim();
         if (!content) return;
         
-        this.sendButton.disabled = true;
-        const originalSendButton = this.sendButton.innerHTML;
-        this.sendButton.innerHTML = '<div style="width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
+        // Verificar tiempo desde el último mensaje para evitar spam
+        const now = Date.now();
+        if (now - this.lastMessageTime < 1000) {
+            return;
+        }
+        this.lastMessageTime = now;
         
+        this.sendingMessage = true;
+        
+        // Deshabilitar controles
+        this.sendButton.disabled = true;
+        this.messageText.disabled = true;
+        
+        const originalSendButton = this.sendButton.innerHTML;
+        this.sendButton.innerHTML = `
+            <div style="width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        `;
+        
+        // Crear mensaje temporal
         const tempMessage = document.createElement('div');
-        tempMessage.className = 'message sent';
+        tempMessage.className = 'message sent temp-message';
         tempMessage.style.opacity = '0.7';
         tempMessage.innerHTML = `
             <div class="message-content">
@@ -335,36 +459,59 @@ class ChatApp {
             </div>
             <div class="message-time">Enviando...</div>
         `;
-        this.messagesContainer.appendChild(tempMessage);
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        
+        if (this.messagesContainer) {
+            this.messagesContainer.appendChild(tempMessage);
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        }
+        
+        // Limpiar campo inmediatamente
+        const messageToSend = content;
+        this.messageText.value = '';
+        this.messageText.style.height = 'auto';
         
         fetch('../../api/send_message.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `conversacion_id=${this.currentConversationId}&remitente_id=${this.currentUserId}&contenido=${encodeURIComponent(content)}`
+            body: `conversacion_id=${this.currentConversationId}&remitente_id=${this.currentUserId}&contenido=${encodeURIComponent(messageToSend)}`
         })
         .then(response => response.json())
         .then(data => {
-            tempMessage.remove();
+            if (tempMessage && tempMessage.parentNode) {
+                tempMessage.remove();
+            }
             
             if (data.success) {
-                this.messageText.value = '';
-                this.messageText.style.height = 'auto';
+                // Recargar mensajes después de envío exitoso
                 this.loadMessages();
             } else {
+                // Restaurar mensaje en caso de error
+                this.messageText.value = messageToSend;
                 alert('Error al enviar mensaje: ' + data.message);
             }
         })
         .catch(error => {
-            tempMessage.remove();
+            if (tempMessage && tempMessage.parentNode) {
+                tempMessage.remove();
+            }
+            // Restaurar mensaje en caso de error
+            this.messageText.value = messageToSend;
             console.error('Error:', error);
             alert('Error de conexión');
         })
         .finally(() => {
+            // Restaurar controles
+            this.sendingMessage = false;
             this.sendButton.disabled = false;
+            this.messageText.disabled = false;
             this.sendButton.innerHTML = originalSendButton;
+            
+            // Enfocar campo de texto
+            if (this.messageText) {
+                this.messageText.focus();
+            }
         });
     }
 
@@ -383,24 +530,29 @@ class ChatApp {
     }
 
     ensureInputVisible() {
-    if (this.isMobile && this.currentConversationId) {
-        const messageInputContainer = document.querySelector('.message-input-container');
-        if (messageInputContainer) {
-            messageInputContainer.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'end' 
-            });
+        if (this.isMobile && this.currentConversationId) {
+            const messageInputContainer = document.querySelector('.message-input-container');
+            if (messageInputContainer) {
+                messageInputContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'end' 
+                });
+            }
         }
     }
 }
-}
 
+// Inicializar una sola vez
 document.addEventListener('DOMContentLoaded', function() {
+    // Prevenir múltiples inicializaciones
+    if (window.chatApp) {
+        return;
+    }
+    
     if (typeof currentUserId !== 'undefined') {
         window.chatApp = new ChatApp(currentUserId);
+        console.log('Chat inicializado correctamente');
     } else {
         console.error('currentUserId no está definido');
     }
-
-
 });
