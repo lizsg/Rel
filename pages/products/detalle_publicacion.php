@@ -1210,6 +1210,74 @@
         .star-input.pulse {
             animation: starPulse 0.3s ease;
         }
+
+        .profile-button {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 18px;
+            font-size: 1.15em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 8px 30px rgba(107, 66, 38, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .profile-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .profile-button:hover {
+            background: linear-gradient(135deg, var(--secondary-brown) 0%, #744830 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(107, 66, 38, 0.4);
+            color: white;
+        }
+
+        .profile-button:hover::before {
+            left: 100%;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .contact-button {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .profile-actions {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .contact-button,
+            .profile-button {
+                flex: none;
+                padding: 15px 25px;
+                font-size: 1em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1389,7 +1457,7 @@
                 </div>
                 <div class="seller-detail-info">
                     <div class="seller-detail-label">
-                        Contacto: DISPONIBLE 
+                        Contacto: 
                     </div>
                     <div class="seller-detail-value">
                         <?php if (!empty($publicacion['telefono'])): ?>
@@ -1490,6 +1558,15 @@
                                 </svg>
                                 Contactar Vendedor
                             </button>
+
+                            <br>
+
+                            <a href="perfil_vendedor.php?id=<?php echo $publicacion['idUsuario']; ?>" class="profile-button">
+                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Ver Perfil
+                            </a>
                         </div>
 
                         <!-- Especificaciones inline -->
