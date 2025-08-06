@@ -103,6 +103,11 @@ function getBotResponse(message) {
     '📚 Busca por el codigo de barras en linea';
   }
 
+  if (lowerMessage.includes('descripcion') || lowerMessage.includes('descripción')) {
+    return 'Si no sabes que poner en la descripción de tu libro te recomendamos:' + '\n' +
+    '📚 Describir brevemenye la historia pricipal, los personajes principales y tono';
+  }
+
   if (lowerMessage.includes('edicion') || lowerMessage.includes('edición')) {
     return 'Si no sabes cual es la edición del libro 👀🔎✨:' + '\n' +
     '📚 Revisa en la página de créditos al inicio o al final frases como: "Primera edición", "Segunda edición", "Edición revisada", "Edición especial". También aparece el año de la edición (ej: "© 2020, 2ª edición")'  + '\n' +
@@ -111,11 +116,11 @@ function getBotResponse(message) {
   }
 
   if (lowerMessage.includes('subir') || lowerMessage.includes('publicar') || lowerMessage.includes('agregar')) {
-    return 'Para subir un libro, ve a "Mis Publicaciones" en la barra inferior y selecciona "Agregar nueva publicación". Asegúrate de tener los derechos necesarios antes de publicar.';
+    return 'Para subir un libro, ve a "Mis Publicaciones" en la barra inferior y selecciona "Agregar nueva publicación". Asegurate de tener los campos necesarios llenos';
   }
 
   if (lowerMessage.includes('ayuda') || lowerMessage.includes('como') || lowerMessage.includes('funciona')) {
-    return 'RELEE es una plataforma para compartir y descubrir libros. Puedes buscar libros, leer reseñas, subir tus propias publicaciones y conectar con otros lectores. ¿Hay algo específico que te gustaría saber?';
+    return 'RELEE es una plataforma para compartir y descubrir libros. Puedes buscar libros, subir tus propias publicaciones y conectar con otros lectores. ¿Hay algo específico que te gustaría saber?';
   }
   
   if (lowerMessage.includes('perfil') || lowerMessage.includes('cuenta') || lowerMessage.includes('usuario')) {

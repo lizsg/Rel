@@ -434,50 +434,6 @@
             font-weight: 500;
         }
 
-        .stats-banner {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 25px 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: var(--transition);
-        }
-
-        .stat-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-        }
-
-        .stat-number {
-            font-size: 2.2em;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.95em;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
         /* Galleria */
         .gallery {
             display: grid;
@@ -1183,27 +1139,7 @@
     <div class="hero-section">
         <h1 class="hero-title">📚 Descubre Libros Increíbles</h1>
         <p class="hero-subtitle">Explora las publicaciones más recientes de nuestra comunidad</p>
-        
-        <?php if (!empty($publicaciones)): ?>
-        <div class="stats-banner">
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count($publicaciones); ?></span>
-                <span class="stat-label">Publicaciones</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] == 0; })); ?></span>
-                <span class="stat-label">Gratis</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return !empty($p['linkVideo']); })); ?></span>
-                <span class="stat-label">Con Video</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count(array_unique(array_column($publicaciones, 'idUsuario'))); ?></span>
-                <span class="stat-label">Usuarios</span>
-            </div>
-        </div>
-        <?php endif; ?>
+    
     </div>
 
     <!-- Mensajes de éxito y error -->

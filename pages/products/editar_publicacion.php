@@ -347,6 +347,70 @@ if (isset($conn)) $conn->close();
             padding-bottom: 65px;
             min-height: 100vh;
         }
+        /* LOGO IMAGEN*/
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-icon {
+            width: 85px;
+            height: 85px;
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(107, 66, 38, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(107, 66, 38, 0.35);
+        }
+
+        .logo-icon:hover .logo-image {
+            transform: scale(1.1);
+        }
+
+        /* Ajustes para responsive */
+        @media (max-width: 768px) {
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+            
+            .logo-container {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 12px;
+            }
+        }
 
         .edit-publication-container {
             background: rgba(255, 253, 252, 0.9);
@@ -687,7 +751,13 @@ if (isset($conn)) $conn->close();
     <?php include '../../includes/chat-component.php'; ?>
 
     <header>
-        <div class="logo">RELEE</div>
+        <div class="logo-container">
+    <a href="../home.php" class="logo-link" title="Ir al inicio">
+        <div class="logo-icon">
+            <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
+        </div>
+    </a>
+</div>
         <div class="search-bar">
             <input type="text" placeholder="Buscar libros, autores, géneros...">
             <button>

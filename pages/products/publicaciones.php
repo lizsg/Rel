@@ -438,49 +438,7 @@ function tiempoTranscurrido($fecha) {
             font-weight: 500;
         }
 
-        .stats-banner {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 25px 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: var(--transition);
-        }
-
-        .stat-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-        }
-
-        .stat-number {
-            font-size: 2.2em;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.95em;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+       
 
         /* Botón de nueva publicación */
         .new-button-container {
@@ -1193,11 +1151,13 @@ function tiempoTranscurrido($fecha) {
     <?php include '../../includes/chat-component.php'; ?>
 
  <header>
-    <div class="logo">
+<div class="logo-container">
+    <a href="../home.php" class="logo-link" title="Ir al inicio">
         <div class="logo-icon">
-            <img src="../../assets/images/REELEE.jpeg" alt="REELE Logo" class="logo-image" />
+            <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
         </div>
-    </div>
+    </a>
+</div>
     <div class="search-bar">
         <input type="text" id="search-input" placeholder="Buscar en mis publicaciones...">
         <button type="button" id="search-button">
@@ -1214,26 +1174,7 @@ function tiempoTranscurrido($fecha) {
         <h1 class="hero-title">📚 Mis Publicaciones</h1>
         <p class="hero-subtitle">Gestiona y visualiza toda tu biblioteca digital personal</p>
         
-        <?php if (!empty($publicaciones)): ?>
-        <div class="stats-banner">
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count($publicaciones); ?></span>
-                <span class="stat-label">Total Publicaciones</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] == 0; })); ?></span>
-                <span class="stat-label">Libros Gratis</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return !empty($p['linkVideo']); })); ?></span>
-                <span class="stat-label">Con Video</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php echo count(array_filter($publicaciones, function($p) { return $p['precio'] > 0; })); ?></span>
-                <span class="stat-label">De Pago</span>
-            </div>
-        </div>
-        <?php endif; ?>
+
     </div>
 
     

@@ -121,6 +121,7 @@ function tiempoTranscurrido($fecha) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $publicacion ? htmlspecialchars($publicacion['titulo']) : 'Detalle'; ?> | RELEE</title>
     <link rel="stylesheet" href="../../assets/css/home-styles.css">
+    <link rel="stylesheet" href="../../assets/css/chat-styles.css">
     <style>
         :root {
             --primary-brown: #6b4226;
@@ -143,7 +144,139 @@ function tiempoTranscurrido($fecha) {
             color: var(--text-primary);
             margin: 0;
             padding: 20px;
+            padding-bottom: 100px; /* Espacio para la barra inferior */
             min-height: 100vh;
+        }
+
+        /* Topbar */
+        .topbar {
+            background: linear-gradient(135deg, #f5f0ea 0%, #ede6dd 100%);
+            backdrop-filter: blur(10px);
+            padding: 8px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(211, 197, 184, 0.3);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        /* Logo styles */
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-icon {
+            width: 65px;
+            height: 65px;
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(107, 66, 38, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
+
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(107, 66, 38, 0.35);
+        }
+
+        .logo-icon:hover .logo-image {
+            transform: scale(1.1);
+        }
+
+        /* Right side icons container */
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar-icon {
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 3px 10px rgba(163, 177, 138, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .topbar-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .topbar-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(163, 177, 138, 0.4);
+        }
+
+        .topbar-icon:hover::before {
+            left: 100%;
+        }
+
+        .logout-button {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, #5b4a3e 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(107, 66, 38, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(107, 66, 38, 0.4);
+        }
+
+        form.logout-form {
+            margin: 0;
+        }
+
+        /* Ajustar el contenido principal por la topbar */
+        body {
+            padding-top: 80px; /* Espacio para la topbar */
         }
 
         .detail-container {
@@ -483,6 +616,83 @@ function tiempoTranscurrido($fecha) {
             font-weight: 600;
         }
 
+        /* Bottom bar */
+        .bottombar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 65px;
+            background: linear-gradient(135deg, rgba(245, 240, 234, 0.95) 0%, rgba(237, 230, 221, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(224, 214, 207, 0.3);
+            box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bottom-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .bottom-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .bottom-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(163, 177, 138, 0.4);
+        }
+
+        .bottom-button:hover::before {
+            left: 100%;
+        }
+
+        .bottom-button span {
+            font-size: 10px;
+            margin-top: 3px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .bottom-button-wide {
+            width: 110px;
+            height: 50px;
+            font-size: 11px;
+            padding: 5px;
+        }
+
+        .bottom-button-wide span {
+            font-size: 11px;
+            margin-top: 0;
+            text-align: center;
+            line-height: 1.1;
+        }
+
         @media (max-width: 768px) {
             .detail-content {
                 grid-template-columns: 1fr;
@@ -509,10 +719,78 @@ function tiempoTranscurrido($fecha) {
             .details-grid {
                 grid-template-columns: 1fr;
             }
+
+            .topbar {
+                padding: 8px 15px;
+                gap: 10px;
+            }
+
+            .topbar-right {
+                gap: 10px;
+            }
+
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .bottom-button-wide {
+                width: 95px;
+                font-size: 10px;
+            }
+
+            .bottom-button-wide span {
+                font-size: 10px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Barra superior -->
+    <div class="topbar">
+        <!-- Logo en el lado izquierdo -->
+<div class="logo-container">
+    <a href="../home.php" class="logo-link" title="Ir al inicio">
+        <div class="logo-icon">
+            <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
+        </div>
+    </a>
+</div>
+
+        <!-- Iconos del lado derecho -->
+        <div class="topbar-right">
+            <div class="topbar-icon" title="Chat">
+                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 2c.55 0 1 .45 1 1v1h4a2 2 0 0 1 2 2v2h1a1 1 0 1 1 0 2h-1v6a3 3 0 0 1-3 3h-1v1a1 1 0 1 1-2 0v-1H9v1a1 1 0 1 1-2 0v-1H6a3 3 0 0 1-3-3v-6H2a1 1 0 1 1 0-2h1V6a2 2 0 0 1 2-2h4V3c0-.55.45-1 1-1zm-5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                </svg>
+            </div>
+
+            <a href="../chat/chat.php" class="topbar-icon" title="Chat 2">
+                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+            </a>
+
+            <div class="topbar-icon" title="Perfil">
+                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+
+            <form action="../auth/logout.php" method="post" class="logout-form">
+                <button type="submit" class="logout-button">
+                    <svg width="14" height="14" fill="white" viewBox="0 0 24 24">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                    </svg>
+                    Cerrar sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Incluir componente de chat -->
+    <?php include '../../includes/chat-component.php'; ?>
+
     <?php if (!empty($errorMessage)): ?>
         <div class="error-message">
             ❌ <?php echo htmlspecialchars($errorMessage); ?>
@@ -697,6 +975,21 @@ function tiempoTranscurrido($fecha) {
         </div>
     <?php endif; ?>
 
+    <!-- Barra inferior -->
+    <div class="bottombar">
+        <a href="../home.php" class="bottom-button" title="Inicio">
+            <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span>Inicio</span>
+        </a>
+        <a href="publicaciones.php" class="bottom-button bottom-button-wide" title="Mis Publicaciones">
+            <span>Mis Publicaciones</span>
+        </a>
+    </div>
+
+    <script src="../../assets/js/home-script.js"></script>
+    <script src="../../assets/js/chat-script.js"></script>
     <script>
         function changeMainImage(thumbnail, imageSrc) {
             // Remover clase active de todas las miniaturas
