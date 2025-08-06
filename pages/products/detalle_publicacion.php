@@ -19,6 +19,8 @@
         exit();
     }
 
+    //holahpla escribo para que no me cierre sesion hola sjssjsjjs
+
     try {
         $conn = new mysqli(SERVER_NAME, DB_USER, DB_PASS, DB_NAME);
         
@@ -50,7 +52,8 @@
             l.paginas,
             l.fechaPublicacion,
             u.userName as nombreUsuario,
-            u.nombre
+            u.nombre,
+            u.telefono
         FROM Publicaciones p
         JOIN Libros l ON p.idLibro = l.idLibro
         JOIN Usuarios u ON p.idUsuario = u.idUsuario
@@ -901,6 +904,312 @@
                 padding: 20px;
             }
         }
+
+        .rating-section {
+            margin-top: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(163, 177, 138, 0.08) 0%, rgba(163, 177, 138, 0.12) 100%);
+            border-radius: 18px;
+            border: 2px solid rgba(163, 177, 138, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rating-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+            opacity: 0.8;
+        }
+
+        .rating-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .rating-title {
+            color: var(--primary-brown);
+            font-size: 1.3em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-rating-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(163, 177, 138, 0.2);
+        }
+
+        .rating-stars-display {
+            display: flex;
+            gap: 3px;
+        }
+
+        .star-display {
+            color: #ffd700;
+            font-size: 18px;
+            transition: all 0.2s ease;
+        }
+
+        .star-display.empty {
+            color: rgba(255, 215, 0, 0.25);
+        }
+
+        .rating-info {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .rating-form {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(163, 177, 138, 0.2);
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .rating-form.hidden {
+            display: none;
+        }
+
+        .rating-form:hover {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .rating-input-group {
+            margin-bottom: 20px;
+        }
+
+        .rating-label {
+            display: block;
+            color: var(--primary-brown);
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .star-input {
+            font-size: 28px;
+            color: rgba(255, 215, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .star-input:hover,
+        .star-input.active {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+
+        .star-input:hover ~ .star-input {
+            color: rgba(255, 215, 0, 0.3);
+        }
+
+        .comment-textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(163, 177, 138, 0.2);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95em;
+            resize: vertical;
+            min-height: 100px;
+            max-height: 200px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .comment-textarea:focus {
+            outline: none;
+            border-color: var(--green-primary);
+            box-shadow: 0 0 0 3px rgba(163, 177, 138, 0.1);
+            background: white;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .submit-rating-btn {
+            background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-rating-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--green-dark) 0%, #2d4732 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(88, 129, 87, 0.3);
+        }
+
+        .submit-rating-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cancel-rating-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid rgba(163, 177, 138, 0.3);
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-rating-btn:hover {
+            background: rgba(163, 177, 138, 0.1);
+            border-color: rgba(163, 177, 138, 0.5);
+        }
+
+        .rate-user-btn {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--secondary-brown) 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .rate-user-btn:hover {
+            background: linear-gradient(135deg, var(--secondary-brown) 0%, #744830 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(107, 66, 38, 0.3);
+        }
+
+        .existing-rating {
+            background: rgba(255, 248, 220, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #ffd700;
+            margin-top: 15px;
+        }
+
+        .existing-rating-header {
+            color: var(--primary-brown);
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .existing-rating-stars {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 8px;
+        }
+
+        .existing-rating-comment {
+            color: var(--text-primary);
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+
+        .existing-rating-date {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+
+        .rating-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .rating-message.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #388e3c;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .rating-message.error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #d32f2f;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .rating-message.info {
+            background: rgba(33, 150, 243, 0.1);
+            color: #1976d2;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+
+        /* Responsive para ratings */
+        @media (max-width: 768px) {
+            .rating-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .current-rating-display {
+                align-self: stretch;
+            }
+            
+            .star-rating {
+                justify-content: center;
+            }
+            
+            .rating-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Animaciones para las estrellas */
+        @keyframes starPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .star-input.pulse {
+            animation: starPulse 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -1014,98 +1323,166 @@
                             <p class="book-author">por <?php echo htmlspecialchars($publicacion['autor']); ?></p>
                             <div class="book-price">$<?php echo number_format($publicacion['precio'], 2); ?></div>
 
-                            <div class="seller-info">
-    <div class="seller-header">
-        <div class="seller-avatar">
-    <?php 
-    // Intentar obtener la inicial de diferentes campos disponibles
-    $inicial = '';
-    
-    // Primero intentar con el nombre completo
-    if (!empty($publicacion['nombre'])) {
-        $inicial = strtoupper(substr(trim($publicacion['nombre']), 0, 1));
-    }
-    // Si no hay nombre, usar userName
-    elseif (!empty($publicacion['userName'])) {
-        $inicial = strtoupper(substr(trim($publicacion['userName']), 0, 1));
-    }
-    // Si no hay userName, usar nombreUsuario
-    elseif (!empty($publicacion['nombreUsuario'])) {
-        $inicial = strtoupper(substr(trim($publicacion['nombreUsuario']), 0, 1));
-    }
-    // Como último recurso, usar 'U' de Usuario
-    else {
-        $inicial = 'U';
-    }
-    
-    echo $inicial;
-    ?>
-</div>
-        <div class="seller-main-info">
-            <h3>
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-                Vendido por
-            </h3>
-            <?php if (!empty($publicacion['nombre'])): ?>
-                <div class="seller-fullname"><?php echo htmlspecialchars($publicacion['nombre']); ?></div>
-            <?php endif; ?>
-        </div>
-    </div>
 
-    <div class="seller-details">
-        <div class="seller-detail-item">
-            <div class="seller-detail-icon">
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
+    <div class="seller-info">
+        <div class="seller-header">
+            <div class="seller-avatar">
+                <?php 
+                $inicial = '';
+                if (!empty($publicacion['nombre'])) {
+                    $inicial = strtoupper(substr(trim($publicacion['nombre']), 0, 1));
+                } elseif (!empty($publicacion['userName'])) {
+                    $inicial = strtoupper(substr(trim($publicacion['userName']), 0, 1));
+                } elseif (!empty($publicacion['nombreUsuario'])) {
+                    $inicial = strtoupper(substr(trim($publicacion['nombreUsuario']), 0, 1));
+                } else {
+                    $inicial = 'U';
+                }
+                echo $inicial;
+                ?>
             </div>
-            <div class="seller-detail-info">
-                <div class="seller-detail-label">Usuario Verificado</div>
-                <div class="seller-detail-value">Cuenta Activa</div>
+            <div class="seller-main-info">
+                <h3>
+                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Vendido por
+                </h3>
+                <?php if (!empty($publicacion['nombre'])): ?>
+                    <div class="seller-fullname"><?php echo htmlspecialchars($publicacion['nombre']); ?></div>
+                <?php endif; ?>
             </div>
         </div>
 
-        <div class="seller-detail-item">
-            <div class="seller-detail-icon">
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
+        <div class="seller-details">
+            <div class="seller-detail-item">
+                <div class="seller-detail-icon">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <div class="seller-detail-info">
+                    <div class="seller-detail-label">Usuario Verificado</div>
+                    <div class="seller-detail-value">Cuenta Activa</div>
+                </div>
             </div>
-            <div class="seller-detail-info">
-                <div class="seller-detail-label">Publicación</div>
-                <div class="seller-detail-value">
-                    <?php echo date('d/m/Y', strtotime($publicacion['fechaCreacion'])); ?>
+
+            <div class="seller-detail-item">
+                <div class="seller-detail-icon">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <div class="seller-detail-info">
+                    <div class="seller-detail-label">Publicación</div>
+                    <div class="seller-detail-value">
+                        <?php echo date('d/m/Y', strtotime($publicacion['fechaCreacion'])); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="seller-detail-item">
+                <div class="seller-detail-icon">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                </div>
+                <div class="seller-detail-info">
+                    <div class="seller-detail-label">
+                        Contacto: DISPONIBLE 
+                    </div>
+                    <div class="seller-detail-value">
+                        <?php if (!empty($publicacion['telefono'])): ?>
+                            <div class="seller-comtact"><?php echo htmlspecialchars($publicacion['telefono']); ?></div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="seller-detail-item">
-            <div class="seller-detail-icon">
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                </svg>
+        <!-- Sistema de calificaciones mejorado -->
+        <div class="rating-section">
+            <div class="rating-header">
+                <h4 class="rating-title">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Calificación del Usuario
+                </h4>
+                <div class="current-rating-display" id="currentRatingDisplay">
+                    <div class="rating-stars-display" id="starsDisplay">
+                        <!-- Las estrellas se generarán dinámicamente -->
+                    </div>
+                    <div class="rating-info" id="ratingInfo">
+                        Cargando...
+                    </div>
+                </div>
             </div>
-            <div class="seller-detail-info">
-                <div class="seller-detail-label">Contacto</div>
-                <div class="seller-detail-value">Disponible</div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Calificación del vendedor (simulada por ahora) -->
-    <div class="seller-rating">
-        <div class="stars">
-            <span class="star">★</span>
-            <span class="star">★</span>
-            <span class="star">★</span>
-            <span class="star">★</span>
-            <span class="star empty">★</span>
+            <!-- Botón para mostrar formulario de calificación -->
+            <button class="rate-user-btn" id="showRatingFormBtn" style="display: none;">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Calificar Usuario
+            </button>
+
+            <!-- Formulario de calificación -->
+            <div class="rating-form hidden" id="ratingForm">
+                <div class="rating-input-group">
+                    <label class="rating-label">¿Cómo fue tu experiencia con este usuario?</label>
+                    <div class="star-rating" id="starRating">
+                        <span class="star-input" data-rating="1">★</span>
+                        <span class="star-input" data-rating="2">★</span>
+                        <span class="star-input" data-rating="3">★</span>
+                        <span class="star-input" data-rating="4">★</span>
+                        <span class="star-input" data-rating="5">★</span>
+                    </div>
+                </div>
+
+                <div class="rating-input-group">
+                    <label class="rating-label" for="ratingComment">Comentario (opcional)</label>
+                    <textarea 
+                        id="ratingComment" 
+                        class="comment-textarea" 
+                        placeholder="Comparte tu experiencia con este usuario..."
+                        maxlength="500"
+                    ></textarea>
+                    <div style="text-align: right; font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">
+                        <span id="commentCounter">0</span>/500 caracteres
+                    </div>
+                </div>
+
+                <div class="rating-buttons">
+                    <button class="submit-rating-btn" id="submitRatingBtn" disabled>
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        Enviar Calificación
+                    </button>
+                    <button class="cancel-rating-btn" id="cancelRatingBtn">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calificación existente -->
+            <div class="existing-rating hidden" id="existingRating">
+                <div class="existing-rating-header">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Tu calificación para este usuario
+                </div>
+                <div class="existing-rating-stars" id="existingStars"></div>
+                <div class="existing-rating-comment" id="existingComment"></div>
+                <div class="existing-rating-date" id="existingDate"></div>
+            </div>
+
+            <!-- Mensajes -->
+            <div class="rating-message hidden" id="ratingMessage"></div>
         </div>
-        <span class="rating-text">4.2/5 - Vendedor confiable</span>
     </div>
-</div>
 
                             <button class="contact-button" onclick="abrirChat(<?php echo $publicacion['idUsuario']; ?>, '<?php echo htmlspecialchars($publicacion['userName']); ?>')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
@@ -1351,6 +1728,280 @@
             }
         `;
         document.head.appendChild(style);
+
+        class RatingSystem {
+            constructor(targetUserId) {
+                this.targetUserId = targetUserId;
+                this.currentRating = 0;
+                this.isSubmitting = false;
+                
+                this.initializeElements();
+                this.loadUserStats();
+                this.checkCanRate();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    starsDisplay: document.getElementById('starsDisplay'),
+                    ratingInfo: document.getElementById('ratingInfo'),
+                    showRatingFormBtn: document.getElementById('showRatingFormBtn'),
+                    ratingForm: document.getElementById('ratingForm'),
+                    starRating: document.getElementById('starRating'),
+                    ratingComment: document.getElementById('ratingComment'),
+                    commentCounter: document.getElementById('commentCounter'),
+                    submitRatingBtn: document.getElementById('submitRatingBtn'),
+                    cancelRatingBtn: document.getElementById('cancelRatingBtn'),
+                    existingRating: document.getElementById('existingRating'),
+                    existingStars: document.getElementById('existingStars'),
+                    existingComment: document.getElementById('existingComment'),
+                    existingDate: document.getElementById('existingDate'),
+                    ratingMessage: document.getElementById('ratingMessage')
+                };
+            }
+
+            bindEvents() {
+            // Botón para mostrar formulario
+            this.elements.showRatingFormBtn.addEventListener('click', () => {
+                this.showRatingForm();
+            });
+
+            // Estrellas interactivas
+            this.elements.starRating.querySelectorAll('.star-input').forEach(star => {
+                star.addEventListener('click', (e) => {
+                    this.selectRating(parseInt(e.target.dataset.rating));
+                });
+
+                star.addEventListener('mouseenter', (e) => {
+                    this.highlightStars(parseInt(e.target.dataset.rating));
+                });
+            });
+
+            this.elements.starRating.addEventListener('mouseleave', () => {
+                this.highlightStars(this.currentRating);
+            });
+
+            // Contador de comentarios
+            this.elements.ratingComment.addEventListener('input', (e) => {
+                const length = e.target.value.length;
+                this.elements.commentCounter.textContent = length;
+                
+                if (length > 450) {
+                    this.elements.commentCounter.style.color = '#d32f2f';
+                } else {
+                    this.elements.commentCounter.style.color = 'var(--text-secondary)';
+                }
+            });
+
+            // Botones del formulario
+            this.elements.submitRatingBtn.addEventListener('click', () => {
+                this.submitRating();
+            });
+
+            this.elements.cancelRatingBtn.addEventListener('click', () => {
+                this.hideRatingForm();
+            });
+        }
+
+        async loadUserStats() {
+            try {
+                const response = await fetch(`../../api/rating_system.php?action=get_user_stats&user_id=${this.targetUserId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    this.displayUserStats(data.stats);
+                } else {
+                    this.showMessage('No se pudieron cargar las estadísticas del usuario', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+                this.showMessage('Error al cargar las estadísticas', 'error');
+            }
+        }
+
+        displayUserStats(stats) {
+            const rating = parseFloat(stats.puntuacionPromedio) || 0;
+            const totalRatings = parseInt(stats.totalCalificaciones) || 0;
+
+            // Mostrar estrellas
+            this.elements.starsDisplay.innerHTML = this.generateStarsHTML(rating);
+
+            // Mostrar información
+            if (totalRatings > 0) {
+                this.elements.ratingInfo.innerHTML = `
+                    <strong>${rating.toFixed(1)}/5</strong> 
+                    (${totalRatings} calificación${totalRatings !== 1 ? 'es' : ''})
+                `;
+            } else {
+                this.elements.ratingInfo.innerHTML = 'Sin calificaciones aún';
+            }
+        }
+
+        generateStarsHTML(rating) {
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const isFilled = i <= Math.floor(rating);
+                const isHalfFilled = i === Math.ceil(rating) && rating % 1 !== 0;
+                
+                if (isFilled) {
+                    starsHTML += '<span class="star-display">★</span>';
+                } else if (isHalfFilled) {
+                    starsHTML += '<span class="star-display" style="background: linear-gradient(90deg, #ffd700 50%, rgba(255, 215, 0, 0.25) 50%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">★</span>';
+                } else {
+                    starsHTML += '<span class="star-display empty">★</span>';
+                }
+            }
+            return starsHTML;
+        }
+
+        async checkCanRate() {
+            try {
+                const response = await fetch(`../../api/rating_system.php?action=can_rate&target_user_id=${this.targetUserId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.can_rate) {
+                        this.elements.showRatingFormBtn.style.display = 'flex';
+                    } else {
+                        if (data.existing_rating) {
+                            this.displayExistingRating(data.existing_rating);
+                        } else {
+                            this.showMessage(data.reason, 'info');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking rating permissions:', error);
+            }
+        }
+
+        displayExistingRating(rating) {
+            this.elements.existingStars.innerHTML = this.generateStarsHTML(rating.puntuacion);
+            this.elements.existingComment.textContent = rating.comentario || 'Sin comentario';
+            this.elements.existingDate.textContent = `Calificado el ${new Date(rating.fechaCalificacion).toLocaleDateString('es-ES')}`;
+            
+            this.elements.existingRating.classList.remove('hidden');
+        }
+
+        showRatingForm() {
+            this.elements.ratingForm.classList.remove('hidden');
+            this.elements.showRatingFormBtn.style.display = 'none';
+            this.elements.ratingForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        hideRatingForm() {
+            this.elements.ratingForm.classList.add('hidden');
+            this.elements.showRatingFormBtn.style.display = 'flex';
+            this.currentRating = 0;
+            this.highlightStars(0);
+            this.elements.ratingComment.value = '';
+            this.elements.commentCounter.textContent = '0';
+            this.elements.submitRatingBtn.disabled = true;
+        }
+
+        selectRating(rating) {
+            this.currentRating = rating;
+            this.highlightStars(rating);
+            this.elements.submitRatingBtn.disabled = false;
+            
+            // Efecto de pulso en la estrella seleccionada
+            const selectedStar = this.elements.starRating.querySelector(`[data-rating="${rating}"]`);
+            selectedStar.classList.add('pulse');
+            setTimeout(() => selectedStar.classList.remove('pulse'), 300);
+        }
+
+        highlightStars(rating) {
+            this.elements.starRating.querySelectorAll('.star-input').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        async submitRating() {
+            if (this.isSubmitting || this.currentRating === 0) return;
+
+            this.isSubmitting = true;
+            this.elements.submitRatingBtn.disabled = true;
+            this.elements.submitRatingBtn.innerHTML = `
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+                    <path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.364-6.364l-2.828 2.828M9.464 14.536l-2.828 2.828m12.728 0l-2.828-2.828M9.464 9.464L6.636 6.636"/>
+                </svg>
+                Enviando...
+            `;
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'submit_rating');
+                formData.append('target_user_id', this.targetUserId);
+                formData.append('rating', this.currentRating);
+                formData.append('comment', this.elements.ratingComment.value);
+
+                const response = await fetch('../../api/rating_system.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.showMessage('¡Calificación enviada exitosamente!', 'success');
+                    this.hideRatingForm();
+                    // Recargar estadísticas
+                    setTimeout(() => {
+                        this.loadUserStats();
+                        this.checkCanRate();
+                    }, 1000);
+                } else {
+                    this.showMessage(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                this.showMessage('Error al enviar la calificación', 'error');
+            } finally {
+                this.isSubmitting = false;
+                this.elements.submitRatingBtn.disabled = false;
+                this.elements.submitRatingBtn.innerHTML = `
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                    Enviar Calificación
+                `;
+            }
+        }
+
+        showMessage(message, type) {
+            this.elements.ratingMessage.textContent = message;
+            this.elements.ratingMessage.className = `rating-message ${type}`;
+            this.elements.ratingMessage.classList.remove('hidden');
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    this.elements.ratingMessage.classList.add('hidden');
+                }, 5000);
+            }
+        }
+    }
+
+    // Inicializar el sistema de calificaciones cuando la página esté lista
+    document.addEventListener('DOMContentLoaded', function() {
+        const targetUserId = <?php echo $publicacion['idUsuario']; ?>;
+        new RatingSystem(targetUserId);
+    });
+
+    // Estilos adicionales para animaciones
+    const additionalStyles = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = additionalStyles;
+    document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
