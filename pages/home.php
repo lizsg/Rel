@@ -847,6 +847,47 @@
         form.logout-form {
             margin: 0;
         }
+        /* Enlace del video badge - SIN líneas ni subrayado */
+a[href*="detalle_publicacion.php"] {
+    text-decoration: none !important;
+    border: none !important;
+    outline: none !important;
+    color: inherit !important;
+    display: inline-block;
+}
+
+/* Video badge */
+.video-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: rgba(255, 254, 254, 1);
+    color: white !important;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    text-decoration: none !important;
+}
+
+.video-badge:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+    text-decoration: none !important;
+}
+
+.video-badge svg {
+    flex-shrink: 0;
+}
+
+/* Asegurar que no herede estilos de enlaces */
+a .video-badge {
+    color: white !important;
+    text-decoration: none !important;
+}
 
         /* Debug info styles */
         .debug-info {
@@ -1195,6 +1236,7 @@
                         </div>
                         
                         <?php if (!empty($publicacion['linkVideo'])): ?>
+                            <a href="http://143.198.55.50/ReLee/pages/products/detalle_publicacion.php?id=11?id=<?= $publicacion['id'] ?>">
                             <div class="video-badge">
                                 <svg width="12" height="12" fill="white" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>

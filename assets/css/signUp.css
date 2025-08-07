@@ -85,6 +85,24 @@ input:focus {
   text-decoration: underline;
 }
 
+/* Contenedor y etiqueta para fecha de nacimiento */
+.date-container {
+  margin-bottom: 16px;
+}
+
+.date-label {
+  display: block;
+  color: #6b4226;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  margin-left: 2px;
+}
+
+.date-container input[type="date"] {
+  margin-bottom: 0;
+}
+
 /* Mensajes */
 .success, .error {
   padding: 10px 15px;

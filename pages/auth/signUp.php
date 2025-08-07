@@ -83,7 +83,12 @@ try {
     <input type="email" name="correo" placeholder="Correo electrónico" required />
     <input type="password" id="pass" name="password" placeholder="Contraseña" required />
     <div class="toggle-pass" onclick="togglePassword()">Mostrar / Ocultar</div>
-    <input type="date" name="fechaNacimiento" required />
+    
+    <div class="date-container">
+      <label for="fechaNacimiento" class="date-label">Fecha de nacimiento</label>
+      <input type="date" name="fechaNacimiento" id="fechaNacimiento" required />
+    </div>
+    
     <input type="text" name="telefono" placeholder="Teléfono" required />
 
     <button class="btn-login" type="submit">Registrarse</button>
