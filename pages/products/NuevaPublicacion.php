@@ -703,6 +703,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <small>Opcional</small>
             </div>
+            <div class="form-group">
+                <label for="fechaPublicacion">Fecha de Publicación:</label>
+                <input type="date" id="fechaPublicacion" name="fechaPublicacion" 
+                       value="<?php echo htmlspecialchars($datosPublicacion['fechaPublicacion'] ?? ''); ?>">
+                <small>Opcional - Fecha original de publicación del libro</small>
+            </div>
 
 
             <div class="form-group">
