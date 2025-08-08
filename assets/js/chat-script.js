@@ -113,9 +113,15 @@ function getBotResponse(message) {
     '📚 Revisa en la página de créditos al inicio o al final frases como: "Primera edición", "Segunda edición", "Edición revisada", "Edición especial". También aparece el año de la edición (ej: "© 2020, 2ª edición")'  + '\n' +
     '📚 Algunos libros incluyen la edición en pequeño (ej: "3rd Edition").'  + '\n' +
     '📚 Las ediciones distintas tienen ISBN diferentes.';
+  }ReR
+
+  if (lowerMessage.includes('comprar')) {
+    return 'Si quieres comprar un libro puedes utilizar el bucador para filtrar los resultados que tengas o con el buscador avanzado buscar un libro en especifico' + 
+    'Cuando uno te llame la atención puedes ir a ver detalles y ver mas del libro para ver los datos dek libro y vendedor, una vez te convensa un libro '+
+    'usa el boton de contactar con el vendedor para mandarle mensaje y decirle que te interesa el libro. De momento ReLee no cuenata con un sistema de transacción';
   }
 
-  if (lowerMessage.includes('subir') || lowerMessage.includes('publicar') || lowerMessage.includes('agregar')) {
+  if (lowerMessage.includes('subir') || lowerMessage.includes('publicar') || lowerMessage.includes('agregar') || lowerMessage.includes('vender')) {
     return 'Para subir un libro, ve a "Mis Publicaciones" en la barra inferior y selecciona "Agregar nueva publicación". Asegurate de tener los campos necesarios llenos';
   }
 
@@ -132,7 +138,7 @@ function getBotResponse(message) {
   }
     
   if (lowerMessage.includes('libro') || lowerMessage.includes('buscar') || lowerMessage.includes('encontrar')) {
-    return 'Puedes buscar libros usando la barra de búsqueda en la parte superior. También puedes usar filtros avanzados para encontrar exactamente lo que buscas por género, autor o año.';
+    return 'Puedes buscar libros usando la barra de búsqueda en la parte superior. También puedes usar la búsqueda avanzada para encontrar exactamente lo que buscas.';
   }
   
   if (lowerMessage.includes('adios') || lowerMessage.includes('bye') || lowerMessage.includes('hasta')) {

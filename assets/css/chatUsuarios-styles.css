@@ -1,95 +1,82 @@
 /* Variables CSS para colores consistentes */
 :root {
+    --primary-brown: #6b4226;
+    --secondary-brown: #8b5a3c;
+    --light-brown: #d6c1b2;
+    --cream-bg: #f8f6f3;
     --green-primary: #a3b18a;
-    --green-secondary: #8fa377;
-    --green-tertiary: #7a8f67;
-    --brown-primary: #8b4513;
-    --brown-secondary: #a0522d;
-    --brown-tertiary: #6b4226;
+    --green-secondary: #588157;
+    --green-dark: #3a5a40;
+    --text-primary: #2c2016;
+    --text-secondary: #6f5c4d;
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --border-radius: 20px;
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --beige-light: #f8f6f3;
     --beige-medium: #f0ede8;
-    --beige-dark: #e8e4df;
     --brown-text: #2c2016;
     --gray-light: #f8f9fa;
     --gray-medium: #6c757d;
     --gray-dark: #495057;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.15);
-    --shadow-heavy: 0 8px 30px rgba(0, 0, 0, 0.2);
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
-* {
-    box-sizing: border-box;
-}
-
-/* Body con ajustes para las barras */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, var(--cream-bg) 0%, #f0ede8 100%);
+    color: var(--text-primary);
     margin: 0;
-    background: linear-gradient(135deg, var(--beige-light) 0%, var(--beige-medium) 100%);
-    color: var(--brown-text);
-    height: 100vh;
-    overflow: hidden;
-    padding-top: 70px; /* Espacio para la topbar mejorada */
-    padding-bottom: 75px; /* Espacio para la bottombar */
+    padding: 20px;
+    padding-top: 80px; /* Espacio para la topbar */
+    padding-bottom: 100px; /* Espacio para la barra inferior */
+    min-height: 100vh;
 }
 
-/* ============ TOPBAR MEJORADA ============ */
+/* ============ TOPBAR CON ICONO DE PERFIL EN EL LADO DERECHO ============ */
 .topbar {
-    background: linear-gradient(135deg, rgba(248, 246, 243, 0.98) 0%, rgba(240, 237, 232, 0.98) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 10px 30px;
+    background: linear-gradient(135deg, #f5f0ea 0%, #ede6dd 100%);
+    backdrop-filter: blur(10px);
+    padding: 8px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
-    border-bottom: 1px solid rgba(163, 177, 138, 0.2);
-    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+    gap: 15px;
+    border-bottom: 1px solid rgba(211, 197, 184, 0.3);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    height: 70px;
-    transition: var(--transition);
 }
 
-.topbar:hover {
-    box-shadow: 0 6px 35px rgba(0, 0, 0, 0.12);
+/* Contenedor izquierdo - Solo Logo */
+.topbar-left {
+    display: flex;
+    align-items: center;
 }
 
-/* Logo container mejorado */
+/* Logo styles - SIN CAMBIOS */
 .logo-container {
     display: flex;
     align-items: center;
-    position: relative;
-}
-
-.logo-link {
-    text-decoration: none;
-    display: block;
-    transition: var(--transition);
 }
 
 .logo-icon {
-    width: 50px;
-    height: 50px;
+    width: 65px;
+    height: 65px;
     position: relative;
-    animation: logoFloat 4s ease-in-out infinite;
-    border-radius: 15px;
+    animation: logoFloat 3s ease-in-out infinite;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
-    transition: var(--transition);
-    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+    box-shadow: 0 3px 10px rgba(107, 66, 38, 0.25);
+    transition: all 0.3s ease;
 }
 
 @keyframes logoFloat {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    25% { transform: translateY(-2px) rotate(1deg); }
-    50% { transform: translateY(-1px) rotate(0deg); }
-    75% { transform: translateY(-3px) rotate(-1deg); }
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-2px); }
 }
 
 .logo-image {
@@ -97,53 +84,34 @@ body {
     height: 100%;
     object-fit: cover;
     object-position: center;
-    transition: var(--transition);
-    border-radius: 15px;
+    transition: transform 0.3s ease;
 }
 
 .logo-icon:hover {
-    transform: translateY(-3px) scale(1.08);
-    box-shadow: 0 12px 30px rgba(163, 177, 138, 0.4);
-    animation-play-state: paused;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(107, 66, 38, 0.35);
 }
 
 .logo-icon:hover .logo-image {
     transform: scale(1.1);
 }
 
-/* Título de la aplicación */
-.app-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--green-primary);
-    margin-left: 15px;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 4px rgba(163, 177, 138, 0.2);
-}
-
-/* Contenedor de iconos derecho mejorado */
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
+/* Icono de Perfil - MANTENER EN EL LADO DERECHO */
 .topbar-icon {
     background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 35px;
+    height: 35px;
+    border-radius: 10px;
     color: white;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
+    box-shadow: 0 3px 10px rgba(163, 177, 138, 0.3);
     position: relative;
     overflow: hidden;
     text-decoration: none;
-    border: 2px solid transparent;
 }
 
 .topbar-icon::before {
@@ -153,63 +121,146 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.6s;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
 }
 
 .topbar-icon:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 30px rgba(163, 177, 138, 0.4);
-    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(163, 177, 138, 0.4);
 }
 
 .topbar-icon:hover::before {
     left: 100%;
 }
 
-.topbar-icon svg {
-    transition: var(--transition);
-}
-
-.topbar-icon:hover svg {
-    transform: scale(1.1);
-}
-
-/* Botón de logout mejorado en color café */
-.logout-form {
-    margin: 0;
+/* Right side - Icono de Perfil + Logout con espaciado controlado */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espacio controlado entre perfil y logout */
 }
 
 .logout-button {
-    background: linear-gradient(135deg, var(--brown-primary) 0%, var(--brown-secondary) 100%);
+    background: linear-gradient(135deg, var(--primary-brown) 0%, #5b4a3e 100%);
     color: white;
     border: none;
-    padding: 10px 16px;
-    border-radius: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(107, 66, 38, 0.3);
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(107, 85, 70, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    gap: 6px;
 }
 
 .logout-button:hover {
-    background: linear-gradient(135deg, var(--brown-secondary) 0%, var(--brown-tertiary) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(107, 85, 69, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(107, 66, 38, 0.4);
 }
 
-.logout-button svg {
-    transition: var(--transition);
+form.logout-form {
+    margin: 0;
 }
 
-.logout-button:hover svg {
-    transform: rotate(180deg);
+/* ============ RESPONSIVE ADJUSTMENTS ============ */
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .topbar {
+        padding: 8px 20px;
+    }
+    
+    .topbar-right {
+        gap: 12px;
+    }
+}
+
+/* Mobile Phones */
+@media (max-width: 768px) {
+    .topbar {
+        height: 60px;
+        padding: 8px 15px;
+    }
+    
+    .logo-icon {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .topbar-icon {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .topbar-right {
+        gap: 12px;
+    }
+    
+    .logout-button {
+        padding: 6px 10px;
+        font-size: 11px;
+        gap: 4px;
+    }
+}
+
+/* Small Mobile Phones */
+@media (max-width: 480px) {
+    .topbar {
+        height: 55px;
+        padding: 5px 12px;
+    }
+    
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .topbar-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .topbar-right {
+        gap: 10px;
+    }
+    
+    .logout-button {
+        padding: 5px 8px;
+        font-size: 10px;
+        gap: 3px;
+    }
+}
+
+/* Extra Small Mobile Phones */
+@media (max-width: 320px) {
+    .topbar {
+        height: 50px;
+        padding: 4px 8px;
+    }
+    
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .topbar-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .topbar-right {
+        gap: 8px;
+    }
+    
+    .logout-button {
+        padding: 4px 6px;
+        font-size: 9px;
+        gap: 2px;
+    }
 }
 
 /* ============ LAYOUT PRINCIPAL MEJORADO ============ */
@@ -277,12 +328,50 @@ body {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.chat-logo-icon {
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.chat-logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chat-title {
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -1px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    z-index: 1;
+    background: linear-gradient(45deg, white, rgba(255, 255, 255, 0.8));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.chat-subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .new-chat-btn {
@@ -521,9 +610,27 @@ body {
     color: var(--gray-medium);
 }
 
-.no-conversations svg {
-    opacity: 0.3;
+.no-conversations-icon {
     margin-bottom: 20px;
+    opacity: 0.5;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.no-conversations p {
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.no-conversations-subtitle {
+    font-size: 14px !important;
+    opacity: 0.7 !important;
+    font-weight: 400 !important;
 }
 
 .start-chat-btn {
@@ -672,12 +779,7 @@ body {
     animation: float 6s ease-in-out infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-
-.placeholder-content svg {
+.placeholder-icon {
     margin-bottom: 25px;
     filter: drop-shadow(0 4px 8px rgba(163, 177, 138, 0.2));
 }
@@ -693,6 +795,8 @@ body {
     margin: 0;
     font-size: 16px;
     opacity: 0.8;
+    max-width: 300px;
+    line-height: 1.5;
 }
 
 /* ============ CHAT ACTIVO MEJORADO ============ */
@@ -981,24 +1085,22 @@ body {
     box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
 }
 
-/* ============ BOTTOMBAR MEJORADA ============ */
+/* ============ BOTTOMBAR EXACTAMENTE IGUAL ============ */
 .bottombar {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 75px;
-    background: linear-gradient(135deg, rgba(248, 246, 243, 0.98) 0%, rgba(240, 237, 232, 0.98) 100%);
+    height: 65px;
+    background: linear-gradient(135deg, rgba(245, 240, 234, 0.95) 0%, rgba(237, 230, 221, 0.95) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
-    gap: 40px;
-    border-top: 1px solid rgba(163, 177, 138, 0.2);
-    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(224, 214, 207, 0.3);
+    box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    padding: 0 30px;
 }
 
 .bottom-button {
@@ -1006,20 +1108,18 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 60px;
-    height: 55px;
+    width: 50px;
+    height: 50px;
     background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
     color: white;
     border: none;
-    border-radius: 18px;
-    font-size: 20px;
+    border-radius: 12px;
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: 0 6px 20px rgba(163, 177, 138, 0.3);
+    box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
     position: relative;
     overflow: hidden;
     text-decoration: none;
-    border: 2px solid transparent;
 }
 
 .bottom-button::before {
@@ -1034,9 +1134,8 @@ body {
 }
 
 .bottom-button:hover {
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 0 15px 35px rgba(163, 177, 138, 0.4);
-    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(163, 177, 138, 0.4);
 }
 
 .bottom-button:hover::before {
@@ -1044,27 +1143,25 @@ body {
 }
 
 .bottom-button span {
-    font-size: 11px;
-    margin-top: 4px;
-    color: rgba(255, 255, 255, 0.95);
-    font-weight: 600;
+    font-size: 10px;
+    margin-top: 3px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
     letter-spacing: 0.3px;
-    text-transform: uppercase;
 }
 
 .bottom-button-wide {
-    min-width: 120px;
-    height: 55px;
-    font-size: 16px;
-    padding: 8px 16px;
+    width: 110px;
+    height: 50px;
+    font-size: 11px;
+    padding: 5px;
 }
 
 .bottom-button-wide span {
-    font-size: 12px;
-    margin-top: 2px;
+    font-size: 11px;
+    margin-top: 0;
     text-align: center;
-    line-height: 1.2;
-    text-transform: none;
+    line-height: 1.1;
 }
 
 /* ============ ANIMACIONES Y EFECTOS ============ */
@@ -1125,7 +1222,7 @@ body {
 
 .conversations-list::-webkit-scrollbar-thumb:hover,
 .messages-container::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, var(--green-secondary), var(--green-tertiary));
+    background: linear-gradient(180deg, var(--green-secondary), var(--green-dark));
 }
 
 /* ============ ESTADOS ESPECIALES ============ */
@@ -1307,8 +1404,12 @@ body {
         height: 60px;
     }
     
-    .logo {
+    .chat-title {
         font-size: 18px;
+    }
+    
+    .chat-subtitle {
+        font-size: 10px;
     }
     
     .new-chat-btn {
@@ -1435,8 +1536,12 @@ body {
         height: 55px;
     }
     
-    .logo {
+    .chat-title {
         font-size: 16px;
+    }
+    
+    .chat-subtitle {
+        font-size: 9px;
     }
     
     .new-chat-btn {
@@ -1599,8 +1704,12 @@ body {
         height: 50px;
     }
     
-    .logo {
+    .chat-title {
         font-size: 14px;
+    }
+    
+    .chat-subtitle {
+        font-size: 8px;
     }
     
     .new-chat-btn {

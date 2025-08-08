@@ -326,47 +326,69 @@ if (isset($conn)) $conn->close();
     <link rel="stylesheet" href="../../assets/css/home-styles.css">
     <link rel="stylesheet" href="../../assets/css/chat-styles.css">
     <style>
-        :root {
-            --primary-color: #6a994e;
-            --secondary-color: #a7c957;
-            --background-color: #f2e9e4;
-            --form-background: #ffffff;
-            --text-color: #4a4e69;
-            --border-color: #ced4da;
-            --button-bg-color: #d8a47f;
-            --button-text-color: #ffffff;
-            --hover-color: #c98c5a;
+         :root {
+            --primary-brown: #6b4226;
+            --secondary-brown: #8b5a3c;
+            --light-brown: #d6c1b2;
+            --cream-bg: #f8f6f3;
+            --green-primary: #a3b18a;
+            --green-secondary: #588157;
+            --green-dark: #3a5a40;
+            --text-primary: #2c2016;
+            --text-secondary: #6f5c4d;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --border-radius: 20px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--cream-bg) 0%, #f0ede8 100%);
+            color: var(--text-primary);
             margin: 0;
-            background: linear-gradient(135deg, #f8f6f3 0%, #f0ede8 100%);
-            color: #2c2016;
-            position: relative;
-            padding-bottom: 65px;
+            padding: 20px;
+            padding-bottom: 100px; /* Espacio para la barra inferior */
             min-height: 100vh;
         }
-        /* LOGO IMAGEN*/
+
+        /* Topbar */
+        .topbar {
+            background: linear-gradient(135deg, #f5f0ea 0%, #ede6dd 100%);
+            backdrop-filter: blur(10px);
+            padding: 8px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(211, 197, 184, 0.3);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        /* Logo styles */
         .logo-container {
             display: flex;
             align-items: center;
         }
 
         .logo-icon {
-            width: 85px;
-            height: 85px;
+            width: 65px;
+            height: 65px;
             position: relative;
             animation: logoFloat 3s ease-in-out infinite;
-            border-radius: 14px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(107, 66, 38, 0.25);
+            box-shadow: 0 3px 10px rgba(107, 66, 38, 0.25);
             transition: all 0.3s ease;
         }
 
         @keyframes logoFloat {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-3px); }
+            50% { transform: translateY(-2px); }
         }
 
         .logo-image {
@@ -378,38 +400,81 @@ if (isset($conn)) $conn->close();
         }
 
         .logo-icon:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 25px rgba(107, 66, 38, 0.35);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(107, 66, 38, 0.35);
         }
 
         .logo-icon:hover .logo-image {
             transform: scale(1.1);
         }
 
-        /* Ajustes para responsive */
-        @media (max-width: 768px) {
-            .logo-icon {
-                width: 70px;
-                height: 70px;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 15px;
-                padding: 15px 20px;
-            }
-            
-            .logo-container {
-                order: -1;
-            }
+        /* Right side icons container */
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        @media (max-width: 480px) {
-            .logo-icon {
-                width: 60px;
-                height: 60px;
-                border-radius: 12px;
-            }
+        .topbar-icon {
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 3px 10px rgba(163, 177, 138, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .topbar-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .topbar-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(163, 177, 138, 0.4);
+        }
+
+        .topbar-icon:hover::before {
+            left: 100%;
+        }
+
+        .logout-button {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, #5b4a3e 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(107, 66, 38, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(107, 66, 38, 0.4);
+        }
+
+        form.logout-form {
+            margin: 0;
         }
 
         .edit-publication-container {
@@ -714,29 +779,80 @@ if (isset($conn)) $conn->close();
         .edit-publication-container {
             animation: fadeInUp 0.6s ease forwards;
         }
+        .chatbot-icon {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%) !important;
+    box-shadow: 0 3px 10px rgba(163, 177, 138, 0.3) !important;
+    position: relative;
+}
+
+.chatbot-icon:hover {
+    box-shadow: 0 8px 25px rgba(163, 177, 138, 0.4) !important;
+}
+
+/* Animación de parpadeo para los ojos verdes */
+@keyframes robotBlink {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0.3; }
+}
+
+.chatbot-icon svg circle[fill="#a3b18a"] {
+    animation: robotBlink 3s infinite;
+}
     </style>
 </head>
 <body>
-    <div class="topbar">
-        <div class="topbar-icon" title="Chat">
-            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                <path d="M12 2c.55 0 1 .45 1 1v1h4a2 2 0 0 1 2 2v2h1a1 1 0 1 1 0 2h-1v6a3 3 0 0 1-3 3h-1v1a1 1 0 1 1-2 0v-1H9v1a1 1 0 1 1-2 0v-1H6a3 3 0 0 1-3-3v-6H2a1 1 0 1 1 0-2h1V6a2 2 0 0 1 2-2h4V3c0-.55.45-1 1-1zm-5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+     <!-- Barra superior -->
+<!-- Barra superior -->
+<div class="topbar">
+    <!-- Logo en el lado izquierdo -->
+    <div class="logo-container">
+        <a href="../home.php" class="logo-link" title="Ir al inicio">
+            <div class="logo-icon">
+                <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
+            </div>
+        </a>
+    </div>
+
+    <!-- Iconos del lado derecho -->
+    <div class="topbar-right">
+        <div class="topbar-icon chatbot-icon chat-icon" title="Chat">
+            <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
+                <!-- Cabeza del robot -->
+                <rect x="6" y="4" width="12" height="10" rx="2" ry="2"/>
+                <!-- Antenas -->
+                <circle cx="9" cy="2" r="1"/>
+                <circle cx="15" cy="2" r="1"/>
+                <line x1="9" y1="3" x2="9" y2="4" stroke="white" stroke-width="1"/>
+                <line x1="15" y1="3" x2="15" y2="4" stroke="white" stroke-width="1"/>
+                <!-- Ojos con colores de tu tema -->
+                <circle cx="9.5" cy="8" r="1.5" fill="#a3b18a"/>
+                <circle cx="14.5" cy="8" r="1.5" fill="#a3b18a"/>
+                <circle cx="9.5" cy="8" r="0.8" fill="white"/>
+                <circle cx="14.5" cy="8" r="0.8" fill="white"/>
+                <!-- Boca -->
+                <rect x="10" y="11" width="4" height="1" rx="0.5"/>
+                <!-- Cuerpo -->
+                <rect x="8" y="14" width="8" height="6" rx="1"/>
+                <!-- Brazos -->
+                <rect x="4" y="16" width="3" height="1" rx="0.5"/>
+                <rect x="17" y="16" width="3" height="1" rx="0.5"/>
+                <!-- Piernas -->
+                <rect x="9" y="20" width="2" height="2" rx="1"/>
+                <rect x="13" y="20" width="2" height="2" rx="1"/>
             </svg>
         </div>
 
-        <div class="topbar-icon" title="Chat 2">
-            <a href="../chat/chat.php" class="bottom-button" title="Chat">
-                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                </svg>
-            </a>
-        </div>
+        <a href="../chat/chat.php" class="topbar-icon" title="Chat 2">
+            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+        </a>
 
         <a href="../auth/perfil.php" class="topbar-icon" title="Perfil">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
-    </a>
+        </a>
 
         <form action="../auth/logout.php" method="post" class="logout-form">
             <button type="submit" class="logout-button">
@@ -747,27 +863,9 @@ if (isset($conn)) $conn->close();
             </button>
         </form>
     </div>
+</div>
 
     <?php include '../../includes/chat-component.php'; ?>
-
-    <header>
-        <div class="logo-container">
-    <a href="../home.php" class="logo-link" title="Ir al inicio">
-        <div class="logo-icon">
-            <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
-        </div>
-    </a>
-</div>
-        <div class="search-bar">
-            <input type="text" placeholder="Buscar libros, autores, géneros...">
-            <button>
-                <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                </svg>
-            </button>
-        </div>
-        <a href="buscador.php" class="user-button">Búsqueda Avanzada</a>
-    </header>
 
     <main class="edit-publication-container">
         <h1>📝 Editar Publicación</h1>

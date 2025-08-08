@@ -1114,13 +1114,54 @@ function tiempoTranscurrido($fecha) {
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, var(--green-secondary) 0%, var(--green-dark) 100%);
         }
+                /* Estilos para el chatbot con tus colores */
+.chatbot-icon {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-secondary) 100%) !important;
+    box-shadow: 0 3px 10px rgba(163, 177, 138, 0.3) !important;
+    position: relative;
+}
+
+.chatbot-icon:hover {
+    box-shadow: 0 8px 25px rgba(163, 177, 138, 0.4) !important;
+}
+
+/* Animación de parpadeo para los ojos verdes */
+@keyframes robotBlink {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0.3; }
+}
+
+.chatbot-icon svg circle[fill="#a3b18a"] {
+    animation: robotBlink 3s infinite;
+}
     </style>
 </head>
 <body>
     <div class="topbar">
-        <div class="topbar-icon" title="Chat">
-            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                <path d="M12 2c.55 0 1 .45 1 1v1h4a2 2 0 0 1 2 2v2h1a1 1 0 1 1 0 2h-1v6a3 3 0 0 1-3 3h-1v1a1 1 0 1 1-2 0v-1H9v1a1 1 0 1 1-2 0v-1H6a3 3 0 0 1-3-3v-6H2a1 1 0 1 1 0-2h1V6a2 2 0 0 1 2-2h4V3c0-.55.45-1 1-1zm-5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+        <div class="topbar-icon chat-icon" title="Chat">
+            <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
+                <!-- Cabeza del robot -->
+                <rect x="6" y="4" width="12" height="10" rx="2" ry="2"/>
+                <!-- Antenas -->
+                <circle cx="9" cy="2" r="1"/>
+                <circle cx="15" cy="2" r="1"/>
+                <line x1="9" y1="3" x2="9" y2="4" stroke="white" stroke-width="1"/>
+                <line x1="15" y1="3" x2="15" y2="4" stroke="white" stroke-width="1"/>
+                <!-- Ojos con colores de tu tema -->
+                <circle cx="9.5" cy="8" r="1.5" fill="#a3b18a"/>
+                <circle cx="14.5" cy="8" r="1.5" fill="#a3b18a"/>
+                <circle cx="9.5" cy="8" r="0.8" fill="white"/>
+                <circle cx="14.5" cy="8" r="0.8" fill="white"/>
+                <!-- Boca -->
+                <rect x="10" y="11" width="4" height="1" rx="0.5"/>
+                <!-- Cuerpo -->
+                <rect x="8" y="14" width="8" height="6" rx="1"/>
+                <!-- Brazos -->
+                <rect x="4" y="16" width="3" height="1" rx="0.5"/>
+                <rect x="17" y="16" width="3" height="1" rx="0.5"/>
+                <!-- Piernas -->
+                <rect x="9" y="20" width="2" height="2" rx="1"/>
+                <rect x="13" y="20" width="2" height="2" rx="1"/>
             </svg>
         </div>
 

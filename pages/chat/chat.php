@@ -138,45 +138,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chat | RELEE</title>
     <link rel="stylesheet" href="../../assets/css/chatUsuarios-styles.css">
+    <link rel="stylesheet" href="../../assets/css/chat-styles.css">
 </head>
 
 <body>
-<body>
-    <!-- Barra superior -->
-    <div class="topbar">
-        <!-- Logo en el lado izquierdo -->
-        <div class="logo-container">
-            <a href="../home.php" class="logo-link" title="Ir al inicio">
-                <div class="logo-icon">
-                    <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
-                </div>
-            </a>
-        </div>
-
-        <!-- Iconos del lado derecho -->
-        <div class="topbar-right">
-            <a href="../auth/perfil.php" class="topbar-icon" title="Perfil">
-                <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-            </a>
-            
-            <form action="../auth/logout.php" method="post" class="logout-form">
-                <button type="submit" class="logout-button">
-                    <svg width="14" height="14" fill="white" viewBox="0 0 24 24">
-                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                    </svg>
-                    Cerrar sesión
-                </button>
-            </form>
-        </div>
+   <!-- Barra superior -->
+<div class="topbar">
+    <!-- Logo en el lado izquierdo -->
+    <div class="logo-container">
+        <a href="../home.php" class="logo-link" title="Ir al inicio">
+            <div class="logo-icon">
+                <img src="../../assets/images/REELEE.jpeg" alt="RELEE Logo" class="logo-image" />
+            </div>
+        </a>
     </div>
+    
+    <!-- AGREGAR ESTE CONTENEDOR para agrupar perfil + logout -->
+    <div class="topbar-right">
+        <a href="../auth/perfil.php" class="topbar-icon" title="Mi Perfil">
+            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        </a>
+        
+        <form action="../auth/logout.php" method="post" class="logout-form">
+            <button type="submit" class="logout-button">
+                <svg width="14" height="14" fill="white" viewBox="0 0 24 24">
+                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                </svg>
+                Cerrar sesión
+            </button>
+        </form>
+    </div>
+</div>
+
+    <!-- Incluir componente de chat -->
+    <?php include '../../includes/chat-component.php'; ?>
+
     <div class="chat-app">
         <!-- Sidebar con conversaciones -->
         <div class="chat-sidebar">
             <!-- Header del sidebar -->
             <div class="sidebar-header">
-                <div class="logo">RELEE Chat</div>
+                <div class="logo">
+                    <div class="chat-logo-icon">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div class="chat-logo-text">
+                        <span class="chat-title">RELEE</span>
+                        <span class="chat-subtitle">Conversaciones</span>
+                    </div>
+                </div>
                 <button class="new-chat-btn" id="newChatBtn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -224,8 +238,14 @@
             <div class="conversations-list" id="conversationsList">
                 <?php if (empty($conversaciones)): ?>
                     <div class="no-conversations">
+                        <div class="no-conversations-icon">
+                            <svg width="60" height="60" fill="currentColor" viewBox="0 0 24 24" opacity="0.3">
+                                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                            </svg>
+                        </div>
                         <p>No tienes conversaciones aún</p>
-                        <button class="start-chat-btn" id="startChatBtn">Iniciar nueva conversación</button>
+                        <p class="no-conversations-subtitle">Encuentra usuarios y comienza a chatear</p>
+                        <button class="start-chat-btn" id="startChatBtn">Nueva Conversación</button>
                     </div>
                 <?php else: ?>
                     <?php foreach($conversaciones as $conv): ?>
@@ -261,11 +281,13 @@
         <div class="chat-area">
             <div class="chat-placeholder" id="chatPlaceholder">
                 <div class="placeholder-content">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" opacity="0.3">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
+                    <div class="placeholder-icon">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" opacity="0.3">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-8 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                        </svg>
+                    </div>
                     <h3>Selecciona una conversación</h3>
-                    <p>Elige una conversación existente o inicia una nueva</p>
+                    <p>Elige una conversación existente o inicia una nueva para comenzar a chatear</p>
                 </div>
             </div>
 
@@ -304,14 +326,15 @@
         </div>
     </div>
 
+    <!-- Barra inferior -->
     <div class="bottombar">
-        <a href="../home.php" class="bottom-button">
+        <a href="../home.php" class="bottom-button" title="Inicio">
             <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
             <span>Inicio</span>
         </a>
-        <a href="../products/publicaciones.php" class="bottom-button bottom-button-wide">
+        <a href="../products/publicaciones.php" class="bottom-button bottom-button-wide" title="Mis Publicaciones">
             <span>Mis Publicaciones</span>
         </a>
     </div>
@@ -325,6 +348,7 @@
     </script>
     <!-- Cargar el script principal del chat -->
     <script src="../../assets/js/chatUsuarios-script.js"></script>
+    <script src="../../assets/js/chat-script.js"></script>
 
     <script>
     // Cargar la conversación si hay un parámetro en la URL
