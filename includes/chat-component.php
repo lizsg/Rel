@@ -8,7 +8,7 @@
       <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
         <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
       </svg>
-      Asistente RELEE
+      Asistente ReL
     </div>
     <button class="chat-close" onclick="toggleChat()">
       <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
@@ -19,7 +19,7 @@
 
   <div id="chatMessages" class="chat-messages">
     <div class="chat-welcome">
-      ¡Hola! Soy tu asistente virtual de RELEE. ¿En qué puedo ayudarte hoy?
+      ¡Hola! Soy tu asistente virtual de ReL. ¿En qué puedo ayudarte hoy?
     </div>
   </div>
 

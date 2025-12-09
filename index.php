@@ -1,3 +1,3 @@
 <?php
-header('Location: /ReLee/pages/home.php');
+header('Location: /pages/home.php');
 exit();

@@ -50,42 +50,6 @@ CREATE TABLE `Hashtags` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `LibroHashtags`
---
-
-CREATE TABLE `LibroHashtags` (
-  `idLibro` int NOT NULL,
-  `idHashtag` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `Libros`
---
-
-CREATE TABLE `Libros` (
-  `idLibro` int NOT NULL,
-  `titulo` varchar(70) NOT NULL,
-  `autor` varchar(70) DEFAULT NULL,
-  `descripcion` text NOT NULL,
-  `editorial` varchar(20) DEFAULT NULL,
-  `edicion` varchar(20) DEFAULT NULL,
-  `categoria` varchar(20) NOT NULL,
-  `tipoPublico` varchar(20) NOT NULL,
-  `base` int DEFAULT NULL,
-  `altura` int DEFAULT NULL,
-  `paginas` int DEFAULT NULL,
-  `fechaPublicacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `linkVideo` varchar(100) NOT NULL,
-  `linkImagen1` varchar(100) NOT NULL,
-  `linkImagen2` varchar(100) NOT NULL,
-  `linkImagen3` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `Mensajes`
 --
 
@@ -108,20 +72,6 @@ CREATE TABLE `MensajesLeidos` (
   `idMensaje` int NOT NULL,
   `idUsuario` int NOT NULL,
   `fechaLeido` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `Publicaciones`
---
-
-CREATE TABLE `Publicaciones` (
-  `idPublicacion` int NOT NULL,
-  `idUsuario` int NOT NULL,
-  `idLibro` int NOT NULL,
-  `precio` decimal(10,2) NOT NULL,
-  `fechaCreacion` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -169,19 +119,6 @@ ALTER TABLE `Hashtags`
   ADD UNIQUE KEY `texto` (`texto`);
 
 --
--- Indexes for table `LibroHashtags`
---
-ALTER TABLE `LibroHashtags`
-  ADD PRIMARY KEY (`idLibro`,`idHashtag`),
-  ADD KEY `idHashtag` (`idHashtag`);
-
---
--- Indexes for table `Libros`
---
-ALTER TABLE `Libros`
-  ADD PRIMARY KEY (`idLibro`);
-
---
 -- Indexes for table `Mensajes`
 --
 ALTER TABLE `Mensajes`
@@ -196,14 +133,6 @@ ALTER TABLE `Mensajes`
 ALTER TABLE `MensajesLeidos`
   ADD PRIMARY KEY (`idMensaje`,`idUsuario`),
   ADD KEY `idUsuario` (`idUsuario`);
-
---
--- Indexes for table `Publicaciones`
---
-ALTER TABLE `Publicaciones`
-  ADD PRIMARY KEY (`idPublicacion`),
-  ADD KEY `idUsuario` (`idUsuario`),
-  ADD KEY `idLibro` (`idLibro`);
 
 --
 -- Indexes for table `Usuarios`
@@ -231,22 +160,10 @@ ALTER TABLE `Hashtags`
   MODIFY `idHashtag` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `Libros`
---
-ALTER TABLE `Libros`
-  MODIFY `idLibro` int NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `Mensajes`
 --
 ALTER TABLE `Mensajes`
   MODIFY `idMensaje` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `Publicaciones`
---
-ALTER TABLE `Publicaciones`
-  MODIFY `idPublicacion` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `Usuarios`
@@ -266,13 +183,6 @@ ALTER TABLE `Conversaciones`
   ADD CONSTRAINT `Conversaciones_ibfk_2` FOREIGN KEY (`idUsuario2`) REFERENCES `Usuarios` (`idUsuario`);
 
 --
--- Constraints for table `LibroHashtags`
---
-ALTER TABLE `LibroHashtags`
-  ADD CONSTRAINT `LibroHashtags_ibfk_1` FOREIGN KEY (`idLibro`) REFERENCES `Libros` (`idLibro`) ON DELETE CASCADE,
-  ADD CONSTRAINT `LibroHashtags_ibfk_2` FOREIGN KEY (`idHashtag`) REFERENCES `Hashtags` (`idHashtag`) ON DELETE CASCADE;
-
---
 -- Constraints for table `Mensajes`
 --
 ALTER TABLE `Mensajes`
@@ -286,12 +196,6 @@ ALTER TABLE `MensajesLeidos`
   ADD CONSTRAINT `MensajesLeidos_ibfk_1` FOREIGN KEY (`idMensaje`) REFERENCES `Mensajes` (`idMensaje`),
   ADD CONSTRAINT `MensajesLeidos_ibfk_2` FOREIGN KEY (`idUsuario`) REFERENCES `Usuarios` (`idUsuario`);
 
---
--- Constraints for table `Publicaciones`
---
-ALTER TABLE `Publicaciones`
-  ADD CONSTRAINT `Publicaciones_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `Usuarios` (`idUsuario`) ON DELETE CASCADE,
-  ADD CONSTRAINT `Publicaciones_ibfk_2` FOREIGN KEY (`idLibro`) REFERENCES `Libros` (`idLibro`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -93,59 +93,46 @@ function getBotResponse(message) {
   const lowerMessage = message.toLowerCase();
 
   if (lowerMessage.includes('hola') || lowerMessage.includes('holi') || lowerMessage.includes('buenos') || lowerMessage.includes('saludos') || lowerMessage.includes('ola')) {
-    return '¡Hola! ¿En qué puedo ayudarte con RELEE hoy? Puedo ayudarte a encontrar libros, explicar cómo funciona la plataforma o resolver dudas.';
+    return '¡Hola! ¿En qué puedo ayudarte con ReL hoy? Puedo ayudarte a conectar con otros usuarios, compartir tus momentos o resolver dudas sobre la plataforma.';
   }
 
-  if (lowerMessage.includes('editorial')) {
-    return 'Si no sabes cual es la editorial de tu libro 👀🔎✨:' + '\n' +
-    '📚 Revisa la portada o contraportada, suele aparecer el nombre o logo de la editorial.'  + '\n' +
-    '📚 Busca al inicio o al final del libro la página de créditos una frase como "Publicado por [Nombre de la Editorial]"© [Año] [Nombre de la Editorial]"'  + '\n' +
-    '📚 Busca por el codigo de barras en linea';
+  if (lowerMessage.includes('editorial') || lowerMessage.includes('edicion') || lowerMessage.includes('isbn')) {
+    return 'Aunque ReL es ahora una red social, ¡seguimos amando los libros! Si estás compartiendo una lectura, no olvides mencionar la editorial o edición en tu publicación para que otros lectores sepan de qué hablas.';
   }
 
   if (lowerMessage.includes('descripcion') || lowerMessage.includes('descripción')) {
-    return 'Si no sabes que poner en la descripción de tu libro te recomendamos:' + '\n' +
-    '📚 Describir brevemenye la historia pricipal, los personajes principales y tono';
+    return 'Para tus publicaciones en ReL, te recomendamos ser auténtico. Describe lo que sientes, lo que estás haciendo o comparte una cita que te guste.';
   }
 
-  if (lowerMessage.includes('edicion') || lowerMessage.includes('edición')) {
-    return 'Si no sabes cual es la edición del libro 👀🔎✨:' + '\n' +
-    '📚 Revisa en la página de créditos al inicio o al final frases como: "Primera edición", "Segunda edición", "Edición revisada", "Edición especial". También aparece el año de la edición (ej: "© 2020, 2ª edición")'  + '\n' +
-    '📚 Algunos libros incluyen la edición en pequeño (ej: "3rd Edition").'  + '\n' +
-    '📚 Las ediciones distintas tienen ISBN diferentes.';
-  }ReR
-
-  if (lowerMessage.includes('comprar')) {
-    return 'Si quieres comprar un libro puedes utilizar el bucador para filtrar los resultados que tengas o con el buscador avanzado buscar un libro en especifico' + 
-    'Cuando uno te llame la atención puedes ir a ver detalles y ver mas del libro para ver los datos dek libro y vendedor, una vez te convensa un libro '+
-    'usa el boton de contactar con el vendedor para mandarle mensaje y decirle que te interesa el libro. De momento ReLee no cuenata con un sistema de transacción';
+  if (lowerMessage.includes('comprar') || lowerMessage.includes('vender') || lowerMessage.includes('precio')) {
+    return 'ReL es una red social para conectar personas. Si ves algo que te interesa en una publicación de otro usuario, te sugerimos contactarlo directamente por el chat privado para acordar cualquier detalle.';
   }
 
-  if (lowerMessage.includes('subir') || lowerMessage.includes('publicar') || lowerMessage.includes('agregar') || lowerMessage.includes('vender')) {
-    return 'Para subir un libro, ve a "Mis Publicaciones" en la barra inferior y selecciona "Agregar nueva publicación". Asegurate de tener los campos necesarios llenos';
+  if (lowerMessage.includes('subir') || lowerMessage.includes('publicar') || lowerMessage.includes('agregar') || lowerMessage.includes('postear')) {
+    return '¡Es muy fácil! Usa el recuadro "¿Qué estás pensando?" en el inicio para compartir estados, o el botón de nueva publicación para subir fotos y momentos especiales con tus seguidores.';
   }
 
   if (lowerMessage.includes('ayuda') || lowerMessage.includes('como') || lowerMessage.includes('funciona')) {
-    return 'RELEE es una plataforma para compartir y descubrir libros. Puedes buscar libros, subir tus propias publicaciones y conectar con otros lectores. ¿Hay algo específico que te gustaría saber?';
+    return 'ReL es tu nueva red social. Aquí puedes seguir a tus amigos, compartir fotos y estados, dar like a lo que te gusta y chatear en tiempo real. ¡Explora y diviértete!';
   }
   
   if (lowerMessage.includes('perfil') || lowerMessage.includes('cuenta') || lowerMessage.includes('usuario')) {
-    return 'Puedes acceder a tu perfil desde el ícono de usuario en la barra superior. Allí podrás editar tu información, ver tu historial de lecturas y gestionar tus publicaciones.';
+    return 'Tu perfil es tu carta de presentación en ReL. Desde el menú superior puedes acceder a "Mi Perfil" para cambiar tu foto, ver tus seguidores y gestionar tus publicaciones.';
   }
   
   if (lowerMessage.includes('gracias') || lowerMessage.includes('thank')) {
-    return '¡De nada! Estoy aquí para ayudarte. Si tienes más preguntas sobre RELEE, no dudes en preguntarme.';
+    return '¡De nada! Me encanta ayudarte. Disfruta de tu tiempo en ReL.';
   }
     
-  if (lowerMessage.includes('libro') || lowerMessage.includes('buscar') || lowerMessage.includes('encontrar')) {
-    return 'Puedes buscar libros usando la barra de búsqueda en la parte superior. También puedes usar la búsqueda avanzada para encontrar exactamente lo que buscas.';
+  if (lowerMessage.includes('buscar') || lowerMessage.includes('encontrar') || lowerMessage.includes('amigos')) {
+    return 'Usa la barra de búsqueda en la parte superior para encontrar a tus amigos y nuevos usuarios interesantes para seguir en ReL.';
   }
   
   if (lowerMessage.includes('adios') || lowerMessage.includes('bye') || lowerMessage.includes('hasta')) {
-    return '¡Hasta luego! Que tengas una excelente experiencia leyendo en RELEE. 📚';
+    return '¡Hasta pronto! Sigue compartiendo y conectando en ReL. 👋';
   }
   
-  return 'Interesante pregunta. Como asistente de RELEE, puedo ayudarte con búsquedas de libros, navegación de la plataforma, subida de publicaciones y más. ¿Podrías ser más específico sobre lo que necesitas?';
+  return 'Interesante. Como asistente de ReL, estoy aprendiendo cada día. Puedo ayudarte con temas sobre tu perfil, cómo publicar o cómo encontrar amigos. ¿Podrías reformular tu pregunta?';
 }
 
 function handleChatKeyPress(event) {

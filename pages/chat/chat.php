@@ -30,6 +30,40 @@
             throw new Exception("Conexión fallida: " . $conn->connect_error);
         }
 
+        // Lógica para manejar redirección desde perfil (user_id)
+        if (isset($_GET['user_id'])) {
+            $targetUserId = (int)$_GET['user_id'];
+            if ($targetUserId !== $userId) {
+                // 1. Buscar si ya existe conversación
+                $checkStmt = $conn->prepare("
+                    SELECT idConversacion 
+                    FROM Conversaciones 
+                    WHERE (idUsuario1 = ? AND idUsuario2 = ?) 
+                       OR (idUsuario1 = ? AND idUsuario2 = ?)
+                    LIMIT 1
+                ");
+                $checkStmt->bind_param("iiii", $userId, $targetUserId, $targetUserId, $userId);
+                $checkStmt->execute();
+                $checkResult = $checkStmt->get_result();
+                
+                if ($checkResult->num_rows > 0) {
+                    // Ya existe, redirigir
+                    $row = $checkResult->fetch_assoc();
+                    header("Location: chat.php?conversacion=" . $row['idConversacion']);
+                    exit();
+                } else {
+                    // No existe, crear nueva
+                    $createStmt = $conn->prepare("INSERT INTO Conversaciones (idUsuario1, idUsuario2) VALUES (?, ?)");
+                    $createStmt->bind_param("ii", $userId, $targetUserId);
+                    if ($createStmt->execute()) {
+                        $newId = $conn->insert_id;
+                        header("Location: chat.php?conversacion=" . $newId);
+                        exit();
+                    }
+                }
+            }
+        }
+
         // Procesamos la búsqueda de usuarios en caso de que se busque
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["buscador"])) {
             $searchTerm = trim($_POST["buscador"]);
@@ -347,8 +381,8 @@
         window.chatInitialized = false;
     </script>
     <!-- Cargar el script principal del chat -->
-    <script src="../../assets/js/chatUsuarios-script.js"></script>
-    <script src="../../assets/js/chat-script.js"></script>
+    <script src="../../assets/js/chatUsuarios-script.js?v=2.0"></script>
+    <script src="../../assets/js/chat-script.js?v=2.0"></script>
 
     <script>
     // Cargar la conversación si hay un parámetro en la URL

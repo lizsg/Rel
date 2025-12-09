@@ -1,0 +1,14 @@
+RewriteEngine On
+RewriteBase /
+
+# No reescribir archivos o directorios que existen
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirigir todo a index.php si no existe el archivo
+RewriteRule ^index\.php$ - [L]
+
+# Permitir acceso directo a archivos estáticos
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]

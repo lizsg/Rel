@@ -23,6 +23,7 @@ body {
   border-bottom: 1px solid rgba(211, 197, 184, 0.3);
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
   position: relative;
+  z-index: 2001; /* Ensure topbar (and its dropdowns) are above the header */
 }
 
 .topbar-icon {
@@ -420,4 +421,269 @@ form.logout-form {
 
 .search-bar button {
   font-family: 'Segoe UI Symbol', sans-serif;
+}
+/* Social Feed Styles */
+.feed-container {
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+.create-post-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.create-post-form textarea {
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    resize: none;
+    font-family: inherit;
+    margin-bottom: 10px;
+    min-height: 80px;
+}
+
+.create-post-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-post {
+    background: #2c2016;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-post:hover {
+    background: #4a3b32;
+}
+
+.post-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+.post-info h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #2c2016;
+}
+
+.post-date {
+    font-size: 12px;
+    color: #888;
+    margin: 2px 0 0 0;
+}
+
+.post-content {
+    margin-bottom: 15px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.post-image {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.post-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.file-input-wrapper input[type=file] {
+    font-size: 100px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 20px;
+    padding: 5px;
+}
+
+.btn-icon:hover {
+    color: #2c2016;
+}
+
+/* Notification Badges */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: pulse 2s infinite;
+    display: none; /* Hidden by default */
+    z-index: 10;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(231, 76, 60, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+/* Dropdown Styles */
+#notif-dropdown {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 450px;
+    overflow-y: auto;
+    border: 1px solid rgba(0,0,0,0.05);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-header {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 700;
+    color: #2c2016;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+    border-radius: 12px 12px 0 0;
+}
+
+.notif-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.2s;
+}
+
+.notif-item:hover {
+    background: #f8f9fa;
+}
+
+.notif-item.unread {
+    background: #f0f7f0;
+}
+
+.notif-item img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 12px;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.notif-content {
+    flex: 1;
+}
+
+.notif-text {
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.notif-time {
+    font-size: 0.75em;
+    color: #888;
+}
+
+/* Improved Dropdown Positioning */
+#notif-dropdown {
+    top: 60px; /* Increased to ensure it clears the topbar completely */
+    right: -10px; /* Align better with the icon */
+    z-index: 2000; /* Ensure it's on top of everything */
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+/* Dropdown Arrow */
+#notif-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 22px; /* Position arrow under the icon center roughly */
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid white;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 30px 20px;
+    text-align: center;
+    color: #888;
+    font-size: 0.9em;
+}
+
+/* Unread Indicator Dot */
+.notif-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--green-secondary);
+    border-radius: 50%;
+    margin-left: 10px;
 }
